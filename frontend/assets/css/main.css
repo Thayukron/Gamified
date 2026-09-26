@@ -2,20 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-abyss-950 font-sans text-slate-200 antialiased;
+  }
+  ::selection {
+    @apply bg-arcane-600/60 text-white;
+  }
+}
+
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium transition disabled:opacity-50;
+    @apply relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-medium tracking-wide transition duration-300 disabled:cursor-not-allowed disabled:opacity-50;
   }
+  /* Gold rune button with a sweeping shine */
   .btn-primary {
-    @apply btn bg-indigo-600 text-white hover:bg-indigo-700;
+    @apply btn overflow-hidden text-abyss-950 shadow-glow-gold hover:-translate-y-0.5 hover:shadow-[0_0_36px_-4px_rgba(245,196,81,0.9)];
+    background: linear-gradient(110deg, #b7791f 0%, #f5c451 35%, #fde68a 50%, #f5c451 65%, #b7791f 100%);
+    background-size: 200% 100%;
+    animation: shimmer 4s linear infinite;
   }
   .btn-ghost {
-    @apply btn text-slate-600 hover:bg-slate-100;
+    @apply btn border border-arcane-400/30 text-arcane-300 hover:border-arcane-400/70 hover:bg-arcane-500/10 hover:text-white;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200;
+    @apply w-full rounded-xl border border-arcane-400/25 bg-abyss-900/70 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none transition focus:border-rune-400/70 focus:shadow-glow-gold;
   }
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-[0.2em] text-arcane-300/80;
+  }
+  /* Frosted obsidian panel with a faint violet rim */
   .card {
-    @apply rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200;
+    @apply relative rounded-2xl border border-arcane-400/20 bg-abyss-800/60 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md;
+  }
+  .card-hover {
+    @apply transition duration-500 hover:-translate-y-1 hover:border-rune-400/50 hover:shadow-glow-gold;
+  }
+  .title-glow {
+    @apply font-display text-rune-300;
+    text-shadow: 0 0 18px rgba(245, 196, 81, 0.45), 0 0 2px rgba(253, 230, 138, 0.8);
+  }
+  .divider-rune {
+    @apply flex items-center gap-3 text-rune-400/70;
+  }
+  .divider-rune::before,
+  .divider-rune::after {
+    content: '';
+    @apply h-px flex-1 bg-gradient-to-r from-transparent via-rune-400/40 to-transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

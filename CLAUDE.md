@@ -39,8 +39,15 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
   stores/auth.ts          token ใน localStorage key gsp_token
   middleware/auth.global.ts  บังคับ login + จำกัดพื้นที่ /student /teacher /admin ตาม role
   layouts/default.vue, blank.vue · pages/{login,student,teacher,admin}
-  assets/css/main.css     class ร่วม: btn-primary, btn-ghost, input, card
+  assets/css/main.css     class ร่วม: btn-primary, btn-ghost, input, label, card, card-hover, title-glow, divider-rune
+  components/             MysticBackground, MagicCircle, AppIcon (ไอคอน SVG), ComingSoonGrid (การ์ด "ผนึก")
 ```
+
+### ธีม UI "ARCANA" (ผู้ใช้ต้องการแนวลึกลับ น่าตื่นเต้น — ใช้ต่อทุกหน้าใหม่)
+- Dark fantasy: สี `abyss-*` (พื้น), `rune-*` (ทอง/เน้น), `arcane-*` (ม่วง), shadow `glow` / `glow-gold`
+- ฟอนต์ `font-display` (Cinzel+Chonburi) สำหรับหัวข้อ, `font-sans` = Kanit
+- ใช้ `AppIcon` แทน emoji · ถ้อยคำเชิงผจญภัย (นักผจญภัย, เควสต์, ผนึก, คัมภีร์) · แอนิเมชัน `animate-fade-up` ไล่ delay
+- แก้ `tailwind.config.js` แล้วต้อง restart nuxt dev · ถ้า port 3100 ถูกยึดโดย nuxt ตัวเก่า ให้ kill node ที่ commandline มี `nuxt` + `Gamified`
 
 ### รูปแบบโค้ด
 - Controller เป็น static method รับ `Request $req` คืน array (Router แปลงเป็น JSON) · error ใช้ `throw new HttpException(code, 'ข้อความไทย')`
@@ -59,4 +66,5 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
-- 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout) → **รอผู้ใช้ตรวจก่อนเริ่มเฟส 2**
+- 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout)
+- 2026-09-26: ผู้ใช้ขอปรับ UI ให้ลึกลับ/ตื่นเต้น → ทำธีม ARCANA เสร็จ, E2E ผ่าน → **รอผู้ใช้ตรวจก่อนเริ่มเฟส 2**
