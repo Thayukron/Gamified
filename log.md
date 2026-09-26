@@ -4,6 +4,37 @@
 
 ---
 
+## 2026-09-26 — เฟส 2: Game Engine & Profiling
+
+### Backend
+- `src/Services/ScenarioEngine.php` — แกนคำนวณ Rule-based 100%
+  - `forPlayer()` ตัด `tags` (ค่าคะแนน) ออกก่อนส่งให้ผู้เล่น → ผู้เรียนเดาคะแนนไม่ได้
+  - `evaluate()` เล่นซ้ำเส้นทางจาก `choices_log` ตั้งแต่ฉากแรก ตรวจทุกก้าว (กันข้อมูลปลอม/เล่นไม่จบ) แล้วรวมคะแนน
+  - `profile()` — VARK: ทุกด้านที่คะแนนสูงสุดเท่ากัน (multimodal เช่น "VK"); RIASEC: Holland code 3 ตัว เสมอกันตัดสินด้วยตัวที่เลือกล่าสุด; Mindset: growth/fixed/mixed; Archetype = ตัวอักษรแรกของ Holland
+  - `validate()` ตรวจโครงสร้างเนื้อเรื่อง (ใช้ต่อในเฟส 3)
+- `src/Controllers/StudentGameController.php` + routes:
+  - `GET /student/quests` (สถานะ new / in_progress / completed ต่อภาคเรียน)
+  - `GET /student/quests/{id}` (ถ้าเล่นจบแล้วในภาคเรียนนี้ → คืน result_id แทน)
+  - `PUT /student/quests/{id}/progress` (Save State ทุกการตัดสินใจ)
+  - `POST /student/quests/{id}/complete` (คำนวณ + บันทึก `assessment_results`, เล่นได้ 1 ครั้ง/ภาคเรียน)
+  - `GET /student/results`, `GET /student/results/{id}` (เห็นเฉพาะของตัวเอง)
+- `database/scenarios/arcana-gate.json` — เนื้อเรื่องสากล “ประตูแห่งอาร์คานา” 18 ฉาก 11 จุดตัดสินใจ: VARK 4 ข้อ, RIASEC 4 ข้อ (แต่ละด้านปรากฏ 2 ครั้ง), Mindset 3 ข้อ · seed ใน `migrate.php`
+- ไอคอน archetype เปลี่ยนจาก emoji เป็นชื่อไอคอน SVG (hammer, telescope, palette, shield, crown, compass)
+
+### Frontend
+- `pages/student/play/[id].vue` — Visual Novel player (full screen, mobile-first): หน้าเริ่ม/เล่นต่อ, typewriter (ตัดคำไทยด้วย `Intl.Segmenter`), แตะเพื่อข้าม/อ่านต่อ, ป้ายชื่อผู้พูด, ตัวเลือกไล่ปรากฏ, effect fade/shake/flash (ระดับฉากและบรรทัด), แถบความคืบหน้า, ไอคอนบันทึกแล้ว, ปุ่มพัก, ปุ่มปิดเสียง, คีย์บอร์ด (Space/Enter, เลข 1-9)
+- `components/game/VnBackground.vue` — ฉากวาดด้วย SVG: night, gate, hall, corridor, library, courtyard, crystal (หรือใส่ URL รูปได้)
+- `composables/useGameAudio.ts` — เสียงสังเคราะห์ Web Audio (ไม่ต้องมีไฟล์): BGM mystery/wonder/tension, เสียงพิมพ์, เลือก, whoosh, rumble, reveal · รองรับ URL เพลง · จำสถานะปิดเสียง
+- `pages/student/result/[id].vue` — ฉากเปิดการ์ด (วงเวทหมุน → การ์ดพลิก), Radar RIASEC, แท่ง VARK, มาตรวัด Mindset, คำแนะนำ, **แชร์** (Web Share พร้อมรูป / คัดลอกข้อความ) และ **บันทึกการ์ดเป็น PNG** (`html-to-image`)
+- `components/ArchetypeCard.vue` (การ์ดสไตล์ทาโรต์), `components/RadarChart.vue` (SVG), `utils/profile.ts` (ป้ายชื่อเชิงบวกของ VARK/RIASEC/Mindset)
+- `pages/student/index.vue` — รายการเควสต์จริงพร้อมสถานะ + การ์ดตัวตนล่าสุด · `pages/student/history.vue` — ไทม์ไลน์ประวัติ
+
+### ทดสอบ
+- API (curl): ตัดแท็กคะแนนออกแล้ว, save state, log ปลอม/เล่นไม่จบถูกปฏิเสธ, คำนวณถูก (tie-break ตามล่าสุด), ส่งซ้ำได้ผลเดิม, เล่นซ้ำ/บันทึกซ้ำในภาคเรียนเดียวกันถูกบล็อก, นักเรียนอื่นดูผลไม่ได้, ครูเรียก API นักเรียนไม่ได้
+- E2E (Playwright + Edge, มือถือ 390px): เล่น 4 ตัวเลือก → พัก → หน้าแรกแสดง “เดินทางค้างไว้” → เล่นต่อจนจบ (11 ตัวเลือก) → เปิดการ์ด → เข้าเล่นซ้ำถูก redirect ไปผลลัพธ์ → ประวัติ · บันทึกการ์ดเป็นรูปสำเร็จ · ไม่มี error ในเบราว์เซอร์
+
+---
+
 ## 2026-09-26 — ปรับ UI ธีม "Arcana" (ลึกลับ · ตื่นเต้น)
 
 ผู้ใช้ขอ: UI เดิมไม่ดึงดูด → ปรับเป็นแนวลึกลับ น่าตื่นเต้น

@@ -38,3 +38,9 @@ php backend/database/migrate.php
 | POST | /api/auth/login | - |
 | POST | /api/auth/logout | ทุกบทบาท |
 | GET | /api/auth/me | ทุกบทบาท |
+| GET | /api/student/quests | student |
+| GET | /api/student/quests/{id} | student |
+| PUT | /api/student/quests/{id}/progress | student |
+| POST | /api/student/quests/{id}/complete | student |
+| GET | /api/student/results | student |
+| GET | /api/student/results/{id} | student |

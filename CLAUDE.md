@@ -32,15 +32,20 @@ backend/
   routes.php            ประกาศ route ทั้งหมด ($router->get/post/put/delete(path, handler, roles))
   public/index.php      front controller + CORS + error handling
   src/Core/             Database(PDO), Router, Request, Response, HttpException, Auth(bearer token)
-  src/Controllers/      AuthController ...
+  src/Controllers/      AuthController, StudentGameController
+  src/Services/ScenarioEngine.php  ตัดแท็กก่อนส่งผู้เล่น / replay log ตรวจเส้นทาง + รวมคะแนน / profile() / validate()
   database/schema.sql   ตารางทั้งหมด · migrate.php = run schema + seed
+  database/scenarios/   JSON เนื้อเรื่อง (arcana-gate.json = ชุดสากล)
 frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
   composables/useApi.ts   $fetch + Bearer token, 401 -> logout
   stores/auth.ts          token ใน localStorage key gsp_token
   middleware/auth.global.ts  บังคับ login + จำกัดพื้นที่ /student /teacher /admin ตาม role
   layouts/default.vue, blank.vue · pages/{login,student,teacher,admin}
   assets/css/main.css     class ร่วม: btn-primary, btn-ghost, input, label, card, card-hover, title-glow, divider-rune
-  components/             MysticBackground, MagicCircle, AppIcon (ไอคอน SVG), ComingSoonGrid (การ์ด "ผนึก")
+  components/             MysticBackground, MagicCircle, AppIcon (ไอคอน SVG), ComingSoonGrid (การ์ด "ผนึก"), ArchetypeCard, RadarChart, game/VnBackground
+  composables/useGameAudio.ts  เสียงสังเคราะห์ Web Audio (bgm preset: mystery/wonder/tension หรือ URL)
+  utils/profile.ts        ป้ายชื่อเชิงบวก VARK/RIASEC/Mindset + type AssessmentResult
+  pages/student/          index (เควสต์), play/[id] (VN player), result/[id] (การ์ด+กราฟ+แชร์), history
 ```
 
 ### ธีม UI "ARCANA" (ผู้ใช้ต้องการแนวลึกลับ น่าตื่นเต้น — ใช้ต่อทุกหน้าใหม่)
@@ -54,11 +59,13 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - Route ที่ต้อง login ส่ง roles เป็น argument ที่ 3 (`['*']` = ทุก role) → `$req->user`
 - คะแนนเก็บเป็นคอลัมน์แยกใน `assessment_results` (vark_v/a/r/k, riasec_r..c, mindset_growth/fixed) เพื่อ query สถิติง่าย
 - Save state อยู่ในตาราง `game_sessions` (1 แถวต่อ user+scenario)
-- เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content`
+- เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content`: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
+- แท็กคะแนนที่ใช้ได้: vark_v/a/r/k, riasec_r/i/a/s/e/c, mindset_growth/fixed · `choices_log` = `[{scene, choice}]`
+- ภาคเรียนปัจจุบันมาจาก `config.php` (academic_year, semester) · ผลลัพธ์ unique ต่อ user+scenario+ภาคเรียน
 
 ## แผนการพัฒนา (Phases)
 - [x] **เฟส 1 Foundation** — schema, PHP API + auth token, Nuxt login + role routing
-- [ ] **เฟส 2 Game Engine** — Quest list (เช็คเล่นแล้วหรือยัง), VN player (typewriter/shake/fade/เสียง), save state real-time, rule-based scoring, Archetype card, ประวัติ, แชร์ผล + seed เนื้อเรื่องสากล 1 ชุด
+- [x] **เฟส 2 Game Engine** — Quest list (เช็คเล่นแล้วหรือยัง), VN player (typewriter/shake/fade/เสียง), save state real-time, rule-based scoring, Archetype card, ประวัติ, แชร์ผล + seed เนื้อเรื่องสากล 1 ชุด
 - [ ] **เฟส 3 Scenario Builder + Story Library** — CRUD scene/choice ผูกคะแนน, export JSON, คัดลอกจากคลังกลาง, แอดมินเปิด/ปิดชุดสากล
 - [ ] **เฟส 4 Dashboard** — Pie/Bar ระดับห้อง, Radar รายบุคคล (Chart.js), จัดกลุ่มทำงานอัจฉริยะ
 - [ ] **เฟส 5 AI** — ตั้งค่า BYOK, Contextual AI Prompting + ai_insights_cache, AI Story Generator
@@ -67,4 +74,5 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 
 ## สถานะล่าสุด
 - 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout)
-- 2026-09-26: ผู้ใช้ขอปรับ UI ให้ลึกลับ/ตื่นเต้น → ทำธีม ARCANA เสร็จ, E2E ผ่าน → **รอผู้ใช้ตรวจก่อนเริ่มเฟส 2**
+- 2026-09-26: ผู้ใช้ขอปรับ UI ให้ลึกลับ/ตื่นเต้น → ทำธีม ARCANA เสร็จ, E2E ผ่าน (ผู้ใช้ชอบ)
+- 2026-09-26: เสร็จเฟส 2 Game Engine, ทดสอบ API + E2E ผ่าน (student002 เล่นจบแล้วใน DB ตัวอย่าง) → **รอผู้ใช้ตรวจก่อนเริ่มเฟส 3**
