@@ -13,14 +13,15 @@ const props = defineProps<{
 }>()
 
 const box = computed(() => ({
-  normal: 'bottom-[8.5rem] top-16 sm:bottom-40',
-  raised: 'bottom-[50%] top-14',
-  low: 'bottom-0 top-[70%]',
+  normal: 'bottom-[4.5rem] top-16 sm:bottom-24',
+  raised: 'bottom-[44%] top-14',
+  low: '-bottom-4 top-[66%]',
 })[props.variant ?? 'normal'])
+const members0 = computed(() => props.cast.filter((m) => props.characters[m.id]).length)
 const size = computed(() => ({
-  normal: 'h-[min(46vh,420px)] w-[min(44vw,260px)]',
-  raised: 'h-[min(32vh,300px)] w-[min(34vw,200px)]',
-  low: 'h-[26vh] w-[min(28vw,170px)] opacity-80',
+  normal: ['h-[min(66vh,640px)] w-[min(86vw,420px)]', 'h-[min(62vh,600px)] w-[min(62vw,360px)]', 'h-[min(58vh,560px)] w-[min(46vw,320px)]'][Math.min(members0.value, 3) - 1] ?? '',
+  raised: 'h-[min(40vh,380px)] w-[min(40vw,240px)]',
+  low: 'h-[34vh] w-[min(36vw,210px)] opacity-80',
 })[props.variant ?? 'normal'])
 
 const posClass = { left: 'left-[22%]', center: 'left-1/2', right: 'left-[78%]' }
@@ -50,7 +51,7 @@ const members = computed(() => props.cast.filter((m) => props.characters[m.id]))
           ]"
           :style="speaker === m.id ? { filter: `drop-shadow(0 0 18px ${characters[m.id].color ?? '#f5c451'}88)` } : {}"
         >
-          <GameCharacterSprite :def="characters[m.id]" :expr="exprs[m.id] ?? m.expr ?? 'neutral'" />
+          <GameCharacterSprite class="fade-bottom" :def="characters[m.id]" :expr="exprs[m.id] ?? m.expr ?? 'neutral'" />
         </div>
       </div>
     </TransitionGroup>
@@ -58,6 +59,7 @@ const members = computed(() => props.cast.filter((m) => props.characters[m.id]))
 </template>
 
 <style scoped>
+.fade-bottom { -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 97%); mask-image: linear-gradient(to bottom, #000 72%, transparent 97%); }
 .idle { animation: breathe 3.2s ease-in-out infinite; transform-origin: bottom center; }
 @keyframes breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.018); } }
 .anim-bounce { animation: bounce 0.55s cubic-bezier(.3,.7,.4,1.4); transform-origin: bottom center; }

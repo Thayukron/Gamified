@@ -3,8 +3,8 @@
   "meta": { "icon": "book", "color": "#a78bfa", "subtitle": "บทที่ 1 · หอสมุดเวทมนตร์" },
   "characters": {
     "lumin": { "name": "ลูมิน", "kind": "owl", "color": "#f5c451" },
-    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd" },
-    "kael": { "name": "เคล", "kind": "mage", "robe": "#991b1b", "hair": "#1f2937", "eyes": "#ef4444", "skin": "#f1c7a5", "accessory": ["hood"], "color": "#fca5a5" }
+    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd", "hairStyle": "long" },
+    "kael": { "name": "เคล", "kind": "mage", "robe": "#991b1b", "hair": "#1f2937", "eyes": "#ef4444", "skin": "#f1c7a5", "accessory": ["hood"], "color": "#fca5a5", "hairStyle": "short" }
   },
   "scenes": {
     "intro": {

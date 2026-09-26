@@ -10,7 +10,12 @@ export interface CharacterDef {
   hair?: string
   skin?: string
   eyes?: string
+  hairStyle?: 'long' | 'bob' | 'short'
+  /** hood | hat | glasses | cat | beard | child */
   accessory?: string[]
+  /** Optional artwork file(s) replacing the SVG, e.g. "/characters/mira.png" or one per expression. */
+  image?: string
+  images?: Partial<Record<Expr, string>>
 }
 
 export interface CastMember { id: string; pos: 'left' | 'center' | 'right'; expr?: Expr }

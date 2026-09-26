@@ -2,7 +2,7 @@
   "start": "o_intro",
   "meta": { "icon": "star", "color": "#38bdf8", "subtitle": "บทที่ 3 · หอคอยแห่งดวงดาว" },
   "characters": {
-    "orin": { "name": "อาจารย์โอริน", "kind": "mage", "robe": "#1e3a8a", "hair": "#e5e7eb", "eyes": "#38bdf8", "skin": "#f1c7a5", "accessory": ["hat", "glasses"], "color": "#93c5fd" },
+    "orin": { "name": "อาจารย์โอริน", "kind": "mage", "robe": "#1e3a8a", "hair": "#e5e7eb", "eyes": "#38bdf8", "skin": "#f1c7a5", "accessory": ["hat", "glasses", "beard"], "color": "#93c5fd", "hairStyle": "long" },
     "golem": { "name": "โกเลมดวงดาว", "kind": "golem", "color": "#67e8f9" },
     "lumin": { "name": "ลูมิน", "kind": "owl", "color": "#f5c451" }
   },

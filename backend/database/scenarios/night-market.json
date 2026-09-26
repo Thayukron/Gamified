@@ -2,9 +2,9 @@
   "start": "m_intro",
   "meta": { "icon": "lantern", "color": "#f59e0b", "subtitle": "บทที่ 2 · ตลาดยามค่ำคืน" },
   "characters": {
-    "nyx": { "name": "นิกซ์", "kind": "mage", "robe": "#0f766e", "hair": "#1e293b", "eyes": "#fbbf24", "skin": "#fde2cf", "accessory": ["cat"], "color": "#5eead4" },
-    "pim": { "name": "พิม", "kind": "mage", "robe": "#57534e", "hair": "#78350f", "eyes": "#65a30d", "skin": "#e8b98f", "accessory": ["hood"], "color": "#d6d3d1" },
-    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd" }
+    "nyx": { "name": "นิกซ์", "kind": "mage", "robe": "#0f766e", "hair": "#1e293b", "eyes": "#fbbf24", "skin": "#fde2cf", "accessory": ["cat"], "color": "#5eead4", "hairStyle": "bob" },
+    "pim": { "name": "พิม", "kind": "mage", "robe": "#57534e", "hair": "#78350f", "eyes": "#65a30d", "skin": "#e8b98f", "accessory": ["hood", "child"], "color": "#d6d3d1", "hairStyle": "short" },
+    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd", "hairStyle": "long" }
   },
   "scenes": {
     "m_intro": {
