@@ -1,0 +1,10 @@
+node_modules/
+frontend/.nuxt/
+frontend/.output/
+frontend/.data/
+frontend/dist/
+backend/config.local.php
+backend/vendor/
+*.log
+.env
+.DS_Store
