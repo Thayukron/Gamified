@@ -13,6 +13,9 @@ const hair = computed(() => props.def.hair ?? '#1f2937')
 const iris = computed(() => props.def.eyes ?? '#7c3aed')
 const glow = computed(() => props.def.color ?? '#f5c451')
 const style = computed(() => props.def.hairStyle ?? 'bob')
+const male = computed(() => props.def.gender === 'm')
+const FACE_F = 'M104 118 C104 76 124 58 150 58 C176 58 196 76 196 118 C196 152 188 176 172 192 C163 201 157 207 150 207 C143 207 137 201 128 192 C112 176 104 152 104 118Z'
+const FACE_M = 'M101 116 C101 74 124 56 150 56 C176 56 199 74 199 116 C199 150 193 174 180 192 C168 206 158 211 150 211 C142 211 132 206 120 192 C107 174 101 150 101 116Z'
 const imageSrc = computed(() => props.def.images?.[e.value] ?? props.def.image)
 const uid = `c${Math.random().toString(36).slice(2, 8)}`
 
@@ -114,11 +117,11 @@ const BANGS = 'M98 122 C92 60 124 38 150 38 C178 38 208 58 202 122 C196 104 190 
       </template>
 
       <!-- face -->
-      <path d="M104 118 C104 76 124 58 150 58 C176 58 196 76 196 118 C196 152 188 176 172 192 C163 201 157 207 150 207 C143 207 137 201 128 192 C112 176 104 152 104 118Z" :fill="skin" />
-      <path d="M104 118 C104 76 124 58 150 58 C176 58 196 76 196 118 C196 152 188 176 172 192 C163 201 157 207 150 207 C143 207 137 201 128 192 C112 176 104 152 104 118Z" fill="#7c2d12" opacity=".08" transform="translate(6 0)" />
+      <path :d="male ? FACE_M : FACE_F" :fill="skin" />
+      <path :d="male ? FACE_M : FACE_F" fill="#7c2d12" opacity=".08" transform="translate(6 0)" />
       <!-- cheeks -->
-      <ellipse cx="124" cy="164" rx="13" ry="7" :fill="`url(#${uid}-cheek)`" :opacity="e === 'happy' ? 1 : 0.6" />
-      <ellipse cx="176" cy="164" rx="13" ry="7" :fill="`url(#${uid}-cheek)`" :opacity="e === 'happy' ? 1 : 0.6" />
+      <ellipse cx="124" cy="164" rx="13" ry="7" :fill="`url(#${uid}-cheek)`" :opacity="(e === 'happy' ? 1 : 0.6) * (male ? 0.35 : 1)" />
+      <ellipse cx="176" cy="164" rx="13" ry="7" :fill="`url(#${uid}-cheek)`" :opacity="(e === 'happy' ? 1 : 0.6) * (male ? 0.35 : 1)" />
       <!-- nose -->
       <path d="M151 148 Q154 158 149 162" fill="none" stroke="#9a3412" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round" />
 
@@ -177,10 +180,10 @@ const BANGS = 'M98 122 C92 60 124 38 150 38 C178 38 208 58 202 122 C196 104 190 
           </g>
           <path d="M-4 8 Q4 9 10 5.5" fill="none" stroke="#1a1025" stroke-opacity=".3" stroke-width="1" />
         </template>
-        <path :d="lash" fill="none" stroke="#1a1025" stroke-width="2.7" stroke-linecap="round" />
-        <path v-if="e !== 'happy'" d="M-12 -4 Q-4 -9.5 6 -8.5" fill="none" stroke="#1a1025" stroke-width="1.6" stroke-linecap="round" />
-        <path :d="brow" fill="none" :stroke="hair" stroke-width="2.3" stroke-linecap="round" />
-        <path :d="brow" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="2.3" stroke-linecap="round" />
+        <path :d="lash" fill="none" stroke="#1a1025" :stroke-width="male ? 2.1 : 2.7" stroke-linecap="round" />
+        <path v-if="e !== 'happy' && !male" d="M-12 -4 Q-4 -9.5 6 -8.5" fill="none" stroke="#1a1025" stroke-width="1.6" stroke-linecap="round" />
+        <path :d="brow" fill="none" :stroke="hair" :stroke-width="male ? 3.6 : 2.3" stroke-linecap="round" />
+        <path :d="brow" fill="none" stroke="#000" stroke-opacity=".25" :stroke-width="male ? 3.6 : 2.3" stroke-linecap="round" />
       </g>
       <!-- sad tear -->
       <path v-if="e === 'sad'" d="M122 152 Q118 162 122 166 Q126 162 122 152Z" fill="#bae6fd" opacity=".85" />

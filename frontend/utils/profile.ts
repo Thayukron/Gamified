@@ -55,4 +55,7 @@ export interface AssessmentResult {
   color: string
   icon: string
   items?: { name: string; icon: string }[]
+  rarity?: 'rare' | 'epic' | 'legendary'
+  xp_gained?: number
+  coins_gained?: number
 }

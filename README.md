@@ -45,3 +45,5 @@ php backend/database/migrate.php
 | GET | /api/student/results | student |
 | GET | /api/student/results/{id} | student |
 | GET | /api/student/profile | student |
+| GET | /api/student/player | student |
+| PUT | /api/student/player/avatar | student |

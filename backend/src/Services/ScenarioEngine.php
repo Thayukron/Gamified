@@ -58,7 +58,7 @@ class ScenarioEngine
 
     /**
      * Replay the log from the start scene, validating every step, and total the tags.
-     * @return array{scores: array<string,int>, path: string[], tag_history: array<int, string[]>, items: array}
+     * @return array{scores: array<string,int>, path: string[], tag_history: array<int, string[]>, items: array, stats: array{choices:int, wins:int, fails:int}}
      */
     public static function evaluate(array $content, array $log): array
     {
@@ -68,6 +68,7 @@ class ScenarioEngine
         $path = [];
         $tagHistory = [];
         $items = [];
+        $stats = ['choices' => 0, 'wins' => 0, 'fails' => 0];
         $logIndex = 0;
 
         for ($step = 0; $step < self::MAX_STEPS; $step++) {
@@ -78,7 +79,7 @@ class ScenarioEngine
                 if ($logIndex !== count($log)) {
                     throw new HttpException(422, 'ข้อมูลการเล่นไม่ถูกต้อง (มีขั้นตอนเกิน)');
                 }
-                return ['scores' => $scores, 'path' => $path, 'tag_history' => $tagHistory, 'items' => $items];
+                return ['scores' => $scores, 'path' => $path, 'tag_history' => $tagHistory, 'items' => $items, 'stats' => $stats];
             }
 
             if (!empty($scene['choices'])) {
@@ -95,6 +96,7 @@ class ScenarioEngine
                     }
                 }
                 $tagHistory[] = $applied;
+                $stats['choices']++;
                 if (!empty($choice['reward']['name'])) {
                     $items[] = $choice['reward'];
                 }
@@ -106,6 +108,7 @@ class ScenarioEngine
                 if (($entry['scene'] ?? null) !== $sceneId || !in_array($outcome, ['success', 'fail'], true)) {
                     throw new HttpException(422, 'ข้อมูลการเล่นไม่ถูกต้อง');
                 }
+                $stats[$outcome === 'fail' ? 'fails' : 'wins']++;
                 $logIndex++;
                 $sceneId = $outcome === 'fail' ? ($scene['fail_next'] ?? $scene['next'] ?? null) : ($scene['next'] ?? null);
             } else {

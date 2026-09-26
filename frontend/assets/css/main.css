@@ -45,6 +45,12 @@
     @apply font-display text-rune-300;
     text-shadow: 0 0 18px rgba(245, 196, 81, 0.45), 0 0 2px rgba(253, 230, 138, 0.8);
   }
+  /* Gold coin glyph */
+  .coin {
+    @apply inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-amber-600;
+    background: radial-gradient(circle at 35% 30%, #fef3c7, #fbbf24 45%, #b45309);
+    box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
+  }
   .divider-rune {
     @apply flex items-center gap-3 text-rune-400/70;
   }

@@ -30,7 +30,10 @@ onMounted(async () => {
         <div class="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
           <div class="h-full rounded-full bg-gradient-to-r from-arcane-500 to-rune-400" :style="{ width: `${(data.completed / Math.max(data.total, 1)) * 100}%` }" />
         </div>
-        <p v-if="data.completed < data.total" class="mt-2 text-xs text-slate-400">เล่นเควสต์ที่เหลือเพื่อให้ผลแม่นยำยิ่งขึ้น</p>
+        <p v-if="data.completed < data.total" class="mt-2 text-xs text-slate-400">
+          เล่นเควสต์ที่เหลือเพื่อให้ผลแม่นยำยิ่งขึ้น · ครบ 2 เควสต์ได้การ์ด <b class="text-purple-300">EPIC</b> · ครบทุกเควสต์ได้การ์ด <b class="text-amber-300">LEGENDARY</b>
+        </p>
+        <p v-else class="mt-2 text-xs text-amber-200">✦ คุณค้นพบตัวตนครบทุกเควสต์แล้ว — ได้รับการ์ดระดับ LEGENDARY!</p>
       </div>
     </ProfileReport>
   </div>

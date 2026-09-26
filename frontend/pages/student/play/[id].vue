@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { avatarDef, COINS_PER_ITEM, levelInfo } from '~/utils/progression'
 import { ENERGY, replayProgress, type CastMember, type CharacterDef, type Expr, type Line, type LogEntry, type Reward, type Scene } from '~/utils/game'
 
 definePageMeta({ layout: false })
@@ -52,7 +53,21 @@ const line = computed(() => {
   if (!l) return { speaker: '', text: '' }
   return typeof l === 'string' ? { speaker: '', text: l } : { ...l, speaker: l.speaker ?? '' }
 })
-const speakerDef = computed(() => characters.value[line.value.speaker])
+// ---- player progression (XP shown live = saved XP + XP earned this run) ----
+const { player, load: loadPlayer } = usePlayer()
+const playerDef = computed(() => avatarDef(player.value?.avatar, 'คุณ'))
+const lv = computed(() => levelInfo((player.value?.xp ?? 0) + energy.value))
+const coins = computed(() => (player.value?.coins ?? 0) + items.value.length * COINS_PER_ITEM)
+watch(() => lv.value.level, (now, before) => {
+  if (before && now > before) {
+    const id = Date.now()
+    floaters.value.push({ id, text: `LEVEL UP! Lv.${now}` })
+    audio.success()
+    setTimeout(() => (floaters.value = floaters.value.filter((f) => f.id !== id)), 1800)
+  }
+})
+
+const speakerDef = computed(() => characters.value[line.value.speaker] ?? (line.value.speaker === 'player' ? playerDef.value : undefined))
 const speakerName = computed(() => speakerDef.value?.name ?? line.value.speaker)
 const speakerColor = computed(() => speakerDef.value?.color ?? '#f5c451')
 
@@ -70,7 +85,7 @@ const expectedSteps = computed(() => {
 // ---- load ------------------------------------------------------------------
 onMounted(async () => {
   try {
-    const res = await api(`/student/quests/${questId}`)
+    const [res] = await Promise.all([api(`/student/quests/${questId}`), loadPlayer()])
     if (res.completed) return navigateTo(`/student/result/${res.result_id}`, { replace: true })
     const content = res.scenario.content
     title.value = res.scenario.title
@@ -148,7 +163,7 @@ function runEffect(effect?: string) {
 function gainEnergy(n: number) {
   energy.value += n
   const id = Date.now() + Math.random()
-  floaters.value.push({ id, text: `+${n}` })
+  floaters.value.push({ id, text: `+${n} XP` })
   setTimeout(() => (floaters.value = floaters.value.filter((f) => f.id !== id)), 1200)
 }
 
@@ -258,6 +273,7 @@ async function finish() {
       api(`/student/quests/${questId}/complete`, { method: 'POST', body: { choices_log: log.value } }),
       new Promise((r) => setTimeout(r, 900)),
     ])
+    useState('lastRewards').value = res.rewards ?? null
     audio.stopBgm()
     await navigateTo(`/student/result/${res.result_id}?reveal=1`, { replace: true })
   } catch (e) {
@@ -354,15 +370,26 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
       <!-- HUD -->
       <div class="absolute inset-x-0 top-0 z-40 flex items-center gap-2 bg-gradient-to-b from-abyss-950/90 to-transparent px-3 pb-5 pt-3">
         <NuxtLink to="/student" class="hud-btn" title="พักการเดินทาง (บันทึกอัตโนมัติ)"><AppIcon name="back" :size="18" /></NuxtLink>
-        <div class="min-w-0 flex-1">
-          <div class="truncate font-display text-xs tracking-wider text-rune-300/90">{{ title }}</div>
-          <div class="mt-1 h-1.5 w-full max-w-[10rem] overflow-hidden rounded-full bg-white/10">
-            <div class="h-full bg-gradient-to-r from-arcane-500 to-rune-400 transition-all duration-700" :style="{ width: `${Math.min(100, (log.length / expectedSteps) * 100)}%` }" />
-          </div>
+        <!-- player: portrait + level + XP -->
+        <div class="relative shrink-0">
+          <GameCharacterPortrait :def="playerDef" expr="happy" class="h-10 w-10 rounded-full border-2 border-rune-400/70 bg-abyss-800 shadow-glow-gold" />
+          <span class="absolute -bottom-1 -right-1 rounded-md bg-rune-400 px-1 font-display text-[10px] font-bold leading-4 text-abyss-950">{{ lv.level }}</span>
         </div>
-        <div class="relative flex items-center gap-1 rounded-full border border-rune-400/40 bg-abyss-950/70 px-2.5 py-1 font-display text-sm text-rune-200">
-          ✦ {{ energy }}
-          <span v-for="f in floaters" :key="f.id" class="floater absolute -bottom-6 right-1 text-sm font-bold text-rune-300">{{ f.text }}</span>
+        <div class="relative min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2 text-[10px] leading-none">
+            <span class="font-display tracking-wider text-sky-300">XP</span>
+            <span class="text-slate-400">{{ lv.into }}/{{ lv.need }}</span>
+          </div>
+          <div class="mt-1 h-1.5 w-full max-w-[9rem] overflow-hidden rounded-full bg-white/10">
+            <div class="h-full bg-gradient-to-r from-sky-400 to-arcane-400 transition-all duration-700" :style="{ width: `${lv.pct}%` }" />
+          </div>
+          <div class="mt-1 h-1 w-full max-w-[9rem] overflow-hidden rounded-full bg-white/5" title="ความคืบหน้าเควสต์">
+            <div class="h-full bg-rune-400/70 transition-all duration-700" :style="{ width: `${Math.min(100, (log.length / expectedSteps) * 100)}%` }" />
+          </div>
+          <span v-for="f in floaters" :key="f.id" class="floater absolute left-8 top-4 whitespace-nowrap font-display text-sm font-bold text-sky-300">{{ f.text }}</span>
+        </div>
+        <div class="flex items-center gap-1 rounded-full border border-amber-400/40 bg-abyss-950/70 px-2 py-1 text-xs font-semibold text-amber-200">
+          <span class="coin" /> {{ coins }}
         </div>
         <button class="hud-btn relative" title="กระเป๋าไอเทม" @click.stop="bagOpen = true">
           <AppIcon name="bag" :size="18" />
@@ -383,8 +410,16 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
       <template v-if="mode === 'dialogue' || mode === 'reply'">
         <div class="absolute inset-0 z-10 cursor-pointer" @click="advance" />
         <div class="absolute inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-6" @click="advance">
-          <div class="dialog-box" :style="line.speaker ? { borderColor: `${speakerColor}88` } : {}">
-            <div v-if="line.speaker" class="nameplate" :style="{ background: speakerColor }">{{ speakerName }}</div>
+          <div class="dialog-box" :class="{ '!pl-[5.75rem] sm:!pl-[7.75rem]': speakerDef }" :style="line.speaker ? { borderColor: `${speakerColor}88` } : {}">
+            <div v-if="speakerDef" :key="line.speaker" class="portrait absolute bottom-3 left-3 w-[4.5rem] sm:w-24">
+              <GameCharacterPortrait
+                :def="speakerDef"
+                :expr="exprs[line.speaker] ?? 'neutral'"
+                class="rounded-xl border-2 bg-abyss-800"
+                :style="{ borderColor: speakerColor, boxShadow: `0 0 18px ${speakerColor}66` }"
+              />
+            </div>
+            <div v-if="line.speaker" class="nameplate" :class="{ '!left-[5.75rem] sm:!left-[7.5rem]': speakerDef }" :style="{ background: speakerColor }">{{ speakerName }}</div>
             <p class="text-[1.05rem] leading-relaxed sm:text-lg" :class="line.speaker ? 'text-slate-50' : 'text-center italic text-rune-100/90'">
               {{ typed }}<span v-if="typing" class="ml-0.5 inline-block h-5 w-0.5 translate-y-1 animate-pulse bg-rune-300" />
             </p>
@@ -467,7 +502,13 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
   @apply absolute -top-4 left-5 rounded-lg px-3 py-1 font-display text-sm font-bold text-abyss-950 shadow-glow-gold;
 }
 .floater {
-  animation: float-up 1.2s ease-out forwards;
+  animation: float-up 1.4s ease-out forwards;
+}
+.portrait {
+  animation: pop-in 0.35s cubic-bezier(.3,.7,.4,1.4);
+}
+@keyframes pop-in {
+  from { transform: scale(.6); opacity: 0; }
 }
 @keyframes float-up {
   from { opacity: 1; transform: translateY(0); }

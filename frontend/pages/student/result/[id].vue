@@ -9,6 +9,10 @@ const result = ref<AssessmentResult | null>(null)
 const profile = ref<{ completed: number; total: number } | null>(null)
 const error = ref('')
 const phase = ref<'charging' | 'revealed'>(route.query.reveal ? 'charging' : 'revealed')
+// Rewards from the just-finished run (level-up info) — falls back to what the result stored.
+const lastRewards = useState<any>('lastRewards')
+const fresh = route.query.reveal ? lastRewards.value : null
+lastRewards.value = null
 
 onMounted(async () => {
   try {
@@ -44,6 +48,13 @@ onMounted(async () => {
       heading="ตัวตนที่เควสต์นี้เผยให้เห็น"
       :subheading="`จากเควสต์ “${result.scenario_title}” · ภาคเรียน ${result.semester}/${result.academic_year}`"
     >
+      <RewardSummary
+        :xp="fresh?.xp ?? result.xp_gained ?? 0"
+        :coins="fresh?.coins ?? result.coins_gained ?? 0"
+        :rarity="result.rarity"
+        :level-before="fresh?.level_before"
+        :level-after="fresh?.level_after"
+      />
       <NuxtLink
         v-if="profile"
         to="/student/profile"

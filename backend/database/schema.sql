@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -117,6 +117,9 @@ CREATE TABLE assessment_results (
     dominant_riasec VARCHAR(10) NULL,
     mindset_type    ENUM('growth','fixed','mixed') NULL,
     archetype_id    INT UNSIGNED NULL,
+    rarity          ENUM('rare','epic','legendary') NOT NULL DEFAULT 'rare',
+    xp_gained       INT NOT NULL DEFAULT 0,
+    coins_gained    INT NOT NULL DEFAULT 0,
     choices_log     LONGTEXT NULL COMMENT 'JSON log ของการตัดสินใจ',
     completed_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_result_term (user_id, scenario_id, semester, academic_year),
@@ -172,4 +175,14 @@ CREATE TABLE auth_tokens (
     expires_at  DATETIME NOT NULL,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_token_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ความก้าวหน้าของผู้เล่น (สะสมข้ามเควสต์) + avatar
+CREATE TABLE player_progress (
+    user_id     INT UNSIGNED PRIMARY KEY,
+    xp          INT NOT NULL DEFAULT 0,
+    coins       INT NOT NULL DEFAULT 0,
+    avatar      TEXT NULL COMMENT 'JSON: gender, hairStyle, hair, skin, eyes, robe',
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_prog_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

@@ -18,3 +18,5 @@ $router->post('/student/quests/{id}/complete', [StudentGameController::class, 'c
 $router->get('/student/results', [StudentGameController::class, 'results'], ['student']);
 $router->get('/student/results/{id}', [StudentGameController::class, 'result'], ['student']);
 $router->get('/student/profile', [StudentGameController::class, 'profile'], ['student']);
+$router->get('/student/player', [StudentGameController::class, 'player'], ['student']);
+$router->put('/student/player/avatar', [StudentGameController::class, 'saveAvatar'], ['student']);

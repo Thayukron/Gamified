@@ -2,7 +2,6 @@
 
 บันทึกการแก้ไขทุกครั้ง (ใหม่สุดอยู่บน)
 
----
 
 ## 2026-09-27 — วาดตัวละครใหม่ให้สมจริงขึ้น
 
@@ -87,6 +86,34 @@
 - E2E (Playwright + Edge, มือถือ 390px): เล่น 4 ตัวเลือก → พัก → หน้าแรกแสดง “เดินทางค้างไว้” → เล่นต่อจนจบ (11 ตัวเลือก) → เปิดการ์ด → เข้าเล่นซ้ำถูก redirect ไปผลลัพธ์ → ประวัติ · บันทึกการ์ดเป็นรูปสำเร็จ · ไม่มี error ในเบราว์เซอร์
 
 ---
+
+## 2026-09-27 — ศึกษาดีไซน์จาก Gemini + XP/เลเวล/เหรียญ, Avatar, Portrait, ระดับการ์ด
+
+### ศึกษาแชท Gemini ของผู้ใช้
+- ดึงเนื้อหาแชทแชร์ (share.gemini.google/XwfEIPFjESHc) + ภาพ 4 ภาพ → สรุปเป็น `docs/design-gemini.md` และเก็บภาพใน `docs/design/`
+- ผู้ใช้ตัดสินใจ: **ชื่อคง ARCANA PROFILE** · **ธีมผสม** (คงแฟนตาซีเป็นหลัก + เพิ่มเควสต์ฉากวิทยาลัย/อาชีพภายหลัง) · **ยังไม่เพิ่ม Computational Thinking** · เพิ่ม XP/เลเวล/เหรียญ, Avatar, ภาพหน้าผู้พูด, ระดับความหายากของการ์ด
+
+### Backend
+- `schema.sql`: ตาราง `player_progress` (xp, coins, avatar JSON) · `assessment_results` เพิ่ม `rarity`, `xp_gained`, `coins_gained`
+- `Services/Progression.php`: XP = ตัวเลือก×10 + มินิเกมชนะ×30 / แพ้×15 + โบนัสจบเควสต์ 100 · เหรียญ = ไอเทม×20 + 50 · เลเวล L→L+1 ใช้ 100+50(L−1) XP
+- ระดับการ์ด (ไม่มีระดับต่ำ ไม่ตัดสินบุคลิก): การ์ดเควสต์ Rare / **Epic เมื่อผ่านมินิเกมครบทุกด่าน** · Core Profile Rare → Epic (2 เควสต์) → **Legendary (ครบทุกเควสต์)**
+- `ScenarioEngine::evaluate` คืน `stats` (choices, wins, fails) · complete คืน `rewards` (xp, coins, rarity, level_before/after) และบวกเข้า `player_progress` ใน transaction
+- API ใหม่: `GET /student/player`, `PUT /student/player/avatar` (กรองค่าให้ปลอดภัย: gender/hairStyle whitelist, สีต้องเป็น #hex)
+
+### Frontend
+- `AvatarCreator.vue` — สร้างตัวละครครั้งแรกที่เข้าหน้าแรก (เพศ, ทรงผม, สีผม/ผิว/ตา/เสื้อคลุม) แก้ได้ภายหลังโดยกดที่ตัวละคร
+- `CharacterSprite.vue` รองรับ `gender: 'm'` (หน้ากว้างขึ้น คิ้วหนา ขนตาบาง แก้มจาง)
+- `CharacterPortrait.vue` — ครอปใบหน้าจาก sprite (mage/owl/golem/ไฟล์ภาพ)
+- HUD ในเกม: avatar + เลเวล + แถบ XP (สด = XP สะสม + XP รอบนี้) + แถบความคืบหน้าเควสต์ + เหรียญ, แจ้ง LEVEL UP ระหว่างเล่น · กล่องข้อความมีภาพหน้าผู้พูด (รองรับ speaker `"player"`)
+- `ArchetypeCard.vue` — ป้าย RARE/EPIC/LEGENDARY + ขอบฟอยล์หมุนสำหรับ Epic/Legendary + avatar เจ้าของการ์ด
+- `RewardSummary.vue` — หน้าผลลัพธ์แสดง +XP, +เหรียญ (นับขึ้น), ระดับการ์ด, LEVEL UP
+- หน้าแรก: ตัวละครผู้เล่น, เลเวล, XP, เหรียญ, ระดับการ์ด Core Profile · `utils/progression.ts`, `composables/usePlayer.ts`
+- แก้ระหว่างทดสอบ: portrait ในกล่องข้อความไหลไปอยู่ในบรรทัด (class `relative` ของ component ทับ `absolute`) → ห่อด้วย div
+
+### ทดสอบ
+- API: รางวัลคำนวณถูก (+240 XP, +110 เหรียญ, Epic, Lv1→2), กรอง avatar ที่ไม่ถูกต้อง, Core rarity
+- E2E bot: สร้าง avatar → เล่นครบ 3 เควสต์ → การ์ด Epic, LEVEL UP 4→5, Core Profile LEGENDARY · ไม่มี error
+
 
 ## 2026-09-26 — ปรับ UI ธีม "Arcana" (ลึกลับ · ตื่นเต้น)
 

@@ -7,6 +7,8 @@ import { MINDSET, RIASEC, VARK, varkLabel, type AssessmentResult } from '~/utils
 const props = defineProps<{ result: AssessmentResult; heading: string; subheading: string }>()
 
 const auth = useAuthStore()
+const { player, load: loadPlayer } = usePlayer()
+onMounted(() => { if (!player.value) loadPlayer().catch(() => {}) })
 const cardEl = ref<HTMLElement>()
 const busy = ref(false)
 const toast = ref('')
@@ -76,7 +78,7 @@ async function share() {
     <div class="flex flex-col items-center gap-5">
       <div class="reveal-card">
         <div ref="cardEl" class="p-2">
-          <ArchetypeCard :result="result" :owner="auth.user?.full_name" />
+          <ArchetypeCard :result="result" :owner="auth.user?.full_name" :avatar="player?.avatar" />
         </div>
       </div>
       <div class="flex animate-fade-up flex-wrap justify-center gap-2" style="animation-delay: 1.2s">

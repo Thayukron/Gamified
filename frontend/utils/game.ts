@@ -11,6 +11,7 @@ export interface CharacterDef {
   skin?: string
   eyes?: string
   hairStyle?: 'long' | 'bob' | 'short'
+  gender?: 'm' | 'f'
   /** hood | hat | glasses | cat | beard | child */
   accessory?: string[]
   /** Optional artwork file(s) replacing the SVG, e.g. "/characters/mira.png" or one per expression. */

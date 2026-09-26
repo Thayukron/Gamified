@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
+use App\Services\Progression;
 use App\Services\ScenarioEngine;
 
 class StudentGameController
@@ -135,26 +136,77 @@ class StudentGameController
         $stmt->execute([$profile['archetype_key']]);
         $archetypeId = $stmt->fetchColumn() ?: null;
 
+        $rewards = Progression::rewards($eval['stats'], count($eval['items']));
+        $rarity = Progression::questRarity($eval['stats']);
+        $before = self::playerProgress($uid);
+
         [$sem, $year] = self::term();
         $cols = ScenarioEngine::tagKeys();
         $sql = 'INSERT INTO assessment_results (user_id, scenario_id, semester, academic_year, '
             . implode(', ', $cols)
-            . ', dominant_vark, dominant_riasec, mindset_type, archetype_id, choices_log) VALUES ('
-            . implode(', ', array_fill(0, count($cols) + 9, '?')) . ')';
+            . ', dominant_vark, dominant_riasec, mindset_type, archetype_id, rarity, xp_gained, coins_gained, choices_log) VALUES ('
+            . implode(', ', array_fill(0, count($cols) + 12, '?')) . ')';
 
         $db->beginTransaction();
         $db->prepare($sql)->execute([
             $uid, $id, $sem, $year,
             ...array_map(fn ($k) => $eval['scores'][$k], $cols),
             $profile['dominant_vark'], $profile['dominant_riasec'], $profile['mindset_type'],
-            $archetypeId, json_encode($log),
+            $archetypeId, $rarity, $rewards['xp'], $rewards['coins'], json_encode($log),
         ]);
         $resultId = (int) $db->lastInsertId();
         $db->prepare("UPDATE game_sessions SET status = 'completed', choices_log = ? WHERE user_id = ? AND scenario_id = ?")
             ->execute([json_encode($log), $uid, $id]);
+        $db->prepare(
+            'INSERT INTO player_progress (user_id, xp, coins) VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE xp = xp + VALUES(xp), coins = coins + VALUES(coins)'
+        )->execute([$uid, $rewards['xp'], $rewards['coins']]);
         $db->commit();
 
-        return ['result_id' => $resultId, 'already' => false];
+        return [
+            'result_id' => $resultId,
+            'already' => false,
+            'rewards' => $rewards + [
+                'rarity' => $rarity,
+                'level_before' => Progression::level($before['xp'])['level'],
+                'level_after' => Progression::level($before['xp'] + $rewards['xp'])['level'],
+            ],
+        ];
+    }
+
+    /** Current XP/coins/avatar row for a student (defaults when never played). */
+    private static function playerProgress(int $uid): array
+    {
+        $stmt = Database::get()->prepare('SELECT xp, coins, avatar FROM player_progress WHERE user_id = ?');
+        $stmt->execute([$uid]);
+        $row = $stmt->fetch() ?: ['xp' => 0, 'coins' => 0, 'avatar' => null];
+        return ['xp' => (int) $row['xp'], 'coins' => (int) $row['coins'], 'avatar' => $row['avatar'] ? json_decode($row['avatar'], true) : null];
+    }
+
+    /** GET /student/player — XP, level, coins and avatar. */
+    public static function player(Request $req): array
+    {
+        $p = self::playerProgress($req->user['id']);
+        return ['player' => $p + Progression::level($p['xp'])];
+    }
+
+    /** PUT /student/player/avatar — save the student's character look. */
+    public static function saveAvatar(Request $req): array
+    {
+        $in = $req->body();
+        $color = fn ($v) => is_string($v) && preg_match('/^#[0-9a-fA-F]{6}$/', $v) ? $v : null;
+        $avatar = [
+            'gender' => in_array($in['gender'] ?? '', ['m', 'f'], true) ? $in['gender'] : 'f',
+            'hairStyle' => in_array($in['hairStyle'] ?? '', ['long', 'bob', 'short'], true) ? $in['hairStyle'] : 'short',
+            'hair' => $color($in['hair'] ?? null) ?? '#1f2937',
+            'skin' => $color($in['skin'] ?? null) ?? '#f1c7a5',
+            'eyes' => $color($in['eyes'] ?? null) ?? '#7c3aed',
+            'robe' => $color($in['robe'] ?? null) ?? '#4c1d95',
+        ];
+        Database::get()->prepare(
+            'INSERT INTO player_progress (user_id, avatar) VALUES (?, ?) ON DUPLICATE KEY UPDATE avatar = VALUES(avatar)'
+        )->execute([$req->user['id'], json_encode($avatar)]);
+        return ['avatar' => $avatar];
     }
 
     private static function resultQuery(): string
@@ -249,6 +301,7 @@ class StudentGameController
         $a->execute([$p['archetype_key']]);
 
         $profile = self::formatResult($scores + ($a->fetch() ?: []) + [
+            'rarity' => Progression::coreRarity(count($rows), $total),
             'id' => 0,
             'choices_log' => null,
             'scenario_content' => null,

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAuthStore } from '~/stores/auth'
 import type { AssessmentResult } from '~/utils/profile'
+import { avatarDef, RARITY, type Rarity } from '~/utils/progression'
 
 interface Quest {
   id: number
@@ -21,10 +22,13 @@ const quests = ref<Quest[]>([])
 const core = ref<{ profile: AssessmentResult | null; completed: number; total: number; semester: number; academic_year: number } | null>(null)
 const selectedId = ref<number | null>(null)
 const loading = ref(true)
+const { player, level, load: loadPlayer } = usePlayer()
+const creator = ref<'first' | 'edit' | null>(null)
 
 onMounted(async () => {
   try {
-    const [q, p] = await Promise.all([api('/student/quests'), api('/student/profile')])
+    const [q, p, pl] = await Promise.all([api('/student/quests'), api('/student/profile'), loadPlayer()])
+    if (!pl?.avatar) creator.value = 'first'
     quests.value = q.quests
     core.value = p
     selectedId.value = (quests.value.find((x) => x.status === 'in_progress') ?? quests.value.find((x) => x.status === 'new') ?? quests.value[0])?.id ?? null
@@ -46,10 +50,25 @@ const fmtTime = (s: string) => new Date(s.replace(' ', 'T')).toLocaleString('th-
 
 <template>
   <div class="space-y-6">
+    <AvatarCreator
+      v-if="creator"
+      :initial="player?.avatar"
+      :name="auth.user?.full_name"
+      :first-time="creator === 'first'"
+      @saved="creator = null"
+      @close="creator = null"
+    />
     <!-- hero -->
     <section class="card animate-fade-up overflow-hidden border-rune-400/30 !p-0">
       <div class="absolute -right-16 -top-16 w-60 opacity-40"><MagicCircle /></div>
       <div class="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-7">
+        <button class="group relative mx-auto -mb-2 h-44 w-32 shrink-0 sm:mx-0" title="ปรับแต่งตัวละคร" @click="creator = 'edit'">
+          <div class="absolute inset-x-2 bottom-1 h-8 rounded-full bg-rune-400/25 blur-lg" />
+          <GameCharacterSprite :def="avatarDef(player?.avatar, auth.user?.full_name)" expr="happy" class="relative transition group-hover:scale-105" />
+          <span class="absolute bottom-2 right-0 flex h-7 w-7 items-center justify-center rounded-full border border-rune-400/60 bg-abyss-900 text-rune-300">
+            <AppIcon name="quill" :size="14" />
+          </span>
+        </button>
         <div class="flex-1">
           <p class="font-display text-xs tracking-[0.4em] text-arcane-300/80">WELCOME, TRAVELER</p>
           <h1 class="title-glow mt-1 text-2xl sm:text-3xl">{{ auth.user?.full_name }}</h1>
@@ -57,7 +76,22 @@ const fmtTime = (s: string) => new Date(s.replace(' ', 'T')).toLocaleString('th-
             รหัส <span class="font-mono text-rune-300">{{ auth.user?.student_code }}</span>
             <template v-if="core"> · ภาคเรียน {{ core.semester }}/{{ core.academic_year }}</template>
           </p>
-          <div v-if="core" class="mt-4 max-w-xs">
+          <div class="mt-3 flex max-w-sm items-center gap-3">
+            <span class="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl border border-rune-400/60 bg-abyss-950 shadow-glow-gold">
+              <span class="text-[9px] leading-none text-rune-300/80">LV</span>
+              <span class="font-display text-lg font-bold leading-none text-rune-200">{{ level.level }}</span>
+            </span>
+            <div class="flex-1">
+              <div class="flex justify-between text-xs text-slate-400">
+                <span>XP {{ level.into }} / {{ level.need }}</span>
+                <span class="flex items-center gap-1 text-amber-300"><span class="coin" /> {{ player?.coins ?? 0 }}</span>
+              </div>
+              <div class="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
+                <div class="h-full rounded-full bg-gradient-to-r from-sky-400 to-arcane-400 transition-all duration-1000" :style="{ width: `${level.pct}%` }" />
+              </div>
+            </div>
+          </div>
+          <div v-if="core" class="mt-3 max-w-sm">
             <div class="flex justify-between text-xs text-slate-400">
               <span>การค้นพบตัวตน</span><span class="text-rune-300">{{ core.completed }}/{{ core.total }} เควสต์</span>
             </div>
@@ -77,7 +111,9 @@ const fmtTime = (s: string) => new Date(s.replace(' ', 'T')).toLocaleString('th-
             <AppIcon :name="core.profile.icon" :size="28" />
           </div>
           <div>
-            <div class="text-[11px] uppercase tracking-widest text-slate-400">Core Profile</div>
+            <div class="text-[11px] uppercase tracking-widest text-slate-400">
+              Core Profile · <span :style="{ color: RARITY[(core.profile.rarity ?? 'rare') as Rarity].color }">{{ RARITY[(core.profile.rarity ?? 'rare') as Rarity].label }}</span>
+            </div>
             <div class="font-display font-bold text-rune-200">{{ core.profile.archetype_name }}</div>
             <div class="text-sm" :style="{ color: core.profile.color }">{{ core.profile.archetype_title }}</div>
           </div>
