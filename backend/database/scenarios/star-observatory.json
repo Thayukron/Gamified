@@ -1,0 +1,209 @@
+{
+  "start": "o_intro",
+  "meta": { "icon": "star", "color": "#38bdf8", "subtitle": "บทที่ 3 · หอคอยแห่งดวงดาว" },
+  "characters": {
+    "orin": { "name": "อาจารย์โอริน", "kind": "mage", "robe": "#1e3a8a", "hair": "#e5e7eb", "eyes": "#38bdf8", "skin": "#f1c7a5", "accessory": ["hat", "glasses"], "color": "#93c5fd" },
+    "golem": { "name": "โกเลมดวงดาว", "kind": "golem", "color": "#67e8f9" },
+    "lumin": { "name": "ลูมิน", "kind": "owl", "color": "#f5c451" }
+  },
+  "scenes": {
+    "o_intro": {
+      "background": "sky", "bgm": "mystery", "effect": "fade",
+      "dialogue": [
+        "ดวงดาวบนฟ้า... กำลังดับไปทีละดวง",
+        { "text": "บนยอดเขา หอดูดาวโบราณส่องแสงวูบวาบ", "effect": "flash" }
+      ],
+      "next": "o_hall"
+    },
+    "o_hall": {
+      "background": "observatory", "effect": "fade",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "sad" }],
+      "dialogue": [
+        { "speaker": "orin", "text": "อ้า! ผู้ช่วยมาแล้ว ข้าคืออาจารย์โอริน", "expr": "happy", "anim": "bounce" },
+        { "speaker": "orin", "text": "ดาวกำลังดับ! เลือกงานที่เจ้าถนัดก่อนเลย", "expr": "sad" }
+      ],
+      "layout": "hotspots", "prompt": "แตะสิ่งที่อยากช่วย",
+      "choices": [
+        { "text": "โกเลมที่บาดเจ็บ", "icon": "heart", "x": 18, "y": 34, "tags": { "riasec_s": 1 },
+          "reply": [{ "speaker": "orin", "text": "ใจดีจริง ๆ มันคงรู้สึกดีขึ้นแล้ว", "expr": "happy" }], "next": "lesson" },
+        { "text": "กล้องดูดาวยักษ์", "icon": "telescope", "x": 50, "y": 24, "tags": { "riasec_i": 1 },
+          "reply": [{ "speaker": "orin", "text": "สายตานักวิจัย! เจ้าเห็นอะไรบ้าง?", "expr": "surprised" }], "next": "lesson" },
+        { "text": "พู่กันวาดกลุ่มดาว", "icon": "palette", "x": 82, "y": 34, "tags": { "riasec_a": 1 },
+          "reply": [{ "speaker": "orin", "text": "กลุ่มดาวที่เจ้าวาดมีชีวิตเลย!", "expr": "happy", "anim": "bounce" }], "next": "lesson" },
+        { "text": "กล่องเครื่องมือช่าง", "icon": "hammer", "x": 18, "y": 60, "tags": { "riasec_r": 1 },
+          "reply": [{ "speaker": "orin", "text": "มือไวจริง! ฐานกล้องแน่นหนาแล้ว", "expr": "happy" }], "next": "lesson" },
+        { "text": "เหล่าศิษย์รอคำสั่ง", "icon": "flag", "x": 50, "y": 62, "tags": { "riasec_e": 1 },
+          "reply": [{ "speaker": "orin", "text": "ศิษย์ทุกคนฟังเจ้า! มีแววผู้นำนะ", "expr": "surprised" }], "next": "lesson" },
+        { "text": "คลังบันทึกดวงดาว", "icon": "scroll", "x": 82, "y": 60, "tags": { "riasec_c": 1 },
+          "reply": [{ "speaker": "orin", "text": "จัดบันทึกร้อยปีเสร็จในคืนเดียว!", "expr": "surprised", "anim": "bounce" }], "next": "lesson" }
+      ]
+    },
+    "lesson": {
+      "background": "observatory",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "neutral" }],
+      "dialogue": [
+        { "speaker": "orin", "text": "ข้าจะสอนวิชาอ่านดาวให้", "expr": "happy" },
+        { "speaker": "orin", "text": "เจ้าชอบเรียนแบบไหน?", "expr": "neutral" }
+      ],
+      "layout": "cards", "prompt": "เลือกวิธีเรียนดาราศาสตร์",
+      "choices": [
+        { "text": "ดูแผนที่ดาว", "desc": "เห็นตำแหน่งดาวเป็นภาพ", "icon": "map", "tags": { "vark_v": 1 }, "reward": { "name": "แผนที่ท้องฟ้า", "icon": "map" }, "next": "golem_wake" },
+        { "text": "ฟังตำนานดวงดาว", "desc": "เรื่องเล่าจากอาจารย์", "icon": "ear", "tags": { "vark_a": 1 }, "reward": { "name": "ตำนานดาวเหนือ", "icon": "ear" }, "next": "golem_wake" },
+        { "text": "อ่านตำราดาราศาสตร์", "desc": "ตำราเล่มหนาสุดคลาสสิก", "icon": "book", "tags": { "vark_r": 1 }, "reward": { "name": "ตำราแห่งดวงดาว", "icon": "book" }, "next": "golem_wake" },
+        { "text": "หมุนแผ่นจำลองดาว", "desc": "ลองหมุนเองกับมือ", "icon": "hand", "tags": { "vark_k": 1 }, "reward": { "name": "แผ่นหมุนดวงดาว", "icon": "compass" }, "next": "golem_wake" }
+      ]
+    },
+    "golem_wake": {
+      "background": "observatory", "effect": "shake",
+      "cast": [{ "id": "orin", "pos": "left", "expr": "surprised" }, { "id": "golem", "pos": "right", "expr": "surprised" }],
+      "dialogue": [
+        { "text": "ครืน!! โกเลมหินยักษ์ลืมตาขึ้น", "effect": "shake" },
+        { "speaker": "golem", "text": "กร... อ๊ากก... ?", "expr": "surprised", "anim": "shake" },
+        { "speaker": "orin", "text": "มันพูดภาษาโบราณ! จะคุยกับมันยังไง?", "expr": "surprised" }
+      ],
+      "layout": "cards", "prompt": "สื่อสารกับโกเลม",
+      "choices": [
+        { "text": "วาดรูปให้ดู", "desc": "ภาพเป็นภาษาสากล", "icon": "eye", "tags": { "vark_v": 1 },
+          "reply": [{ "speaker": "golem", "text": "กร~ เข้าใจ! เพื่อน!", "expr": "happy", "anim": "bounce" }], "next": "constellation" },
+        { "text": "ฟังจังหวะเสียงของมัน", "desc": "จับทำนองของภาษา", "icon": "ear", "tags": { "vark_a": 1 },
+          "reply": [{ "speaker": "golem", "text": "กร กร~ เจ้า... ฟัง... เก่ง!", "expr": "happy" }], "next": "constellation" },
+        { "text": "เปิดพจนานุกรมโบราณ", "desc": "แปลทีละคำ", "icon": "book", "tags": { "vark_r": 1 },
+          "reply": [{ "speaker": "golem", "text": "คำ... ถูก! สวัสดี!", "expr": "happy" }], "next": "constellation" },
+        { "text": "ทำท่าทางให้เลียนแบบ", "desc": "สื่อสารด้วยร่างกาย", "icon": "hand", "tags": { "vark_k": 1 },
+          "reply": [{ "speaker": "golem", "text": "กร! (โกเลมโบกมือตาม)", "expr": "happy", "anim": "bounce" }], "next": "constellation" }
+      ]
+    },
+    "constellation": {
+      "background": "sky",
+      "cast": [{ "id": "golem", "pos": "center", "expr": "sad" }],
+      "dialogue": [
+        { "speaker": "golem", "text": "ดาว... หาย... ช่วย... เรียง...", "expr": "sad" },
+        { "speaker": "orin", "text": "จำลำดับดาวที่กะพริบ แล้วแตะตามให้ถูก!" }
+      ],
+      "minigame": { "type": "sequence", "length": 5, "speed": 500, "title": "เรียงกลุ่มดาว" },
+      "next": "const_win", "fail_next": "const_fail"
+    },
+    "const_win": {
+      "background": "sky",
+      "cast": [{ "id": "orin", "pos": "left", "expr": "happy" }, { "id": "golem", "pos": "right", "expr": "happy" }],
+      "dialogue": [
+        { "speaker": "orin", "text": "กลุ่มดาวกลับมาแล้ว! ข้าพยายามมาร้อยปี!", "expr": "happy", "anim": "bounce" },
+        { "speaker": "orin", "text": "เจ้าคิดว่าเพราะอะไรถึงทำได้?", "expr": "neutral" }
+      ],
+      "choices": [
+        { "text": "เพราะตั้งใจและลองหลายวิธี", "icon": "star", "tags": { "mindset_growth": 2 }, "next": "storm" },
+        { "text": "จังหวะดีพอดี", "icon": "sparkle", "next": "storm" },
+        { "text": "ข้ามีพรสวรรค์ด้านนี้", "icon": "crown", "tags": { "mindset_fixed": 2 }, "next": "storm" }
+      ]
+    },
+    "const_fail": {
+      "background": "sky",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "sad" }],
+      "dialogue": [
+        { "text": "ดาวดับวูบ...", "effect": "shake" },
+        { "speaker": "orin", "text": "ไม่เป็นไร ข้าเองก็พลาดมาแล้วร้อยครั้ง", "expr": "sad" }
+      ],
+      "choices": [
+        { "text": "ขอลองอีกรอบ!", "icon": "bolt", "tags": { "mindset_growth": 2 },
+          "reply": [{ "speaker": "orin", "text": "ไฟในตาเจ้าลุกโชนเลย! ไปกัน!", "expr": "determined" }], "next": "const_retry" },
+        { "text": "สอนข้าหน่อยว่าต้องสังเกตอะไร", "icon": "ear", "tags": { "mindset_growth": 1 }, "next": "const_hint" },
+        { "text": "ข้าคงไม่เหมาะกับงานนี้", "icon": "back", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "speaker": "orin", "text": "อย่าเพิ่งตัดสินตัวเองเร็วนักนะ", "expr": "neutral" }], "next": "storm" }
+      ]
+    },
+    "const_hint": {
+      "background": "sky",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "happy" }],
+      "dialogue": [{ "speaker": "orin", "text": "ดาวแต่ละดวงมีเสียงประจำตัว จำเป็นทำนองดู", "expr": "happy" }],
+      "next": "const_retry"
+    },
+    "const_retry": {
+      "background": "sky",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "determined" }],
+      "dialogue": [{ "speaker": "orin", "text": "รอบนี้ดาวน้อยลง สู้เขา!", "expr": "determined" }],
+      "minigame": { "type": "sequence", "length": 3, "speed": 650, "title": "เรียงกลุ่มดาว (รอบแก้ตัว)" },
+      "next": "storm", "fail_next": "storm"
+    },
+    "storm": {
+      "background": "sky", "bgm": "tension", "effect": "shake",
+      "cast": [{ "id": "orin", "pos": "left", "expr": "surprised" }, { "id": "golem", "pos": "right", "expr": "surprised" }],
+      "dialogue": [
+        { "text": "ฝนดาวตกพุ่งตรงมาที่หอดูดาว!", "effect": "shake" },
+        { "speaker": "orin", "text": "ไม่มีเวลาแล้ว! เจ้าจะทำอะไร!?", "expr": "surprised", "anim": "shake" }
+      ],
+      "timer": 8, "timeout_choice": 3,
+      "choices": [
+        { "text": "สร้างเกราะป้องกันด้วยมือ", "icon": "shield", "tags": { "riasec_r": 1 },
+          "reply": [{ "text": "เกราะแสงกางออก ดาวตกกระเด็นออกไป!", "effect": "flash" }], "next": "repair" },
+        { "text": "สั่งทุกคนหลบเข้าห้องใต้ดิน", "icon": "flag", "tags": { "riasec_e": 1 },
+          "reply": [{ "speaker": "orin", "text": "ทุกคนปลอดภัย! สั่งการได้เฉียบขาด", "expr": "happy" }], "next": "repair" },
+        { "text": "พาโกเลมที่บาดเจ็บไปหลบ", "icon": "heart", "tags": { "riasec_s": 1 },
+          "reply": [{ "speaker": "golem", "text": "กร... ขอบคุณ... เพื่อน", "expr": "happy" }], "next": "repair" },
+        { "text": "คำนวณวิถีหาจุดปลอดภัย", "icon": "telescope", "tags": { "riasec_i": 1 },
+          "reply": [{ "speaker": "orin", "text": "แม่นยำ! ไม่มีดาวตกลูกไหนโดนเลย", "expr": "surprised" }], "next": "repair" }
+      ]
+    },
+    "repair": {
+      "background": "observatory", "bgm": "mystery",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "sad" }],
+      "dialogue": [
+        { "speaker": "orin", "text": "พายุผ่านไป แต่กล้องยักษ์เสียหาย", "expr": "sad" },
+        { "speaker": "orin", "text": "เจ้าจะเริ่มซ่อมจากตรงไหน?", "expr": "neutral" }
+      ],
+      "layout": "cards", "prompt": "เลือกวิธีซ่อมกล้อง",
+      "choices": [
+        { "text": "หาสาเหตุที่เลนส์เพี้ยน", "desc": "วิเคราะห์ต้นตอ", "icon": "telescope", "tags": { "riasec_i": 1 }, "reward": { "name": "เลนส์ผลึกดาว", "icon": "gem" }, "next": "teach" },
+        { "text": "ปรับแสงให้ดาวสวยขึ้น", "desc": "ท้องฟ้าต้องงดงาม", "icon": "palette", "tags": { "riasec_a": 1 }, "reward": { "name": "ฟิลเตอร์แสงรุ้ง", "icon": "palette" }, "next": "teach" },
+        { "text": "ทำเช็กลิสต์ตรวจทีละชิ้น", "desc": "ไม่พลาดสักจุด", "icon": "scroll", "tags": { "riasec_c": 1 }, "reward": { "name": "บันทึกช่างซ่อม", "icon": "scroll" }, "next": "teach" }
+      ]
+    },
+    "teach": {
+      "background": "observatory",
+      "cast": [{ "id": "golem", "pos": "center", "expr": "happy" }],
+      "dialogue": [
+        { "speaker": "golem", "text": "กร~ อยาก... รู้จัก... ดาว!", "expr": "happy", "anim": "bounce" },
+        "โกเลมอยากเรียนชื่อดวงดาว"
+      ],
+      "layout": "cards", "prompt": "สอนโกเลมรู้จักดวงดาว",
+      "choices": [
+        { "text": "วาดแผนที่ดาว", "desc": "ให้เห็นเป็นภาพ", "icon": "map", "tags": { "vark_v": 1 }, "next": "orin_story" },
+        { "text": "ร้องเพลงชื่อดาว", "desc": "จำเป็นทำนอง", "icon": "ear", "tags": { "vark_a": 1 }, "next": "orin_story" },
+        { "text": "เขียนรายชื่อดาว", "desc": "ให้เก็บไว้อ่าน", "icon": "quill", "tags": { "vark_r": 1 }, "next": "orin_story" },
+        { "text": "จับมือชี้ดาวทีละดวง", "desc": "เรียนผ่านการทำ", "icon": "hand", "tags": { "vark_k": 1 }, "next": "orin_story" }
+      ]
+    },
+    "orin_story": {
+      "background": "observatory",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "neutral" }],
+      "dialogue": [
+        { "speaker": "orin", "text": "ข้าพยายามจุดดาวมาร้อยปี ล้มเหลวทุกครั้ง", "expr": "sad" },
+        { "speaker": "orin", "text": "เจ้าคิดยังไงกับความล้มเหลวพวกนั้น?", "expr": "neutral" }
+      ],
+      "choices": [
+        { "text": "ทุกครั้งพาเข้าใกล้ความสำเร็จ", "icon": "star", "tags": { "mindset_growth": 2 },
+          "reply": [{ "speaker": "orin", "text": "ถูกต้อง! และคืนนี้ก็คือคืนนั้น", "expr": "happy", "anim": "bounce" }], "next": "relight" },
+        { "text": "น่าทึ่ง อยากอดทนได้แบบนั้นบ้าง", "icon": "heart", "tags": { "mindset_growth": 1 },
+          "reply": [{ "speaker": "orin", "text": "เจ้าทำได้แน่ ข้าเชื่อ", "expr": "happy" }], "next": "relight" },
+        { "text": "ถ้าเป็นข้าคงเลิกไปนานแล้ว", "icon": "back", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "speaker": "orin", "text": "ฮะ ฮะ บางทีคืนนี้เจ้าอาจเปลี่ยนใจ", "expr": "happy" }], "next": "relight" }
+      ]
+    },
+    "relight": {
+      "background": "sky", "bgm": "wonder",
+      "cast": [{ "id": "orin", "pos": "center", "expr": "determined" }],
+      "dialogue": [{ "speaker": "orin", "text": "ถึงเวลาแล้ว! แตะดาวให้สว่างอีกครั้ง!", "expr": "determined", "anim": "bounce" }],
+      "minigame": { "type": "orbs", "seconds": 12, "goal": 10, "title": "จุดประกายดวงดาว", "color": "#7dd3fc" },
+      "next": "o_end", "fail_next": "o_end"
+    },
+    "o_end": {
+      "background": "sky", "effect": "flash",
+      "cast": [{ "id": "orin", "pos": "left", "expr": "happy" }, { "id": "lumin", "pos": "center", "expr": "happy" }, { "id": "golem", "pos": "right", "expr": "happy" }],
+      "dialogue": [
+        { "text": "ท้องฟ้าสว่างไสวด้วยดวงดาวนับล้าน", "effect": "flash" },
+        { "speaker": "lumin", "text": "ฮู้! เจ้าทำได้อีกแล้ว!", "expr": "happy", "anim": "bounce" },
+        { "speaker": "orin", "text": "ดวงดาวจะจดจำชื่อเจ้าไว้ตลอดไป", "expr": "happy" }
+      ],
+      "end": true
+    }
+  }
+}

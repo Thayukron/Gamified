@@ -1,208 +1,231 @@
 {
   "start": "intro",
+  "meta": { "icon": "book", "color": "#a78bfa", "subtitle": "บทที่ 1 · หอสมุดเวทมนตร์" },
+  "characters": {
+    "lumin": { "name": "ลูมิน", "kind": "owl", "color": "#f5c451" },
+    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd" },
+    "kael": { "name": "เคล", "kind": "mage", "robe": "#991b1b", "hair": "#1f2937", "eyes": "#ef4444", "skin": "#f1c7a5", "accessory": ["hood"], "color": "#fca5a5" }
+  },
   "scenes": {
     "intro": {
-      "background": "night",
-      "bgm": "mystery",
-      "effect": "fade",
+      "background": "night", "bgm": "mystery", "effect": "fade",
       "dialogue": [
-        "คืนนั้น... ลมเย็นผิดปกติพัดผ่านหน้าต่างห้องของคุณ",
-        "จดหมายสีดำขลิบทองถูกสอดเข้ามาใต้ประตู ทั้งที่ไม่มีเสียงฝีเท้าใครเลย",
-        "ตราประทับรูปดวงตาเรืองแสงวูบหนึ่ง... ก่อนตัวอักษรจะค่อย ๆ ปรากฏขึ้นเอง",
-        { "speaker": "จดหมายลึกลับ", "text": "“ผู้ถูกเลือก... หอสมุดอาร์คานารอเจ้าอยู่ ณ เที่ยงคืนนี้”" }
+        "เที่ยงคืน... จดหมายเรืองแสงลอยเข้ามาทางหน้าต่าง",
+        { "text": "“ผู้ถูกเลือก จงมาที่หอสมุดอาร์คานา”", "effect": "flash" }
       ],
       "next": "gate"
     },
     "gate": {
-      "background": "gate",
-      "effect": "flash",
+      "background": "gate", "effect": "flash",
+      "cast": [{ "id": "lumin", "pos": "center", "expr": "surprised" }],
       "dialogue": [
-        "เมื่อเข็มนาฬิกาชี้เที่ยงคืน ประตูหินโบราณผุดขึ้นกลางความมืด",
-        { "speaker": "ลูมิน", "text": "ยินดีต้อนรับ ผู้เดินทาง... ข้าคือลูมิน ผู้เฝ้าประตูแห่งอาร์คานา" },
-        { "speaker": "ลูมิน", "text": "ประตูนี้เปิดให้เฉพาะผู้ที่กล้าค้นหาตัวตน และจงจำไว้ ที่นี่ไม่มีคำตอบใดผิด" },
-        { "speaker": "ลูมิน", "text": "หอสมุดนี้กว้างใหญ่ราวเขาวงกต เจ้าอยากรู้เส้นทางด้วยวิธีใด?" }
+        { "speaker": "lumin", "text": "ฮู้ว! ในที่สุดเจ้าก็มา!", "expr": "surprised", "anim": "bounce" },
+        { "speaker": "lumin", "text": "ข้าคือลูมิน นกฮูกผู้เฝ้าประตู", "expr": "happy" },
+        { "speaker": "lumin", "text": "เลือกของวิเศษติดตัวไปหนึ่งชิ้นสิ!", "expr": "neutral" }
       ],
+      "layout": "cards", "prompt": "เลือกของวิเศษ 1 ชิ้น",
       "choices": [
-        { "text": "ขอดูแผนที่หอสมุดที่วาดเป็นภาพ", "tags": { "vark_v": 1 }, "next": "hall" },
-        { "text": "ให้ลูมินเล่าเส้นทางให้ฟัง", "tags": { "vark_a": 1 }, "next": "hall" },
-        { "text": "ขอคู่มือที่เขียนอธิบายทางไว้อย่างละเอียด", "tags": { "vark_r": 1 }, "next": "hall" },
-        { "text": "เดินสำรวจเองเลย แล้วจำจากสิ่งที่เจอ", "tags": { "vark_k": 1 }, "next": "hall" }
+        { "text": "แผนที่เรืองแสง", "desc": "เห็นทุกเส้นทางเป็นภาพ", "icon": "map", "tags": { "vark_v": 1 }, "reward": { "name": "แผนที่เรืองแสง", "icon": "map" },
+          "reply": [{ "speaker": "lumin", "text": "ตาไวดีนี่! ภาพเดียวแทนคำพันคำ", "expr": "happy" }], "next": "hall" },
+        { "text": "เปลือกหอยกระซิบ", "desc": "กระซิบบอกทางข้างหู", "icon": "ear", "tags": { "vark_a": 1 }, "reward": { "name": "เปลือกหอยกระซิบ", "icon": "ear" },
+          "reply": [{ "speaker": "lumin", "text": "ฮู้! หูไวแบบนกฮูกเลย", "expr": "happy", "anim": "bounce" }], "next": "hall" },
+        { "text": "คัมภีร์นักเดินทาง", "desc": "จดทุกเส้นทางเป็นตัวอักษร", "icon": "book", "tags": { "vark_r": 1 }, "reward": { "name": "คัมภีร์นักเดินทาง", "icon": "book" },
+          "reply": [{ "speaker": "lumin", "text": "นักอ่านตัวยง! เหมือนข้าเลย", "expr": "happy" }], "next": "hall" },
+        { "text": "ถุงมือนักสำรวจ", "desc": "สัมผัสแล้วจำทางได้เอง", "icon": "hand", "tags": { "vark_k": 1 }, "reward": { "name": "ถุงมือนักสำรวจ", "icon": "hand" },
+          "reply": [{ "speaker": "lumin", "text": "ลุยเลย! ข้าชอบคนลงมือทำ", "expr": "happy", "anim": "bounce" }], "next": "hall" }
       ]
     },
     "hall": {
-      "background": "hall",
-      "effect": "fade",
+      "background": "hall", "effect": "fade",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "surprised" }],
       "dialogue": [
-        "ประตูบานยักษ์เปิดออกพร้อมเสียงดังกึกก้อง ฝุ่นแสงสีทองลอยฟุ้งไปทั่ว",
-        { "speaker": "ลูมิน", "text": "บททดสอบแรก: โถงแห่งสามทางแยก แต่ละทางต้องการพลังที่ต่างกัน" },
-        { "speaker": "ลูมิน", "text": "ฟังเสียงหัวใจของเจ้า... แล้วเลือกทางที่ดึงดูดเจ้าที่สุด" }
+        { "speaker": "mira", "text": "ช่วยด้วย! ประตูล็อกหมดเลย!", "expr": "surprised", "anim": "shake" },
+        { "speaker": "mira", "text": "ข้ามิร่า เด็กฝึกเวท... ช่วยไขสักบานนะ", "expr": "sad" }
       ],
+      "layout": "hotspots", "prompt": "แตะประตูที่อยากไข",
       "choices": [
-        { "text": "ทางที่มีเครื่องจักรโบราณพังอยู่ รอให้ใครสักคนซ่อม", "tags": { "riasec_r": 1 }, "next": "hall_r" },
-        { "text": "ทางที่เต็มไปด้วยปริศนาตัวเลขและสัญลักษณ์ลึกลับ", "tags": { "riasec_i": 1 }, "next": "hall_i" },
-        { "text": "ทางที่ผนังว่างเปล่า รอให้ใครสักคนวาดประตูขึ้นมาเอง", "tags": { "riasec_a": 1 }, "next": "hall_a" }
+        { "text": "ประตูเฟืองกลไก", "icon": "hammer", "x": 20, "y": 42, "tags": { "riasec_r": 1 },
+          "reply": [{ "speaker": "mira", "text": "ว้าว! ซ่อมเฟืองคล่องมือสุด ๆ", "expr": "happy", "anim": "bounce" }], "next": "puzzle" },
+        { "text": "ประตูปริศนารูน", "icon": "eye", "x": 50, "y": 30, "tags": { "riasec_i": 1 },
+          "reply": [{ "speaker": "mira", "text": "ถอดรหัสได้ยังไงน่ะ! อัจฉริยะ!", "expr": "surprised" }], "next": "puzzle" },
+        { "text": "ผนังว่างเปล่า", "icon": "palette", "x": 80, "y": 42, "tags": { "riasec_a": 1 },
+          "reply": [{ "speaker": "mira", "text": "เจ้าวาดประตูขึ้นมาใหม่เลยเหรอ!?", "expr": "surprised", "anim": "bounce" }], "next": "puzzle" }
       ]
-    },
-    "hall_r": {
-      "background": "corridor",
-      "dialogue": [
-        "คุณพับแขนเสื้อ หยิบเฟืองทองเหลืองที่หลุดขึ้นมาใส่คืนทีละชิ้น",
-        "กริ๊ก... เครื่องจักรกลับมาหมุนอีกครั้ง และชี้ทางไปข้างหน้า"
-      ],
-      "next": "puzzle"
-    },
-    "hall_i": {
-      "background": "corridor",
-      "dialogue": [
-        "คุณสังเกตรูปแบบของสัญลักษณ์บนผนัง... มันซ้ำกันทุกเจ็ดตัว!",
-        "เมื่อคุณกดตามลำดับที่ถูกต้อง อักษรทั้งหมดก็เรืองแสงเป็นลูกศรนำทาง"
-      ],
-      "next": "puzzle"
-    },
-    "hall_a": {
-      "background": "corridor",
-      "dialogue": [
-        "คุณใช้ปลายนิ้ววาดลวดลายลงบนผนัง เส้นแสงไหลตามจินตนาการของคุณ",
-        "ภาพวาดกลายเป็นประตูจริง ๆ... และมันเปิดออกอย่างนุ่มนวล"
-      ],
-      "next": "puzzle"
     },
     "puzzle": {
       "background": "library",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "neutral" }],
       "dialogue": [
-        "ทางทั้งสามมาบรรจบกันที่ห้องกลไกขนาดใหญ่",
-        { "text": "ทันใดนั้น พื้นสั่นสะเทือนอย่างรุนแรง! ประตูทุกบานล็อกตัวเอง", "effect": "shake" },
-        { "speaker": "ลูมิน", "text": "กลไกนี้ต้องไขด้วยการลองผิดลองถูก... เจ้าลองครั้งแรก แต่มันไม่ขยับเลย" },
-        { "speaker": "ลูมิน", "text": "เจ้าจะทำอย่างไรต่อ?" }
+        { "text": "ครืน...! พื้นสั่นสะเทือน", "effect": "shake" },
+        { "speaker": "mira", "text": "ผนึกรูน! ต้องจำลำดับแสงให้ได้", "expr": "determined" }
       ],
+      "minigame": { "type": "sequence", "length": 5, "speed": 520, "title": "ผนึกรูนแห่งความจำ" },
+      "next": "puzzle_win", "fail_next": "puzzle_fail"
+    },
+    "puzzle_win": {
+      "background": "library",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "happy" }],
+      "dialogue": [{ "speaker": "mira", "text": "เปิดได้แล้ว! เจ้าทำได้ยังไงน่ะ?", "expr": "happy", "anim": "bounce" }],
       "choices": [
-        { "text": "ลองใหม่ด้วยวิธีอื่น ความผิดพลาดบอกใบ้ว่าอะไรไม่ได้ผล", "tags": { "mindset_growth": 2 }, "next": "study" },
-        { "text": "ขอให้ลูมินช่วยอธิบายหลักการก่อน แล้วค่อยลองอีกครั้ง", "tags": { "mindset_growth": 1 }, "next": "study" },
-        { "text": "เราคงไม่ถนัดเรื่องกลไก ข้ามไปหาทางอื่นดีกว่า", "tags": { "mindset_fixed": 2 }, "next": "study" }
+        { "text": "ตั้งใจจำทีละจังหวะ ฝึกบ่อยก็เก่งขึ้น", "icon": "star", "tags": { "mindset_growth": 2 },
+          "reply": [{ "speaker": "mira", "text": "งั้นข้าจะฝึกแบบเจ้าบ้าง!", "expr": "determined" }], "next": "study" },
+        { "text": "โชคช่วยล้วน ๆ เลย", "icon": "sparkle",
+          "reply": [{ "speaker": "mira", "text": "โชคก็เป็นส่วนหนึ่งของเวทมนตร์นะ ฮิ ๆ", "expr": "happy" }], "next": "study" },
+        { "text": "ข้าเกิดมาเก่งเรื่องจำอยู่แล้ว", "icon": "crown", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "speaker": "mira", "text": "พรสวรรค์ก็ดี แต่อย่าลืมฝึกล่ะ", "expr": "neutral" }], "next": "study" }
       ]
     },
-    "study": {
+    "puzzle_fail": {
       "background": "library",
-      "bgm": "wonder",
-      "effect": "fade",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "sad" }],
       "dialogue": [
-        "ในที่สุดประตูก็เปิดออก... เบื้องหน้าคือหอตำราที่สูงจนมองไม่เห็นเพดาน",
-        { "speaker": "ลูมิน", "text": "ก่อนรุ่งสาง เจ้าต้องเรียนรู้ ‘คาถาแห่งแสง’ ให้ได้" },
-        { "speaker": "ลูมิน", "text": "วิธีไหนที่ทำให้เจ้าจำได้ดีที่สุด?" }
+        { "text": "ปั้ง! รูนดับวูบ", "effect": "shake" },
+        { "speaker": "mira", "text": "ไม่เป็นไรนะ... เอายังไงต่อดี?", "expr": "sad" }
       ],
       "choices": [
-        { "text": "ดูภาพวาดวงเวทและแผนภาพประกอบ", "tags": { "vark_v": 1 }, "next": "courtyard" },
-        { "text": "ฟังวิญญาณนักปราชญ์ท่องคาถาให้ฟัง", "tags": { "vark_a": 1 }, "next": "courtyard" },
-        { "text": "จดสรุปคาถาลงสมุดบันทึกของตัวเอง", "tags": { "vark_r": 1 }, "next": "courtyard" },
-        { "text": "ลองร่ายคาถาจริง ๆ ทีละขั้น", "tags": { "vark_k": 1 }, "next": "courtyard" }
+        { "text": "ขอลองอีกรอบ! รู้แล้วว่าพลาดตรงไหน", "icon": "bolt", "tags": { "mindset_growth": 2 },
+          "reply": [{ "speaker": "mira", "text": "นั่นแหละ! ลุยเลย!", "expr": "determined", "anim": "bounce" }], "next": "puzzle_retry" },
+        { "text": "มิร่า ช่วยบอกเคล็ดลับหน่อย", "icon": "ear", "tags": { "mindset_growth": 1 }, "next": "puzzle_hint" },
+        { "text": "ข้าไม่ถนัดเรื่องจำ ข้ามไปเถอะ", "icon": "back", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "speaker": "mira", "text": "งั้น... ข้าเปิดทางลับให้ก็ได้", "expr": "neutral" }], "next": "study" }
+      ]
+    },
+    "puzzle_hint": {
+      "background": "library",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "happy" }],
+      "dialogue": [{ "speaker": "mira", "text": "จำเป็นเพลงสิ! แต่ละรูนมีเสียงไม่เหมือนกัน", "expr": "happy" }],
+      "next": "puzzle_retry"
+    },
+    "puzzle_retry": {
+      "background": "library",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "determined" }],
+      "dialogue": [{ "speaker": "mira", "text": "รอบนี้สั้นลงแล้ว สู้ ๆ!", "expr": "determined" }],
+      "minigame": { "type": "sequence", "length": 3, "speed": 650, "title": "ผนึกรูน (รอบแก้ตัว)" },
+      "next": "study", "fail_next": "study"
+    },
+    "study": {
+      "background": "library", "bgm": "wonder", "effect": "fade",
+      "cast": [{ "id": "mira", "pos": "left", "expr": "happy" }, { "id": "lumin", "pos": "right", "expr": "neutral" }],
+      "dialogue": [
+        { "speaker": "lumin", "text": "คืนนี้เจ้าต้องเรียนคาถาแห่งแสง", "expr": "neutral" },
+        { "speaker": "lumin", "text": "อยากเรียนแบบไหนดี?", "expr": "happy" }
+      ],
+      "layout": "cards", "prompt": "เลือกวิธีเรียนคาถา",
+      "choices": [
+        { "text": "ดูภาพวงเวท", "desc": "แผนภาพสีสวยทีละขั้น", "icon": "eye", "tags": { "vark_v": 1 },
+          "reply": [{ "speaker": "lumin", "text": "ภาพวงเวทนี้ข้าวาดเองนะ!", "expr": "happy", "anim": "bounce" }], "next": "courtyard" },
+        { "text": "ฟังบทสวด", "desc": "ให้ลูมินร่ายให้ฟัง", "icon": "ear", "tags": { "vark_a": 1 },
+          "reply": [{ "speaker": "lumin", "text": "ฮู้ ฮู้~ จำจังหวะไว้นะ", "expr": "happy" }], "next": "courtyard" },
+        { "text": "จดสรุปคาถา", "desc": "เขียนเป็นโน้ตของตัวเอง", "icon": "quill", "tags": { "vark_r": 1 },
+          "reply": [{ "speaker": "mira", "text": "ขอยืมโน้ตเจ้าหน่อยนะ!", "expr": "happy" }], "next": "courtyard" },
+        { "text": "ลองร่ายเลย", "desc": "ผิดก็ลองใหม่", "icon": "hand", "tags": { "vark_k": 1 },
+          "reply": [{ "text": "ฟู่ว! ประกายไฟพุ่งออกจากมือคุณ", "effect": "flash" }], "next": "courtyard" }
       ]
     },
     "courtyard": {
-      "background": "courtyard",
-      "effect": "fade",
+      "background": "courtyard", "bgm": "tension", "effect": "fade",
+      "cast": [{ "id": "mira", "pos": "center", "expr": "surprised" }],
       "dialogue": [
-        "คุณออกมาถึงลานกว้างใต้แสงจันทร์ มีนักเรียนเวทกลุ่มหนึ่งกำลังโกลาหล",
-        { "speaker": "นักเรียนเวท", "text": "ประตูทางออกกำลังจะปิด! พวกเราไม่รู้จะทำยังไงดี!" },
-        { "speaker": "ลูมิน", "text": "ทุกคนมองมาที่เจ้า... เจ้าจะทำอะไร?" }
+        { "text": "ตูม! ประตูทางออกกำลังจะพัง", "effect": "shake" },
+        { "speaker": "mira", "text": "ทุกคนตกใจกันหมด! รีบตัดสินใจเร็ว!", "expr": "surprised", "anim": "shake" }
       ],
+      "timer": 10, "timeout_choice": 3,
       "choices": [
-        { "text": "ปลอบคนที่ตกใจ ช่วยให้ทุกคนใจเย็นลง", "tags": { "riasec_s": 1 }, "next": "rival" },
-        { "text": "ยืนขึ้นนำกลุ่ม แบ่งหน้าที่ แล้วพาทุกคนไปข้างหน้า", "tags": { "riasec_e": 1 }, "next": "rival" },
-        { "text": "จัดระเบียบ ทำรายชื่อ และวางลำดับขั้นตอนให้ชัดเจน", "tags": { "riasec_c": 1 }, "next": "rival" }
+        { "text": "ปลอบทุกคนให้ใจเย็นลง", "icon": "heart", "tags": { "riasec_s": 1 },
+          "reply": [{ "speaker": "mira", "text": "เสียงเจ้าทำให้ทุกคนหายกลัวเลย", "expr": "happy" }], "next": "rival" },
+        { "text": "นำทุกคนวิ่งไปทางออก!", "icon": "flag", "tags": { "riasec_e": 1 },
+          "reply": [{ "speaker": "mira", "text": "ทุกคนตามเจ้าไปแล้ว! ผู้นำตัวจริง", "expr": "happy", "anim": "bounce" }], "next": "rival" },
+        { "text": "นับคนและจัดแถวให้เป็นระเบียบ", "icon": "scroll", "tags": { "riasec_c": 1 },
+          "reply": [{ "speaker": "mira", "text": "ไม่มีใครตกหล่นเลยสักคน!", "expr": "happy" }], "next": "rival" },
+        { "text": "สังเกตหาจุดที่ปลอดภัยที่สุด", "icon": "eye", "tags": { "riasec_i": 1 },
+          "reply": [{ "speaker": "mira", "text": "เจ้าหาทางรอดเจอจริง ๆ!", "expr": "surprised" }], "next": "rival" }
       ]
     },
     "rival": {
       "background": "courtyard",
+      "cast": [{ "id": "mira", "pos": "left", "expr": "neutral" }, { "id": "kael", "pos": "right", "expr": "determined" }],
       "dialogue": [
-        "ทุกคนผ่านประตูมาได้ทันเวลา",
-        "นักเรียนคนหนึ่งร่ายเวทปิดประตูได้งดงามและทรงพลังกว่าที่คุณเคยเห็นมา",
-        { "speaker": "ลูมิน", "text": "เขาเก่งกว่าเจ้ามาก... เจ้ารู้สึกอย่างไร?" }
+        { "speaker": "kael", "text": "ฮึ! ข้าคือเคล ศิษย์อันดับหนึ่งของหอนี้", "expr": "determined", "anim": "bounce" },
+        { "text": "เคลดีดนิ้ว... ประตูพังซ่อมเสร็จในพริบตา", "effect": "flash" },
+        { "speaker": "kael", "text": "เจ้าทำแบบนี้ได้ไหมล่ะ?", "expr": "happy" }
       ],
       "choices": [
-        { "text": "อยากรู้ว่าเขาฝึกอย่างไร จะได้เรียนรู้จากเขา", "tags": { "mindset_growth": 2 }, "next": "message" },
-        { "text": "รู้สึกกดดันนิดหน่อย แต่จะพยายามต่อไป", "tags": { "mindset_growth": 1, "mindset_fixed": 1 }, "next": "message" },
-        { "text": "ก็ยินดีด้วย บางคนเกิดมามีพรสวรรค์แบบนั้น", "tags": { "mindset_fixed": 2 }, "next": "message" }
+        { "text": "สอนข้าหน่อยได้ไหม อยากเก่งแบบเจ้า", "icon": "star", "tags": { "mindset_growth": 2 },
+          "reply": [{ "speaker": "kael", "text": "เอ๊ะ... ก-ก็ได้ ถ้าเจ้าตั้งใจนะ", "expr": "surprised" }], "next": "crystal" },
+        { "text": "ตอนนี้ยังไม่ได้ แต่ข้าจะฝึกจนได้", "icon": "bolt", "tags": { "mindset_growth": 1 },
+          "reply": [{ "speaker": "kael", "text": "ข้าจะรอดูนะ!", "expr": "happy" }], "next": "crystal" },
+        { "text": "เจ้าเกิดมามีพรสวรรค์ ข้าสู้ไม่ได้หรอก", "icon": "back", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "speaker": "kael", "text": "ฮึ... พรสวรรค์อย่างเดียวไม่พอหรอก", "expr": "neutral" }], "next": "crystal" }
       ]
     },
-    "message": {
-      "background": "corridor",
+    "crystal": {
+      "background": "crystal", "bgm": "tension", "effect": "shake",
+      "cast": [{ "id": "lumin", "pos": "center", "expr": "surprised" }],
       "dialogue": [
-        { "speaker": "ลูมิน", "text": "ข้าต้องส่งข่าวถึงผู้เฝ้าหอคนอื่นว่าเราใกล้ถึงห้องผลึกแล้ว" },
-        { "speaker": "ลูมิน", "text": "เจ้าช่วยอธิบายเส้นทางให้พวกเขาเข้าใจได้ไหม?" }
+        { "text": "เพล้ง! ผลึกแห่งตัวตนแตกกระจาย!", "effect": "shake" },
+        { "speaker": "lumin", "text": "เก็บเศษแสงก่อนมันดับ! เร็วเข้า!", "expr": "surprised", "anim": "shake" }
       ],
-      "choices": [
-        { "text": "วาดแผนผังพร้อมลูกศรให้ดู", "tags": { "vark_v": 1 }, "next": "crystal_room" },
-        { "text": "อธิบายด้วยคำพูดผ่านผลึกส่งเสียง", "tags": { "vark_a": 1 }, "next": "crystal_room" },
-        { "text": "เขียนจดหมายบอกทีละขั้นตอน", "tags": { "vark_r": 1 }, "next": "crystal_room" },
-        { "text": "ออกไปรับแล้วพาพวกเขาเดินมาด้วยกันเลย", "tags": { "vark_k": 1 }, "next": "crystal_room" }
-      ]
-    },
-    "crystal_room": {
-      "background": "crystal",
-      "bgm": "tension",
-      "effect": "shake",
-      "dialogue": [
-        "ใจกลางหอสมุด ผลึกแห่งตัวตนลอยอยู่กลางอากาศ... แต่มันกำลังร้าว!",
-        { "text": "เสียงแตกเปรี๊ยะดังก้อง แสงวูบไหวราวกับกำลังจะดับ", "effect": "shake" },
-        { "speaker": "ลูมิน", "text": "เร็วเข้า! เจ้าจะช่วยผลึกด้วยวิธีใด?" }
-      ],
-      "choices": [
-        { "text": "ลงมือประกอบชิ้นส่วนผลึกด้วยมือตัวเอง", "tags": { "riasec_r": 1 }, "next": "ceremony" },
-        { "text": "ศึกษาโครงสร้างผลึก หาจุดที่เป็นต้นเหตุของรอยร้าว", "tags": { "riasec_i": 1 }, "next": "ceremony" },
-        { "text": "เจรจากับวิญญาณผู้คุมผลึกให้ยอมมาช่วยกัน", "tags": { "riasec_e": 1 }, "next": "ceremony" }
-      ]
+      "minigame": { "type": "orbs", "seconds": 12, "goal": 10, "title": "เก็บเศษผลึก", "color": "#c4b5fd" },
+      "next": "ceremony", "fail_next": "ceremony"
     },
     "ceremony": {
-      "background": "hall",
-      "bgm": "wonder",
-      "effect": "fade",
+      "background": "hall", "bgm": "wonder",
+      "cast": [{ "id": "lumin", "pos": "left", "expr": "happy" }, { "id": "mira", "pos": "center", "expr": "happy" }, { "id": "kael", "pos": "right", "expr": "neutral" }],
       "dialogue": [
-        "รอยร้าวค่อย ๆ สมานตัว ผลึกกลับมาเต้นเป็นจังหวะเหมือนหัวใจ",
-        { "speaker": "ลูมิน", "text": "ก่อนพิธีปลุกผลึกจะเริ่ม หอสมุดต้องการผู้ช่วยอีกหนึ่งคน" },
-        { "speaker": "ลูมิน", "text": "เจ้าอยากรับหน้าที่ไหน?" }
+        { "speaker": "lumin", "text": "ผลึกกลับมาแล้ว! คืนนี้มีพิธีปลุกผลึก", "expr": "happy", "anim": "bounce" },
+        { "speaker": "mira", "text": "เจ้าอยากรับหน้าที่อะไร?", "expr": "happy" }
       ],
+      "layout": "cards", "prompt": "เลือกหน้าที่ในพิธี",
       "choices": [
-        { "text": "ออกแบบลวดลายแสงสำหรับพิธีให้งดงามที่สุด", "tags": { "riasec_a": 1 }, "next": "memory" },
-        { "text": "ดูแลต้อนรับผู้มาร่วมพิธีให้รู้สึกอบอุ่น", "tags": { "riasec_s": 1 }, "next": "memory" },
-        { "text": "ตรวจเช็กอุปกรณ์และลำดับพิธีให้ครบถ้วนไม่ผิดพลาด", "tags": { "riasec_c": 1 }, "next": "memory" }
+        { "text": "สร้างแท่นพิธี", "desc": "ประกอบด้วยมือตัวเอง", "icon": "hammer", "tags": { "riasec_r": 1 }, "reward": { "name": "ค้อนช่างเวท", "icon": "hammer" },
+          "reply": [{ "speaker": "kael", "text": "แท่นแข็งแรงดี... ยอมรับก็ได้", "expr": "happy" }], "next": "memory" },
+        { "text": "ศึกษาพลังผลึก", "desc": "ไขความลับของแสง", "icon": "telescope", "tags": { "riasec_i": 1 }, "reward": { "name": "แว่นส่องความจริง", "icon": "eye" },
+          "reply": [{ "speaker": "lumin", "text": "เจ้าค้นพบสิ่งที่ข้าไม่เคยรู้!", "expr": "surprised" }], "next": "memory" },
+        { "text": "ออกแบบแสงสี", "desc": "ให้พิธีงดงามที่สุด", "icon": "palette", "tags": { "riasec_a": 1 }, "reward": { "name": "พู่กันดวงดาว", "icon": "palette" },
+          "reply": [{ "speaker": "mira", "text": "สวยจนน้ำตาจะไหล!", "expr": "happy", "anim": "bounce" }], "next": "memory" },
+        { "text": "ดูแลแขกทุกคน", "desc": "ให้ทุกคนรู้สึกอบอุ่น", "icon": "heart", "tags": { "riasec_s": 1 }, "reward": { "name": "จี้หัวใจอบอุ่น", "icon": "heart" },
+          "reply": [{ "speaker": "mira", "text": "ทุกคนยิ้มกันใหญ่เลย", "expr": "happy" }], "next": "memory" },
+        { "text": "เป็นพิธีกร", "desc": "นำทุกคนสู่ช่วงเวลาสำคัญ", "icon": "crown", "tags": { "riasec_e": 1 }, "reward": { "name": "มงกุฎผู้นำ", "icon": "crown" },
+          "reply": [{ "speaker": "kael", "text": "เสียงเจ้าทรงพลังกว่าข้าอีก!", "expr": "surprised" }], "next": "memory" },
+        { "text": "คุมลำดับพิธี", "desc": "ทุกขั้นตอนต้องเป๊ะ", "icon": "compass", "tags": { "riasec_c": 1 }, "reward": { "name": "นาฬิกาทรายทองคำ", "icon": "hourglass" },
+          "reply": [{ "speaker": "lumin", "text": "ตรงเวลาทุกวินาที ยอดเยี่ยม!", "expr": "happy" }], "next": "memory" }
       ]
     },
     "memory": {
       "background": "crystal",
+      "cast": [{ "id": "lumin", "pos": "center", "expr": "neutral" }],
       "dialogue": [
-        "ผลึกเปล่งเสียงกระซิบ... มันต้องการมอบความทรงจำของผู้เฝ้าหอรุ่นก่อนให้คุณ",
-        { "speaker": "ผลึกแห่งตัวตน", "text": "เจ้าปรารถนาจะรับความทรงจำในรูปแบบใด?" }
+        "ผลึกกระซิบเบา ๆ...",
+        { "speaker": "ผลึกแห่งตัวตน", "text": "เจ้าอยากรับความทรงจำแบบไหน?" }
       ],
+      "layout": "cards", "prompt": "รับความทรงจำจากผลึก",
       "choices": [
-        { "text": "นิมิตเป็นภาพเคลื่อนไหวตรงหน้า", "tags": { "vark_v": 1 }, "next": "final" },
-        { "text": "บทเพลงและเสียงเล่าเรื่อง", "tags": { "vark_a": 1 }, "next": "final" },
-        { "text": "ตัวอักษรเรืองแสงที่อ่านได้ซ้ำ ๆ", "tags": { "vark_r": 1 }, "next": "final" },
-        { "text": "สัมผัสผลึกแล้วรับรู้ความรู้สึกผ่านมือ", "tags": { "vark_k": 1 }, "next": "final" }
+        { "text": "นิมิตเป็นภาพ", "desc": "เห็นอดีตตรงหน้า", "icon": "eye", "tags": { "vark_v": 1 }, "next": "final" },
+        { "text": "บทเพลงแห่งอดีต", "desc": "ฟังเรื่องเล่าเป็นทำนอง", "icon": "ear", "tags": { "vark_a": 1 }, "next": "final" },
+        { "text": "จารึกเรืองแสง", "desc": "อ่านซ้ำได้ทุกเมื่อ", "icon": "scroll", "tags": { "vark_r": 1 }, "next": "final" },
+        { "text": "สัมผัสผลึก", "desc": "รู้สึกผ่านปลายนิ้ว", "icon": "hand", "tags": { "vark_k": 1 }, "next": "final" }
       ]
     },
     "final": {
-      "background": "crystal",
-      "bgm": "tension",
-      "effect": "flash",
+      "background": "crystal", "bgm": "tension", "effect": "flash",
+      "cast": [{ "id": "lumin", "pos": "left", "expr": "neutral" }, { "id": "mira", "pos": "right", "expr": "neutral" }],
       "dialogue": [
-        "ห้องทั้งห้องมืดลง เหลือเพียงแสงจากผลึกที่ส่องมายังคุณ",
-        { "speaker": "ผลึกแห่งตัวตน", "text": "คำถามสุดท้าย... หากวันหนึ่งเจ้าล้มเหลวในสิ่งที่สำคัญที่สุด" },
-        { "speaker": "ผลึกแห่งตัวตน", "text": "เจ้าจะเชื่อสิ่งใด?" }
+        "ทุกอย่างมืดลง... เหลือแค่แสงผลึกส่องมาที่คุณ",
+        { "speaker": "ผลึกแห่งตัวตน", "text": "ถ้าเจ้าล้มเหลวในสิ่งสำคัญ เจ้าจะเชื่ออะไร?" }
       ],
       "choices": [
-        { "text": "ความล้มเหลวคือบทเรียน ข้าเก่งขึ้นได้ด้วยความพยายาม", "tags": { "mindset_growth": 2 }, "next": "ending" },
-        { "text": "มันอาจเป็นสัญญาณให้พักก่อน แล้วค่อยเริ่มใหม่", "tags": { "mindset_growth": 1 }, "next": "ending" },
-        { "text": "ความสามารถของข้ามีขีดจำกัด ควรเลือกทางที่ถนัดอยู่แล้ว", "tags": { "mindset_fixed": 2 }, "next": "ending" }
+        { "text": "ความล้มเหลวคือบทเรียน ข้าเก่งขึ้นได้", "icon": "star", "tags": { "mindset_growth": 2 }, "next": "ending" },
+        { "text": "พักสักหน่อย แล้วค่อยเริ่มใหม่", "icon": "clock", "tags": { "mindset_growth": 1 }, "next": "ending" },
+        { "text": "ความสามารถของข้ามีขีดจำกัด", "icon": "lock", "tags": { "mindset_fixed": 2 }, "next": "ending" }
       ]
     },
     "ending": {
-      "background": "crystal",
-      "bgm": "wonder",
-      "effect": "flash",
+      "background": "crystal", "bgm": "wonder", "effect": "flash",
+      "cast": [{ "id": "mira", "pos": "left", "expr": "happy" }, { "id": "lumin", "pos": "center", "expr": "happy" }, { "id": "kael", "pos": "right", "expr": "happy" }],
       "dialogue": [
-        "ผลึกเปล่งแสงเจิดจ้าจนทั้งหอสมุดสว่างไสว",
-        "ท่ามกลางแสงนั้น... เงาของตัวตนที่แท้จริงของคุณค่อย ๆ ปรากฏขึ้น",
-        { "speaker": "ลูมิน", "text": "ยินดีด้วย ผู้เดินทาง... ผลึกได้เผยตัวตนของเจ้าแล้ว" }
+        { "text": "ผลึกเปล่งแสงเจิดจ้า!", "effect": "flash" },
+        { "speaker": "lumin", "text": "ยินดีด้วย! ผลึกเผยตัวตนของเจ้าแล้ว", "expr": "happy", "anim": "bounce" },
+        { "speaker": "mira", "text": "ไว้ผจญภัยด้วยกันอีกนะ!", "expr": "happy" }
       ],
       "end": true
     }

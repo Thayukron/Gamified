@@ -40,6 +40,9 @@ class StudentGameController
         [$sem, $year] = self::term();
         $stmt = Database::get()->prepare(
             "SELECT s.id, s.title, s.description, s.cover_image, s.is_universal,
+                    JSON_UNQUOTE(JSON_EXTRACT(s.content, '$.meta.icon')) AS icon,
+                    JSON_UNQUOTE(JSON_EXTRACT(s.content, '$.meta.color')) AS color,
+                    JSON_UNQUOTE(JSON_EXTRACT(s.content, '$.meta.subtitle')) AS subtitle,
                     r.id AS result_id, gs.current_scene, gs.updated_at AS saved_at
                FROM scenarios s
           LEFT JOIN assessment_results r
@@ -125,7 +128,7 @@ class StudentGameController
             throw new HttpException(422, 'ข้อมูลการเล่นไม่ถูกต้อง');
         }
         $eval = ScenarioEngine::evaluate(json_decode($scenario['content'], true), $log);
-        $profile = ScenarioEngine::profile($eval['scores'], $eval['tag_history']);
+        $profile = ScenarioEngine::profile($eval['scores'], ScenarioEngine::recency($eval['tag_history']));
 
         $db = Database::get();
         $stmt = $db->prepare('SELECT id FROM archetype_master WHERE riasec_key = ? LIMIT 1');
@@ -156,7 +159,7 @@ class StudentGameController
 
     private static function resultQuery(): string
     {
-        return 'SELECT r.*, s.title AS scenario_title,
+        return 'SELECT r.*, s.title AS scenario_title, s.content AS scenario_content,
                        a.code AS archetype_code, a.name AS archetype_name, a.title AS archetype_title,
                        a.description AS archetype_description, a.strengths, a.tips, a.color, a.icon
                   FROM assessment_results r
@@ -164,9 +167,18 @@ class StudentGameController
              LEFT JOIN archetype_master a ON a.id = r.archetype_id';
     }
 
-    private static function formatResult(array $r): array
+    private static function formatResult(array $r, bool $withItems = false): array
     {
-        unset($r['choices_log']);
+        $r['items'] = [];
+        if ($withItems && $r['choices_log'] && $r['scenario_content']) {
+            try {
+                $eval = ScenarioEngine::evaluate(json_decode($r['scenario_content'], true), json_decode($r['choices_log'], true));
+                $r['items'] = $eval['items'];
+            } catch (HttpException) {
+                // scenario was edited after this play-through; items can no longer be replayed
+            }
+        }
+        unset($r['choices_log'], $r['scenario_content']);
         $r['strengths'] = json_decode($r['strengths'] ?? '[]', true);
         $r['tips'] = json_decode($r['tips'] ?? '[]', true);
         foreach (ScenarioEngine::tagKeys() as $k) {
@@ -180,7 +192,7 @@ class StudentGameController
     {
         $stmt = Database::get()->prepare(self::resultQuery() . ' WHERE r.user_id = ? ORDER BY r.completed_at DESC');
         $stmt->execute([$req->user['id']]);
-        return ['results' => array_map([self::class, 'formatResult'], $stmt->fetchAll())];
+        return ['results' => array_map(fn ($r) => self::formatResult($r), $stmt->fetchAll())];
     }
 
     /** GET /student/results/{id} */
@@ -189,6 +201,65 @@ class StudentGameController
         $stmt = Database::get()->prepare(self::resultQuery() . ' WHERE r.id = ? AND r.user_id = ?');
         $stmt->execute([(int) $req->params['id'], $req->user['id']]);
         $r = $stmt->fetch() ?: throw new HttpException(404, 'ไม่พบผลลัพธ์');
-        return ['result' => self::formatResult($r)];
+        return ['result' => self::formatResult($r, true)];
+    }
+
+    /**
+     * GET /student/profile — Core Profile for the current term, combining every
+     * universal quest the student has completed. More quests = more reliable profile.
+     */
+    public static function profile(Request $req): array
+    {
+        [$sem, $year] = self::term();
+        $db = Database::get();
+        $stmt = $db->prepare(
+            'SELECT r.* FROM assessment_results r JOIN scenarios s ON s.id = r.scenario_id
+              WHERE r.user_id = ? AND r.semester = ? AND r.academic_year = ? AND s.is_universal = 1
+           ORDER BY r.completed_at, r.id'
+        );
+        $stmt->execute([$req->user['id'], $sem, $year]);
+        $rows = $stmt->fetchAll();
+        $total = (int) $db->query(
+            "SELECT COUNT(*) FROM scenarios WHERE is_universal = 1 AND is_active = 1 AND status = 'published'"
+        )->fetchColumn();
+
+        $base = ['completed' => count($rows), 'total' => $total, 'semester' => $sem, 'academic_year' => $year];
+        if (!$rows) {
+            return ['profile' => null] + $base;
+        }
+
+        $scores = array_fill_keys(ScenarioEngine::tagKeys(), 0);
+        $recency = [];
+        foreach ($rows as $i => $row) {
+            foreach (ScenarioEngine::tagKeys() as $k) {
+                $scores[$k] += (int) $row[$k];
+            }
+            // later quests win ties; within a quest, earlier letters of its Holland code rank higher
+            foreach (str_split((string) $row['dominant_riasec']) as $pos => $letter) {
+                $recency['riasec_' . strtolower($letter)] = $i * 10 + (3 - $pos);
+            }
+        }
+        $p = ScenarioEngine::profile($scores, $recency);
+
+        $a = $db->prepare(
+            'SELECT code AS archetype_code, name AS archetype_name, title AS archetype_title,
+                    description AS archetype_description, strengths, tips, color, icon
+               FROM archetype_master WHERE riasec_key = ? LIMIT 1'
+        );
+        $a->execute([$p['archetype_key']]);
+
+        $profile = self::formatResult($scores + ($a->fetch() ?: []) + [
+            'id' => 0,
+            'choices_log' => null,
+            'scenario_content' => null,
+            'scenario_title' => 'Core Profile',
+            'semester' => $sem,
+            'academic_year' => $year,
+            'completed_at' => end($rows)['completed_at'],
+            'dominant_vark' => $p['dominant_vark'],
+            'dominant_riasec' => $p['dominant_riasec'],
+            'mindset_type' => $p['mindset_type'],
+        ]);
+        return ['profile' => $profile] + $base;
     }
 }

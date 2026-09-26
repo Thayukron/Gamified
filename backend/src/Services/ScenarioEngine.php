@@ -9,17 +9,28 @@ use App\Core\HttpException;
  * Scenario content format:
  * {
  *   "start": "intro",
+ *   "characters": { "lumin": { "name": "ลูมิน", "kind": "owl", ... } },
  *   "scenes": {
  *     "intro": {
  *       "background": "night", "bgm": "mystery", "effect": "fade|shake|flash",
- *       "dialogue": ["narration", {"speaker": "ลูมิน", "text": "...", "effect": "shake"}],
- *       "choices": [{"text": "...", "tags": {"vark_v": 1}, "next": "scene2"}],
+ *       "cast": [{"id": "lumin", "pos": "center", "expr": "happy"}],
+ *       "dialogue": ["narration", {"speaker": "lumin", "text": "...", "expr": "happy", "anim": "bounce"}],
+ *
+ *       // decision (layout: list | cards | hotspots, optional timer + timeout_choice)
+ *       "layout": "cards", "prompt": "...", "timer": 10, "timeout_choice": 3,
+ *       "choices": [{"text": "...", "icon": "map", "x": 20, "y": 40,
+ *                    "tags": {"vark_v": 1}, "reply": [lines], "reward": {"name": "...", "icon": "..."},
+ *                    "next": "scene2"}],
+ *
+ *       // or a mini-game: success -> next, failure -> fail_next
+ *       "minigame": {"type": "sequence|orbs", ...}, "fail_next": "scene3",
+ *
  *       "next": "scene2",          // when there are no choices
  *       "end": true                // final scene
  *     }
  *   }
  * }
- * choices_log: [{"scene": "intro", "choice": 0}, ...]
+ * choices_log: [{"scene": "intro", "choice": 0}, {"scene": "puzzle", "outcome": "fail"}, ...]
  */
 class ScenarioEngine
 {
@@ -46,8 +57,8 @@ class ScenarioEngine
     }
 
     /**
-     * Replay the choice log from the start scene, validating every step, and total the tags.
-     * @return array{scores: array<string,int>, path: string[], tag_history: array<int, string[]>}
+     * Replay the log from the start scene, validating every step, and total the tags.
+     * @return array{scores: array<string,int>, path: string[], tag_history: array<int, string[]>, items: array}
      */
     public static function evaluate(array $content, array $log): array
     {
@@ -56,6 +67,7 @@ class ScenarioEngine
         $scores = array_fill_keys(self::tagKeys(), 0);
         $path = [];
         $tagHistory = [];
+        $items = [];
         $logIndex = 0;
 
         for ($step = 0; $step < self::MAX_STEPS; $step++) {
@@ -64,9 +76,9 @@ class ScenarioEngine
 
             if (!empty($scene['end'])) {
                 if ($logIndex !== count($log)) {
-                    throw new HttpException(422, 'ข้อมูลการเล่นไม่ถูกต้อง (มีตัวเลือกเกิน)');
+                    throw new HttpException(422, 'ข้อมูลการเล่นไม่ถูกต้อง (มีขั้นตอนเกิน)');
                 }
-                return ['scores' => $scores, 'path' => $path, 'tag_history' => $tagHistory];
+                return ['scores' => $scores, 'path' => $path, 'tag_history' => $tagHistory, 'items' => $items];
             }
 
             if (!empty($scene['choices'])) {
@@ -83,8 +95,19 @@ class ScenarioEngine
                     }
                 }
                 $tagHistory[] = $applied;
+                if (!empty($choice['reward']['name'])) {
+                    $items[] = $choice['reward'];
+                }
                 $logIndex++;
                 $sceneId = $choice['next'] ?? $scene['next'] ?? null;
+            } elseif (!empty($scene['minigame'])) {
+                $entry = $log[$logIndex] ?? throw new HttpException(422, 'ยังเล่นไม่จบเรื่อง');
+                $outcome = $entry['outcome'] ?? null;
+                if (($entry['scene'] ?? null) !== $sceneId || !in_array($outcome, ['success', 'fail'], true)) {
+                    throw new HttpException(422, 'ข้อมูลการเล่นไม่ถูกต้อง');
+                }
+                $logIndex++;
+                $sceneId = $outcome === 'fail' ? ($scene['fail_next'] ?? $scene['next'] ?? null) : ($scene['next'] ?? null);
             } else {
                 $sceneId = $scene['next'] ?? null;
             }
@@ -95,10 +118,10 @@ class ScenarioEngine
     /**
      * Derive the profile summary from totals.
      * - VARK: every style tied for the top score (multimodal, e.g. "VK")
-     * - RIASEC: Holland code of the top 3; ties broken by the most recently chosen tag
+     * - RIASEC: Holland code of the top 3; ties broken by $recency (higher = chosen more recently)
      * - Mindset: growth / fixed / mixed by comparing the two totals
      */
-    public static function profile(array $scores, array $tagHistory): array
+    public static function profile(array $scores, array $recency): array
     {
         $vark = array_intersect_key($scores, array_flip(self::VARK));
         $max = max($vark);
@@ -106,15 +129,9 @@ class ScenarioEngine
             ? implode('', array_map(fn ($k) => strtoupper(substr($k, -1)), array_keys(array_filter($vark, fn ($v) => $v === $max))))
             : null;
 
-        $lastSeen = [];
-        foreach ($tagHistory as $i => $keys) {
-            foreach ($keys as $key) {
-                $lastSeen[$key] = $i;
-            }
-        }
         $riasec = array_intersect_key($scores, array_flip(self::RIASEC));
         $keys = array_keys($riasec);
-        usort($keys, fn ($a, $b) => [$riasec[$b], $lastSeen[$b] ?? -1] <=> [$riasec[$a], $lastSeen[$a] ?? -1]);
+        usort($keys, fn ($a, $b) => [$riasec[$b], $recency[$b] ?? -1] <=> [$riasec[$a], $recency[$a] ?? -1]);
         $holland = implode('', array_map(fn ($k) => strtoupper(substr($k, -1)), array_slice($keys, 0, 3)));
 
         $g = $scores['mindset_growth'];
@@ -127,6 +144,18 @@ class ScenarioEngine
             'mindset_type' => $mindset,
             'archetype_key' => $holland[0],
         ];
+    }
+
+    /** Recency map from a tag history: tag => index of the last decision that applied it. */
+    public static function recency(array $tagHistory): array
+    {
+        $last = [];
+        foreach ($tagHistory as $i => $keys) {
+            foreach ($keys as $key) {
+                $last[$key] = $i;
+            }
+        }
+        return $last;
     }
 
     /** Basic structural validation used by the scenario builder and import. */
@@ -145,6 +174,9 @@ class ScenarioEngine
             $hasEnd = $hasEnd || !empty($scene['end']);
             if (empty($scene['end']) && empty($scene['choices']) && !isset($scenes[$scene['next'] ?? ''])) {
                 $errors[] = "ฉาก $id ไม่มีทางไปต่อ";
+            }
+            if (!empty($scene['minigame']) && isset($scene['fail_next']) && !isset($scenes[$scene['fail_next']])) {
+                $errors[] = "ฉาก $id: fail_next ชี้ไปฉากที่ไม่มีอยู่";
             }
             foreach ($scene['choices'] ?? [] as $i => $c) {
                 if (!isset($scenes[$c['next'] ?? ''])) {

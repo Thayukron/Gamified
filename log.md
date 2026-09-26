@@ -4,6 +4,43 @@
 
 ---
 
+## 2026-09-26 — ปรับเกมใหม่: ตัวละคร · อินเตอร์แอคทีฟ · 3 เควสต์
+
+ผู้ใช้ลองเล่นแล้ว: “น่าเบื่อ ต้องคอยอ่าน ไม่มีตัวละคร/อินเตอร์แอคทีฟ ฉากจืด” → ปรับใหม่ทั้งระบบเกม
+
+### ตัวละครและฉาก
+- `components/game/CharacterSprite.vue` — ตัวละคร SVG สไตล์ chibi 3 แบบ (mage / owl / golem) × 5 สีหน้า (neutral, happy, surprised, sad, determined) + accessory (hood, hat, glasses, cat)
+- ตัวละคร 7 ตัว: ลูมิน (นกฮูก), มิร่า, เคล, นิกซ์ (แมวพ่อค้า), พิม, อาจารย์โอริน, โกเลมดวงดาว
+- `components/game/StageCast.vue` — ยืนบนเวทีซ้าย/กลาง/ขวา, คนพูดเด่นขึ้น คนอื่นมืดลง, ท่าทาง bounce/shake, หายใจ idle, ปรับตำแหน่งตามโหมด (normal/raised/low)
+- ฉากใหม่: market (โคมแกว่ง), alley, sky (ดาวตก), observatory + ละอองแสงลอยทุกฉาก
+
+### อินเตอร์แอคทีฟ
+- `components/game/ChoicePanel.vue` — 3 รูปแบบ: `list`, `cards` (การ์ดไอคอน), `hotspots` (แตะวัตถุในฉาก) + `timer` นับถอยหลัง (หมดเวลาเลือก `timeout_choice`)
+- ตัวละครตอบสนองต่อทุกตัวเลือก (`reply`) · ได้รับไอเทม (`reward`) พร้อม popup + กระเป๋าไอเทม · พลังงาน ✦ (+10 ต่อการตัดสินใจ, +30/+15 มินิเกม)
+- มินิเกม: `MiniGameSequence.vue` (จำลำดับรูน/ดาว) และ `MiniGameOrbs.vue` (แตะเก็บแสงให้ครบเป้าในเวลา) · ผลสำเร็จ/ล้มเหลวแยกเส้นทาง → ใช้วัด Mindset จากพฤติกรรมหลังล้มเหลวจริง
+- โหมด AUTO, ข้อความสั้นลง, พิมพ์เร็วขึ้น, เสียงใหม่ (note, pop, coin, success, fail)
+
+### เนื้อเรื่อง 3 เควสต์ (seed ทั้งหมดเป็น Core Profile)
+1. `arcana-gate.json` ประตูแห่งอาร์คานา — หอสมุดเวทมนตร์
+2. `night-market.json` ตลาดราตรีแห่งเงา — ไล่ล่าหัวขโมย เทศกาลโคม
+3. `star-observatory.json` หอดูดาวที่หลับใหล — ปลุกโกเลม พายุดาวตก
+- แต่ละเควสต์วัดครบ VARK 3 ครั้ง, RIASEC ทุกด้าน ≥ 2 ครั้ง, Mindset 2–3 ครั้ง · `migrate.php` ตรวจ `validate()` ก่อน seed
+
+### Backend
+- `ScenarioEngine`: รองรับ log มินิเกม `{scene, outcome: success|fail}` + `fail_next`, เก็บ `items` จาก reward, แยก `recency()` ออกมา
+- `GET /student/profile` — **Core Profile** รวมคะแนนทุกเควสต์สากลในภาคเรียน (เสมอกันใช้ผลเควสต์ล่าสุดตัดสิน)
+- `GET /student/quests` ส่ง `icon/color/subtitle` จาก `content.meta` · `GET /student/results/{id}` ส่ง `items`
+
+### Frontend อื่น ๆ
+- หน้าแรกนักเรียนเป็น **แผนที่โลก** (โหนดเควสต์ + เส้นทาง + รายละเอียดเควสต์) + แถบความคืบหน้าการค้นพบตัวตน + การ์ด Core Profile
+- `components/ProfileReport.vue` ใช้ร่วมกันระหว่าง `result/[id]` และหน้าใหม่ `/student/profile`
+- `utils/game.ts` — type ของเนื้อเรื่อง + `replayProgress()` คืนไอเทม/พลังงานตอนเล่นต่อ
+
+### ทดสอบ
+- API: log มินิเกมผิดรูปแบบถูกปฏิเสธ, items คืนถูกต้อง, Core Profile รวม 2–3 เควสต์ถูกต้อง
+- E2E bot (มือถือ 390px) เล่นครบ 3 เควสต์ ผ่านทุกรูปแบบ (cards, hotspots, list+timer, sequence แพ้/ชนะ, orbs) → ผลลัพธ์ → แผนที่ 3/3 → Core Profile · ไม่มี error ในเบราว์เซอร์
+- แก้ระหว่างทดสอบ: ตัวละครถูกการ์ดบัง → ยกขึ้น/ย่อ, ป้ายชื่อ hotspot/แผนที่ล้นขอบจอ → จำกัดตำแหน่ง + ตัดบรรทัด
+
 ## 2026-09-26 — เฟส 2: Game Engine & Profiling
 
 ### Backend

@@ -6,6 +6,7 @@
 require __DIR__ . '/../bootstrap.php';
 
 use App\Core\Database;
+use App\Services\ScenarioEngine;
 
 $pdo = Database::connect(app_config('db'), false);
 $pdo->exec(file_get_contents(__DIR__ . '/schema.sql'));
@@ -54,13 +55,19 @@ foreach ($archetypes as $a) {
     $arch->execute($a);
 }
 
-$scenario = file_get_contents(__DIR__ . '/scenarios/arcana-gate.json');
-$pdo->prepare("INSERT INTO scenarios (title, description, owner_id, is_universal, is_active, status, content) VALUES (?, ?, 1, 1, 1, 'published', ?)")
-    ->execute([
-        'ประตูแห่งอาร์คานา',
-        'จดหมายลึกลับนำคุณสู่หอสมุดเวทมนตร์ยามเที่ยงคืน ทุกการตัดสินใจจะปลุกผลึกแห่งตัวตนของคุณ',
-        json_encode(json_decode($scenario), JSON_UNESCAPED_UNICODE),
-    ]);
+$universal = [
+    ['arcana-gate', 'ประตูแห่งอาร์คานา', 'จดหมายลึกลับนำคุณสู่หอสมุดเวทมนตร์ยามเที่ยงคืน ไขผนึกรูน ช่วยมิร่า และปลุกผลึกแห่งตัวตน'],
+    ['night-market', 'ตลาดราตรีแห่งเงา', 'ตลาดโคมลอยกับแมวพ่อค้าจอมป่วน ไล่ล่าหัวขโมยปริศนา และจัดเทศกาลปล่อยโคม'],
+    ['star-observatory', 'หอดูดาวที่หลับใหล', 'ดวงดาวกำลังดับ! ปลุกโกเลมโบราณ ฝ่าพายุดาวตก และจุดประกายท้องฟ้าอีกครั้ง'],
+];
+$insert = $pdo->prepare("INSERT INTO scenarios (title, description, owner_id, is_universal, is_active, status, content) VALUES (?, ?, 1, 1, 1, 'published', ?)");
+foreach ($universal as [$file, $title, $desc]) {
+    $json = json_decode(file_get_contents(__DIR__ . "/scenarios/$file.json"), true);
+    if ($errors = ScenarioEngine::validate($json)) {
+        exit("Scenario $file invalid:\n - " . implode("\n - ", $errors) . "\n");
+    }
+    $insert->execute([$title, $desc, json_encode($json, JSON_UNESCAPED_UNICODE)]);
+}
 $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES
     ('ai_enabled', '0'), ('ai_provider', 'anthropic'), ('ai_model', ''), ('ai_api_key', '')");
 

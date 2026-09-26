@@ -164,6 +164,25 @@ export function useGameAudio() {
       envTone(55, 0.8, 0.2, 'sawtooth')
       envTone(41, 1, 0.15, 'square', 0.05)
     },
+    note(freq: number, dur = 0.5) {
+      envTone(freq, dur, 0.09, 'triangle')
+      envTone(freq * 2, dur * 0.6, 0.02, 'sine')
+    },
+    pop() {
+      envTone(880 + Math.random() * 440, 0.18, 0.07, 'sine')
+      envTone(1760, 0.1, 0.02, 'triangle', 0.03)
+    },
+    coin() {
+      envTone(987.77, 0.12, 0.06, 'square')
+      envTone(1318.51, 0.4, 0.05, 'square', 0.08)
+    },
+    fail() {
+      envTone(220, 0.35, 0.1, 'sawtooth')
+      envTone(164.81, 0.6, 0.1, 'sawtooth', 0.18)
+    },
+    success() {
+      ;[523.25, 659.25, 783.99, 1046.5].forEach((f, i) => envTone(f, 0.5, 0.07, 'triangle', i * 0.09))
+    },
     reveal() {
       ;[523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((f, i) => envTone(f, 1.6, 0.06, 'sine', i * 0.12))
     },

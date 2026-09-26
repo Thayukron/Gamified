@@ -12,7 +12,19 @@ const gradients: Record<string, string> = {
   library: 'radial-gradient(ellipse at 50% 20%, #5b3a1a66 0%, #1a1230 50%, #05030d 100%)',
   courtyard: 'radial-gradient(ellipse at 50% 15%, #1e3a8a 0%, #0f172a 50%, #05030d 100%)',
   crystal: 'radial-gradient(ellipse at 50% 45%, #7c3aed 0%, #2d1f5e 35%, #05030d 100%)',
+  market: 'radial-gradient(ellipse at 50% 10%, #9a3412aa 0%, #3b0764 45%, #0b0718 100%)',
+  alley: 'radial-gradient(ellipse at 50% 40%, #44403c 0%, #1c1917 50%, #05030d 100%)',
+  sky: 'linear-gradient(180deg, #020617 0%, #1e1b4b 55%, #312e81 100%)',
+  observatory: 'radial-gradient(ellipse at 50% 20%, #1e3a8a 0%, #172554 40%, #05030d 100%)',
 }
+
+const motes = Array.from({ length: 14 }, () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${40 + Math.random() * 60}%`,
+  delay: `${Math.random() * 6}s`,
+  dur: `${6 + Math.random() * 6}s`,
+}))
+const skyStars = Array.from({ length: 60 }, () => ({ x: Math.random() * 400, y: Math.random() * 420, r: Math.random() * 1.6 + 0.4, d: Math.random() * 3 }))
 </script>
 
 <template>
@@ -92,6 +104,52 @@ const gradients: Record<string, string> = {
             <path d="M40 470l30-120 30 120Z M320 470l25-100 25 100Z" fill="#05030d" />
           </svg>
 
+          <!-- market: lantern strings and stalls -->
+          <svg v-else-if="name === 'market'" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 h-full w-full">
+            <path d="M-10 90 Q200 170 410 90 M-10 170 Q200 240 410 170" fill="none" stroke="#fbbf24" stroke-opacity=".35" />
+            <g v-for="i in 9" :key="'la' + i" class="lantern" :style="{ animationDelay: `${i * 0.3}s` }">
+              <ellipse :cx="i * 44 - 20" :cy="100 + Math.sin(i) * 12 + (i % 2) * 70" rx="11" ry="15" fill="#f97316" opacity=".9" />
+              <ellipse :cx="i * 44 - 20" :cy="100 + Math.sin(i) * 12 + (i % 2) * 70" rx="24" ry="28" fill="#fbbf24" opacity=".14" />
+            </g>
+            <g fill="#05030d" opacity=".9">
+              <path d="M0 330 h110 l-15 -30 h-80 Z M5 330 h100 v270 H5 Z" />
+              <path d="M290 330 h110 v270 H290 Z M280 330 l15 -30 h90 l15 30 Z" />
+              <path d="M150 380 h100 v220 h-100 Z M140 380 l20 -26 h80 l20 26 Z" />
+            </g>
+            <g fill="#fbbf24" opacity=".25"><rect x="20" y="350" width="70" height="8" /><rect x="305" y="350" width="80" height="8" /><rect x="165" y="400" width="70" height="8" /></g>
+          </svg>
+
+          <!-- alley: narrow walls with glowing footprints -->
+          <svg v-else-if="name === 'alley'" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 h-full w-full">
+            <path d="M0 0 L150 200 L150 480 L0 600 Z" fill="#0c0a09" /><path d="M400 0 L250 200 L250 480 L400 600 Z" fill="#0c0a09" />
+            <rect x="30" y="120" width="40" height="60" fill="#fbbf24" opacity=".25" /><rect x="320" y="160" width="36" height="50" fill="#fbbf24" opacity=".18" />
+            <g fill="#fbbf24" opacity=".6">
+              <ellipse cx="190" cy="560" rx="8" ry="12" /><ellipse cx="212" cy="520" rx="7" ry="11" /><ellipse cx="192" cy="482" rx="6" ry="9" /><ellipse cx="208" cy="450" rx="5" ry="8" />
+            </g>
+          </svg>
+
+          <!-- sky: open starfield with shooting star -->
+          <svg v-else-if="name === 'sky'" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 h-full w-full">
+            <circle v-for="(s, i) in skyStars" :key="'st' + i" :cx="s.x" :cy="s.y" :r="s.r" fill="#fff" class="twinkle" :style="{ animationDelay: `${s.d}s` }" />
+            <path d="M60 80 L200 150" stroke="url(#shoot)" stroke-width="2" class="shoot" />
+            <defs><linearGradient id="shoot"><stop offset="0" stop-color="#fff" stop-opacity="0" /><stop offset="1" stop-color="#fff" /></linearGradient></defs>
+            <path d="M0 520 Q100 470 200 500 T400 480 V600 H0 Z" fill="#05030d" />
+            <path d="M270 500 v-60 a30 30 0 0 1 60 0 v60 Z" fill="#05030d" />
+          </svg>
+
+          <!-- observatory: dome with telescope -->
+          <svg v-else-if="name === 'observatory'" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice" class="absolute inset-0 h-full w-full">
+            <path d="M20 330 a180 180 0 0 1 360 0 Z" fill="#0b1025" stroke="#93c5fd" stroke-opacity=".25" stroke-width="3" />
+            <path d="M170 150 a40 180 0 0 1 60 0 L230 330 L170 330 Z" fill="#1e3a8a" opacity=".6" />
+            <circle v-for="(s, i) in skyStars.slice(0, 12)" :key="'ds' + i" :cx="175 + (s.x % 50)" :cy="160 + (s.y % 150)" r="1.4" fill="#fff" class="twinkle" :style="{ animationDelay: `${s.d}s` }" />
+            <g transform="rotate(-35 200 360)">
+              <rect x="150" y="330" width="130" height="34" rx="10" fill="#f5c451" opacity=".85" />
+              <rect x="270" y="324" width="22" height="46" rx="6" fill="#b7791f" />
+            </g>
+            <path d="M200 380 l-40 120 M200 380 l40 120 M200 380 v120" stroke="#94a3b8" stroke-width="6" />
+            <rect x="0" y="500" width="400" height="100" fill="#05030d" />
+          </svg>
+
           <!-- crystal: floating gem inside a sigil -->
           <template v-else-if="name === 'crystal'">
             <div class="absolute left-1/2 top-[38%] w-[90vmin] max-w-[520px] -translate-x-1/2 -translate-y-1/2 opacity-70">
@@ -108,6 +166,23 @@ const gradients: Record<string, string> = {
         </template>
       </div>
     </Transition>
+    <span
+      v-for="(m, i) in motes"
+      :key="'m' + i"
+      class="mote absolute h-1.5 w-1.5 rounded-full bg-rune-200"
+      :style="{ left: m.left, top: m.top, animationDelay: m.delay, animationDuration: m.dur }"
+    />
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(5,3,13,0.8)_100%)]" />
   </div>
 </template>
+
+<style scoped>
+.mote { box-shadow: 0 0 8px 2px rgba(253, 230, 138, 0.6); animation: mote 8s ease-in-out infinite; opacity: 0; }
+@keyframes mote { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: .8; } 100% { transform: translate(30px, -160px); opacity: 0; } }
+.lantern { animation: sway 3s ease-in-out infinite; transform-box: fill-box; transform-origin: top center; }
+@keyframes sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.twinkle { animation: tw 2.5s ease-in-out infinite; }
+@keyframes tw { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+.shoot { stroke-dasharray: 160; animation: shoot 4s ease-in infinite; }
+@keyframes shoot { 0% { stroke-dashoffset: 160; opacity: 0; } 10% { opacity: 1; } 30%, 100% { stroke-dashoffset: -160; opacity: 0; } }
+</style>

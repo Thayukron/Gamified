@@ -44,3 +44,4 @@ php backend/database/migrate.php
 | POST | /api/student/quests/{id}/complete | student |
 | GET | /api/student/results | student |
 | GET | /api/student/results/{id} | student |
+| GET | /api/student/profile | student |

@@ -17,3 +17,4 @@ $router->put('/student/quests/{id}/progress', [StudentGameController::class, 'pr
 $router->post('/student/quests/{id}/complete', [StudentGameController::class, 'complete'], ['student']);
 $router->get('/student/results', [StudentGameController::class, 'results'], ['student']);
 $router->get('/student/results/{id}', [StudentGameController::class, 'result'], ['student']);
+$router->get('/student/profile', [StudentGameController::class, 'profile'], ['student']);

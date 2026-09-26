@@ -1,0 +1,172 @@
+{
+  "start": "m_intro",
+  "meta": { "icon": "lantern", "color": "#f59e0b", "subtitle": "บทที่ 2 · ตลาดยามค่ำคืน" },
+  "characters": {
+    "nyx": { "name": "นิกซ์", "kind": "mage", "robe": "#0f766e", "hair": "#1e293b", "eyes": "#fbbf24", "skin": "#fde2cf", "accessory": ["cat"], "color": "#5eead4" },
+    "pim": { "name": "พิม", "kind": "mage", "robe": "#57534e", "hair": "#78350f", "eyes": "#65a30d", "skin": "#e8b98f", "accessory": ["hood"], "color": "#d6d3d1" },
+    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd" }
+  },
+  "scenes": {
+    "m_intro": {
+      "background": "market", "bgm": "wonder", "effect": "fade",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "happy" }],
+      "dialogue": [
+        "โคมไฟนับพันลอยเหนือตลาดยามค่ำคืน",
+        { "speaker": "nyx", "text": "เมี้ยว~ ลูกค้าใหม่! ข้าคือนิกซ์", "expr": "happy", "anim": "bounce" },
+        { "speaker": "nyx", "text": "อยากแวะร้านไหนก่อนล่ะ?", "expr": "neutral" }
+      ],
+      "layout": "hotspots", "prompt": "แตะร้านที่อยากแวะ",
+      "choices": [
+        { "text": "ร้านเครื่องมือช่าง", "icon": "hammer", "x": 18, "y": 34, "tags": { "riasec_r": 1 }, "reward": { "name": "ประแจเวทมนตร์", "icon": "hammer" },
+          "reply": [{ "speaker": "nyx", "text": "ประแจนี้ซ่อมได้ทุกอย่างเลยนะ!", "expr": "happy" }], "next": "charm" },
+        { "text": "ร้านแผนที่ดาว", "icon": "telescope", "x": 50, "y": 26, "tags": { "riasec_i": 1 }, "reward": { "name": "แผนที่ดาวโบราณ", "icon": "star" },
+          "reply": [{ "speaker": "nyx", "text": "ช่างสงสัยเหมือนแมวเลยนะเนี่ย", "expr": "happy", "anim": "bounce" }], "next": "charm" },
+        { "text": "ร้านสีและผ้าวิเศษ", "icon": "palette", "x": 82, "y": 34, "tags": { "riasec_a": 1 }, "reward": { "name": "ผ้าเปลี่ยนสี", "icon": "palette" },
+          "reply": [{ "speaker": "nyx", "text": "ผ้าผืนนี้เปลี่ยนสีตามอารมณ์!", "expr": "surprised" }], "next": "charm" },
+        { "text": "ร้านยาสมุนไพร", "icon": "herb", "x": 18, "y": 60, "tags": { "riasec_s": 1 }, "reward": { "name": "ยาสมานใจ", "icon": "herb" },
+          "reply": [{ "speaker": "nyx", "text": "ยานี้ช่วยคนได้เยอะเลย ใจดีจัง", "expr": "happy" }], "next": "charm" },
+        { "text": "ลานประมูล", "icon": "megaphone", "x": 50, "y": 56, "tags": { "riasec_e": 1 }, "reward": { "name": "ค้อนประมูลทอง", "icon": "megaphone" },
+          "reply": [{ "speaker": "nyx", "text": "เจ้าชนะประมูลซะแล้ว! เก่งเจรจานี่", "expr": "surprised", "anim": "bounce" }], "next": "charm" },
+        { "text": "ร้านตราชั่งทองคำ", "icon": "scale", "x": 82, "y": 60, "tags": { "riasec_c": 1 }, "reward": { "name": "ตราชั่งเที่ยงตรง", "icon": "scale" },
+          "reply": [{ "speaker": "nyx", "text": "ชั่งเป๊ะไม่พลาดสักเกล็ด!", "expr": "happy" }], "next": "charm" }
+      ]
+    },
+    "charm": {
+      "background": "market",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "happy" }],
+      "dialogue": [{ "speaker": "nyx", "text": "ร้านข้ามีเครื่องรางช่วยจำ เลือกฟรีหนึ่งชิ้น!", "expr": "happy", "anim": "bounce" }],
+      "layout": "cards", "prompt": "เลือกเครื่องรางช่วยจำ",
+      "choices": [
+        { "text": "เลนส์ภาพจำ", "desc": "จำทุกอย่างที่เห็นเป็นภาพ", "icon": "eye", "tags": { "vark_v": 1 }, "reward": { "name": "เลนส์ภาพจำ", "icon": "eye" }, "next": "theft" },
+        { "text": "กระดิ่งจำเสียง", "desc": "เล่นเสียงที่เคยได้ยินซ้ำ", "icon": "ear", "tags": { "vark_a": 1 }, "reward": { "name": "กระดิ่งจำเสียง", "icon": "ear" }, "next": "theft" },
+        { "text": "สมุดไม่มีวันหมด", "desc": "จดได้ไม่รู้จบ", "icon": "book", "tags": { "vark_r": 1 }, "reward": { "name": "สมุดไม่มีวันหมด", "icon": "book" }, "next": "theft" },
+        { "text": "ถุงมือสัมผัสเวท", "desc": "จำผ่านการจับต้อง", "icon": "hand", "tags": { "vark_k": 1 }, "reward": { "name": "ถุงมือสัมผัสเวท", "icon": "hand" }, "next": "theft" }
+      ]
+    },
+    "theft": {
+      "background": "market", "bgm": "tension", "effect": "shake",
+      "cast": [{ "id": "nyx", "pos": "left", "expr": "surprised" }, { "id": "pim", "pos": "right", "expr": "surprised" }],
+      "dialogue": [
+        { "text": "“ขโมย!!” เสียงร้องดังลั่นตลาด", "effect": "shake" },
+        { "speaker": "nyx", "text": "มันฉกขนมปังไป! ทำอะไรสักอย่างเร็ว!", "expr": "surprised", "anim": "shake" }
+      ],
+      "timer": 8, "timeout_choice": 3,
+      "choices": [
+        { "text": "วิ่งไล่ตามทันที!", "icon": "bolt", "tags": { "riasec_r": 1 }, "next": "chase" },
+        { "text": "ตะโกนให้ทุกคนช่วยกันล้อม", "icon": "megaphone", "tags": { "riasec_e": 1 }, "next": "chase" },
+        { "text": "จำรอยเท้า วิเคราะห์ทางหนี", "icon": "eye", "tags": { "riasec_i": 1 }, "next": "chase" },
+        { "text": "ช่วยแม่ค้าที่ล้มลงก่อน", "icon": "heart", "tags": { "riasec_s": 1 }, "next": "chase" }
+      ]
+    },
+    "chase": {
+      "background": "alley", "bgm": "tension",
+      "dialogue": [{ "text": "รอยเท้าเรืองแสงทอดยาวเข้าไปในซอย!", "effect": "flash" }],
+      "minigame": { "type": "orbs", "seconds": 10, "goal": 9, "title": "ไล่ตามรอยเท้าเรืองแสง", "color": "#fbbf24" },
+      "next": "chase_win", "fail_next": "chase_lost"
+    },
+    "chase_win": {
+      "background": "alley",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "surprised" }],
+      "dialogue": [{ "speaker": "nyx", "text": "ตามทันด้วย! เจ้าทำได้ยังไงน่ะ?", "expr": "surprised", "anim": "bounce" }],
+      "choices": [
+        { "text": "ฝึกสังเกตมาตลอด ยิ่งทำยิ่งเก่ง", "icon": "star", "tags": { "mindset_growth": 2 }, "next": "caught" },
+        { "text": "จังหวะดีพอดีน่ะ", "icon": "sparkle", "next": "caught" },
+        { "text": "ข้าเกิดมาว่องไวอยู่แล้ว", "icon": "crown", "tags": { "mindset_fixed": 2 }, "next": "caught" }
+      ]
+    },
+    "chase_lost": {
+      "background": "alley",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "sad" }],
+      "dialogue": [
+        { "speaker": "nyx", "text": "เฮ้อ... คลาดกันแล้ว", "expr": "sad" },
+        { "speaker": "nyx", "text": "จะไปต่อหรือพอแค่นี้?", "expr": "neutral" }
+      ],
+      "choices": [
+        { "text": "ไปต่อ! ลองตามรอยอีกเส้นทาง", "icon": "bolt", "tags": { "mindset_growth": 2 },
+          "reply": [{ "text": "คุณพบรอยใหม่... และเจอตัวคนร้าย!", "effect": "flash" }], "next": "caught" },
+        { "text": "นิกซ์ สอนวิธีตามรอยหน่อย", "icon": "ear", "tags": { "mindset_growth": 1 },
+          "reply": [{ "speaker": "nyx", "text": "ดูฝุ่นเรืองแสงตรงนั้นสิ! เจอแล้ว!", "expr": "happy" }], "next": "caught" },
+        { "text": "ช่างเถอะ ข้าไม่เก่งเรื่องไล่จับ", "icon": "back", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "text": "ไม่นาน... คนร้ายกลับเดินออกมาเอง" }], "next": "caught" }
+      ]
+    },
+    "caught": {
+      "background": "alley", "bgm": "mystery",
+      "cast": [{ "id": "pim", "pos": "center", "expr": "sad" }, { "id": "nyx", "pos": "right", "expr": "neutral" }],
+      "dialogue": [
+        "คนร้ายคือเด็กตัวเล็ก ๆ ในผ้าคลุมเก่า",
+        { "speaker": "pim", "text": "ขอโทษ... ข้าหิวมากจริง ๆ", "expr": "sad" },
+        { "speaker": "nyx", "text": "เจ้าจะจัดการเรื่องนี้ยังไง?", "expr": "neutral" }
+      ],
+      "layout": "cards", "prompt": "ตัดสินใจเรื่องของพิม",
+      "choices": [
+        { "text": "นั่งฟังเรื่องราวของเขา", "desc": "เข้าใจก่อนตัดสิน", "icon": "heart", "tags": { "riasec_s": 1 },
+          "reply": [{ "speaker": "pim", "text": "ขอบคุณที่ฟังข้านะ...", "expr": "happy" }], "next": "festival" },
+        { "text": "เจรจาให้ทำงานแลกอาหาร", "desc": "ทุกฝ่ายได้ประโยชน์", "icon": "megaphone", "tags": { "riasec_e": 1 },
+          "reply": [{ "speaker": "nyx", "text": "ฉลาด! ได้ลูกมือเพิ่มอีกคน", "expr": "happy", "anim": "bounce" }], "next": "festival" },
+        { "text": "ตั้งระบบแบ่งปันอาหาร", "desc": "ไม่ให้ใครต้องหิวอีก", "icon": "scale", "tags": { "riasec_c": 1 },
+          "reply": [{ "speaker": "nyx", "text": "ต่อไปจะไม่มีใครหิวอีกแล้ว", "expr": "happy" }], "next": "festival" }
+      ]
+    },
+    "festival": {
+      "background": "market", "bgm": "wonder",
+      "cast": [{ "id": "nyx", "pos": "left", "expr": "happy" }, { "id": "pim", "pos": "right", "expr": "happy" }],
+      "dialogue": [
+        { "speaker": "nyx", "text": "คืนนี้มีเทศกาลปล่อยโคม! มาช่วยกันนะ", "expr": "happy", "anim": "bounce" },
+        { "speaker": "pim", "text": "ข้าก็จะช่วยด้วย!", "expr": "happy" }
+      ],
+      "layout": "cards", "prompt": "เจ้าจะช่วยเรื่องอะไร",
+      "choices": [
+        { "text": "ประกอบโคม", "desc": "ลงมือทำด้วยมือตัวเอง", "icon": "hammer", "tags": { "riasec_r": 1 }, "reward": { "name": "โคมทำมือ", "icon": "lantern" }, "next": "announce" },
+        { "text": "คำนวณทิศลม", "desc": "ให้โคมลอยได้ไกลที่สุด", "icon": "compass", "tags": { "riasec_i": 1 }, "reward": { "name": "เข็มทิศสายลม", "icon": "compass" }, "next": "announce" },
+        { "text": "ออกแบบลายโคม", "desc": "สวยไม่ซ้ำใคร", "icon": "palette", "tags": { "riasec_a": 1 }, "reward": { "name": "ลายโคมพระจันทร์", "icon": "palette" }, "next": "announce" }
+      ]
+    },
+    "announce": {
+      "background": "market",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "neutral" }],
+      "dialogue": [{ "speaker": "nyx", "text": "ต้องบอกแผนให้ทั้งตลาดรู้ จะสื่อสารยังไงดี?", "expr": "neutral" }],
+      "layout": "cards", "prompt": "เลือกวิธีสื่อสาร",
+      "choices": [
+        { "text": "วาดแผนผัง", "desc": "ติดไว้กลางตลาด", "icon": "map", "tags": { "vark_v": 1 }, "next": "critique" },
+        { "text": "ประกาศเสียงระฆัง", "desc": "ให้ทุกคนได้ยินพร้อมกัน", "icon": "megaphone", "tags": { "vark_a": 1 }, "next": "critique" },
+        { "text": "เขียนใบประกาศ", "desc": "แจกทุกร้าน", "icon": "scroll", "tags": { "vark_r": 1 }, "next": "critique" },
+        { "text": "พาไปดูของจริง", "desc": "เดินไปจุดปล่อยโคมด้วยกัน", "icon": "hand", "tags": { "vark_k": 1 }, "next": "critique" }
+      ]
+    },
+    "critique": {
+      "background": "market",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "neutral" }],
+      "dialogue": [
+        { "speaker": "nyx", "text": "อืม... โคมของเจ้ายังเบี้ยวอยู่นะ", "expr": "neutral" },
+        { "speaker": "nyx", "text": "รู้สึกยังไงบ้าง?", "expr": "neutral" }
+      ],
+      "choices": [
+        { "text": "ขอคำแนะนำ แล้วจะแก้ให้ดีขึ้น", "icon": "star", "tags": { "mindset_growth": 2 },
+          "reply": [{ "speaker": "nyx", "text": "นั่นแหละ ถึงจะเป็นยอดฝีมือ!", "expr": "happy", "anim": "bounce" }], "next": "release" },
+        { "text": "เสียใจนิดหน่อย แต่จะลองใหม่", "icon": "heart", "tags": { "mindset_growth": 1, "mindset_fixed": 1 },
+          "reply": [{ "speaker": "nyx", "text": "ใคร ๆ ก็เริ่มจากโคมเบี้ยวทั้งนั้น", "expr": "happy" }], "next": "release" },
+        { "text": "ข้าคงไม่มีหัวทางนี้", "icon": "back", "tags": { "mindset_fixed": 2 },
+          "reply": [{ "speaker": "nyx", "text": "เมี้ยว... ลองอีกนิดน่า", "expr": "sad" }], "next": "release" }
+      ]
+    },
+    "release": {
+      "background": "market", "bgm": "wonder",
+      "cast": [{ "id": "nyx", "pos": "center", "expr": "happy" }],
+      "dialogue": [{ "speaker": "nyx", "text": "ปล่อยโคมได้! แตะให้โคมลอยขึ้นฟ้า!", "expr": "happy", "anim": "bounce" }],
+      "minigame": { "type": "orbs", "seconds": 10, "goal": 8, "title": "ปล่อยโคมสู่ฟ้า", "color": "#fbbf24" },
+      "next": "m_end", "fail_next": "m_end"
+    },
+    "m_end": {
+      "background": "market", "effect": "flash",
+      "cast": [{ "id": "nyx", "pos": "left", "expr": "happy" }, { "id": "pim", "pos": "center", "expr": "happy" }, { "id": "mira", "pos": "right", "expr": "happy" }],
+      "dialogue": [
+        { "text": "โคมนับพันลอยขึ้นสู่ท้องฟ้า", "effect": "flash" },
+        { "speaker": "pim", "text": "ขอบคุณนะ... เจ้าคือฮีโร่ของข้า", "expr": "happy" },
+        { "speaker": "mira", "text": "ข่าวเรื่องเจ้าไปถึงหอสมุดแล้วนะ!", "expr": "happy", "anim": "bounce" },
+        { "speaker": "nyx", "text": "ตลาดราตรีจะจำเจ้าไว้ เมี้ยว~", "expr": "happy", "anim": "bounce" }
+      ],
+      "end": true
+    }
+  }
+}

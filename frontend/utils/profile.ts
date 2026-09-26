@@ -54,4 +54,5 @@ export interface AssessmentResult {
   tips: string[]
   color: string
   icon: string
+  items?: { name: string; icon: string }[]
 }

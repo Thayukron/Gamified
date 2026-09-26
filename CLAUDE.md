@@ -45,12 +45,15 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
   components/             MysticBackground, MagicCircle, AppIcon (ไอคอน SVG), ComingSoonGrid (การ์ด "ผนึก"), ArchetypeCard, RadarChart, game/VnBackground
   composables/useGameAudio.ts  เสียงสังเคราะห์ Web Audio (bgm preset: mystery/wonder/tension หรือ URL)
   utils/profile.ts        ป้ายชื่อเชิงบวก VARK/RIASEC/Mindset + type AssessmentResult
-  pages/student/          index (เควสต์), play/[id] (VN player), result/[id] (การ์ด+กราฟ+แชร์), history
+  pages/student/          index (แผนที่โลก), play/[id] (VN player), result/[id], profile (Core Profile รวม), history
+  components/game/        CharacterSprite, StageCast, ChoicePanel, MiniGameSequence, MiniGameOrbs, VnBackground
+  components/ProfileReport.vue  การ์ด+กราฟ+แชร์ ใช้ร่วม result/profile
 ```
 
 ### ธีม UI "ARCANA" (ผู้ใช้ต้องการแนวลึกลับ น่าตื่นเต้น — ใช้ต่อทุกหน้าใหม่)
 - Dark fantasy: สี `abyss-*` (พื้น), `rune-*` (ทอง/เน้น), `arcane-*` (ม่วง), shadow `glow` / `glow-gold`
 - ฟอนต์ `font-display` (Cinzel+Chonburi) สำหรับหัวข้อ, `font-sans` = Kanit
+- **เกมต้องมีส่วนร่วมสูง** (ผู้ใช้ย้ำ): มีตัวละครบนจอ + สีหน้า + ตอบสนองทุกตัวเลือก, ข้อความสั้น, สลับรูปแบบ (cards/hotspots/timer/มินิเกม), มีรางวัล — อย่าทำเกมที่ต้องอ่านอย่างเดียว
 - ใช้ `AppIcon` แทน emoji · ถ้อยคำเชิงผจญภัย (นักผจญภัย, เควสต์, ผนึก, คัมภีร์) · แอนิเมชัน `animate-fade-up` ไล่ delay
 - แก้ `tailwind.config.js` แล้วต้อง restart nuxt dev · ถ้า port 3100 ถูกยึดโดย nuxt ตัวเก่า ให้ kill node ที่ commandline มี `nuxt` + `Gamified`
 
@@ -59,7 +62,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - Route ที่ต้อง login ส่ง roles เป็น argument ที่ 3 (`['*']` = ทุก role) → `$req->user`
 - คะแนนเก็บเป็นคอลัมน์แยกใน `assessment_results` (vark_v/a/r/k, riasec_r..c, mindset_growth/fixed) เพื่อ query สถิติง่าย
 - Save state อยู่ในตาราง `game_sessions` (1 แถวต่อ user+scenario)
-- เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content`: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
+- เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content` (ดูรูปแบบเต็มใน docblock ของ `ScenarioEngine.php` และ type ใน `frontend/utils/game.ts`; มี `meta`, `characters`, scene `cast`, `layout`, `timer`, `minigame`, choice `reply`/`reward`/`icon`/`x,y`) เดิม: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
 - แท็กคะแนนที่ใช้ได้: vark_v/a/r/k, riasec_r/i/a/s/e/c, mindset_growth/fixed · `choices_log` = `[{scene, choice}]`
 - ภาคเรียนปัจจุบันมาจาก `config.php` (academic_year, semester) · ผลลัพธ์ unique ต่อ user+scenario+ภาคเรียน
 
@@ -75,4 +78,5 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 ## สถานะล่าสุด
 - 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout)
 - 2026-09-26: ผู้ใช้ขอปรับ UI ให้ลึกลับ/ตื่นเต้น → ทำธีม ARCANA เสร็จ, E2E ผ่าน (ผู้ใช้ชอบ)
-- 2026-09-26: เสร็จเฟส 2 Game Engine, ทดสอบ API + E2E ผ่าน (student002 เล่นจบแล้วใน DB ตัวอย่าง) → **รอผู้ใช้ตรวจก่อนเริ่มเฟส 3**
+- 2026-09-26: เสร็จเฟส 2 Game Engine
+- 2026-09-26: ผู้ใช้บอกเกมน่าเบื่อ → ปรับใหม่: ตัวละคร SVG มีสีหน้า, ตัวเลือกแบบการ์ด/แตะฉาก/จับเวลา, มินิเกม 2 แบบ, ไอเทม+พลังงาน, AUTO, 3 เควสต์, แผนที่โลก, Core Profile รวม · E2E ผ่าน · DB รีเซ็ตแล้ว → **รอผู้ใช้ตรวจก่อนเริ่มเฟส 3**
