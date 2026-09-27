@@ -45,7 +45,9 @@ class TeacherController
         $stmt = Database::get()->prepare(
             "SELECT c.id, c.code, c.name, c.section, c.semester, c.academic_year, d.name AS department_name,
                     COUNT(DISTINCT e.student_id) AS enrolled,
-                    COUNT(DISTINCT r.user_id) AS profiled
+                    COUNT(DISTINCT r.user_id) AS profiled,
+                    (SELECT COUNT(DISTINCT pr.user_id) FROM password_reset_requests pr JOIN enrollments e2 ON e2.student_id = pr.user_id
+                      WHERE e2.course_id = c.id AND pr.status = 'pending') AS reset_requests
                FROM courses c
           LEFT JOIN departments d ON d.id = c.department_id
           LEFT JOIN enrollments e ON e.course_id = c.id

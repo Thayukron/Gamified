@@ -5,6 +5,7 @@ use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
 use App\Services\ImportService;
+use App\Services\PasswordService;
 
 /** Admin: bulk import and master-data overview/management. */
 class AdminController
@@ -66,32 +67,98 @@ class AdminController
     {
         $q = '%' . trim((string) $req->query('q', '')) . '%';
         $role = (string) $req->query('role', '');
-        $sql = 'SELECT u.id, u.username, u.full_name, u.role, u.student_code, u.class_group, u.is_active, d.name AS department_name
+        $sql = "SELECT u.id, u.username, u.full_name, u.role, u.student_code, u.class_group, u.is_active, u.department_id, u.must_change_password,
+                       d.name AS department_name,
+                       EXISTS(SELECT 1 FROM password_reset_requests r WHERE r.user_id = u.id AND r.status = 'pending') AS reset_requested
                   FROM users u LEFT JOIN departments d ON d.id = u.department_id
-                 WHERE (u.username LIKE ? OR u.full_name LIKE ?)';
+                 WHERE (u.username LIKE ? OR u.full_name LIKE ?)";
         $args = [$q, $q];
         if (in_array($role, ['student', 'teacher', 'admin'], true)) {
             $sql .= ' AND u.role = ?';
             $args[] = $role;
         }
-        $stmt = Database::get()->prepare($sql . ' ORDER BY u.role, u.username LIMIT 100');
+        $stmt = Database::get()->prepare($sql . ' ORDER BY reset_requested DESC, u.role, u.username LIMIT 100');
         $stmt->execute($args);
-        return ['users' => $stmt->fetchAll()];
+        return ['users' => array_map(fn ($u) => [
+            'is_active' => (bool) $u['is_active'],
+            'must_change_password' => (bool) $u['must_change_password'],
+            'reset_requested' => (bool) $u['reset_requested'],
+        ] + $u, $stmt->fetchAll())];
     }
 
-    /** POST /admin/users/{id}/reset-password — resets to username (student code) and signs the user out. */
+    /**
+     * POST /admin/users/{id}/reset-password — temporary password = username (student code),
+     * forced change at next login, signed out everywhere, reset requests closed.
+     */
     public static function resetPassword(Request $req): array
     {
-        $id = (int) $req->params['id'];
-        $stmt = Database::get()->prepare('SELECT username, role FROM users WHERE id = ?');
-        $stmt->execute([$id]);
-        $u = $stmt->fetch() ?: throw new HttpException(404, 'ไม่พบผู้ใช้');
+        $u = self::user((int) $req->params['id']);
         if ($u['role'] === 'admin') {
-            throw new HttpException(403, 'รีเซ็ตรหัสผ่านผู้ดูแลระบบจากหน้านี้ไม่ได้');
+            throw new HttpException(403, 'รีเซ็ตรหัสผ่านผู้ดูแลระบบจากหน้านี้ไม่ได้ (ผู้ดูแลเปลี่ยนเองที่หน้าบัญชีของฉัน)');
         }
-        Database::get()->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([password_hash($u['username'], PASSWORD_DEFAULT), $id]);
-        Database::get()->prepare('DELETE FROM auth_tokens WHERE user_id = ?')->execute([$id]);
-        return ['ok' => true, 'message' => "รีเซ็ตแล้ว รหัสผ่านใหม่ = {$u['username']}"];
+        $username = PasswordService::resetToDefault((int) $u['id'], (int) $req->user['id']);
+        return ['ok' => true, 'message' => "รีเซ็ตแล้ว — รหัสผ่านชั่วคราว = {$username} (ผู้ใช้ต้องตั้งรหัสใหม่เมื่อเข้าสู่ระบบ)"];
+    }
+
+    private static function user(int $id): array
+    {
+        $stmt = Database::get()->prepare('SELECT * FROM users WHERE id = ?');
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: throw new HttpException(404, 'ไม่พบผู้ใช้');
+    }
+
+    /**
+     * PUT /admin/users/{id} — { username, full_name, department_id, class_group, is_active }.
+     * For students the username is the student code, so both change together.
+     */
+    public static function updateUser(Request $req): array
+    {
+        $u = self::user((int) $req->params['id']);
+        $db = Database::get();
+        $username = trim((string) $req->input('username', $u['username']));
+        $name = trim(preg_replace('/\s+/u', ' ', (string) $req->input('full_name', '')));
+        $active = (bool) $req->input('is_active', true);
+        if (!preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
+            throw new HttpException(422, 'ชื่อผู้ใช้/รหัสนักศึกษา ต้องเป็นตัวอักษรอังกฤษ/ตัวเลข 3–50 ตัว');
+        }
+        if ($name === '' || mb_strlen($name) > 150) {
+            throw new HttpException(422, 'กรุณากรอกชื่อ-สกุล');
+        }
+        if ((int) $u['id'] === (int) $req->user['id'] && !$active) {
+            throw new HttpException(422, 'ปิดการใช้งานบัญชีของตัวเองไม่ได้');
+        }
+        $dup = $db->prepare('SELECT COUNT(*) FROM users WHERE username = ? AND id <> ?');
+        $dup->execute([$username, $u['id']]);
+        if ($dup->fetchColumn()) {
+            throw new HttpException(409, "ชื่อผู้ใช้ {$username} ถูกใช้แล้ว");
+        }
+        $deptId = $req->input('department_id') ? (int) $req->input('department_id') : null;
+        $group = mb_substr(trim((string) $req->input('class_group', '')), 0, 30) ?: null;
+        $db->prepare('UPDATE users SET username = ?, full_name = ?, department_id = ?, class_group = ?, student_code = ?, is_active = ? WHERE id = ?')
+            ->execute([$username, $name, $deptId, $u['role'] === 'student' ? $group : null,
+                $u['role'] === 'student' ? $username : $u['student_code'], $active ? 1 : 0, $u['id']]);
+        if (!$active) {
+            $db->prepare('DELETE FROM auth_tokens WHERE user_id = ?')->execute([$u['id']]);
+        }
+        return ['ok' => true];
+    }
+
+    /** GET /admin/reset-requests — pending "forgot password" requests. */
+    public static function resetRequests(Request $req): array
+    {
+        return ['requests' => Database::get()->query(
+            "SELECT r.id, r.note, r.created_at, u.id AS user_id, u.username, u.full_name, u.role, u.class_group
+               FROM password_reset_requests r JOIN users u ON u.id = r.user_id
+              WHERE r.status = 'pending' ORDER BY r.created_at"
+        )->fetchAll()];
+    }
+
+    /** POST /admin/reset-requests/{id}/dismiss — close a request without resetting (e.g. spam). */
+    public static function dismissRequest(Request $req): array
+    {
+        Database::get()->prepare("UPDATE password_reset_requests SET status = 'dismissed', handled_by = ?, handled_at = NOW() WHERE id = ? AND status = 'pending'")
+            ->execute([$req->user['id'], (int) $req->params['id']]);
+        return ['ok' => true];
     }
 
     /** DELETE /admin/courses/{id} — removes the course with its enrollments, groupings and AI cache (results stay with students). */

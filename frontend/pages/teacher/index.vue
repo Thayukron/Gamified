@@ -2,7 +2,7 @@
 import { useAuthStore } from '~/stores/auth'
 import { pct } from '~/utils/viz'
 
-interface Course { id: number; code: string; name: string; section: string; department_name: string; enrolled: number; profiled: number }
+interface Course { id: number; code: string; name: string; section: string; department_name: string; enrolled: number; profiled: number; reset_requests: number }
 
 const auth = useAuthStore()
 const api = useApi()
@@ -82,6 +82,15 @@ const steps = [
             <AppIcon name="chart" />
           </span>
         </div>
+        <button
+          v-if="c.reset_requests > 0"
+          type="button"
+          class="mt-3 flex w-full items-center gap-2 rounded-lg bg-rune-400/15 px-3 py-1.5 text-left text-sm text-rune-200 hover:bg-rune-400/25"
+          data-testid="course-resets"
+          @click.prevent.stop="navigateTo(`/teacher/course/${c.id}/students`)"
+        >
+          <AppIcon name="lock" :size="14" /> ผู้เรียน {{ c.reset_requests }} คนขอรีเซ็ตรหัสผ่าน — คลิกเพื่อจัดการ
+        </button>
         <div class="mt-4">
           <div class="flex justify-between text-xs text-slate-400">
             <span>ผู้เรียนที่มีโปรไฟล์แล้ว</span>

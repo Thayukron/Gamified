@@ -32,7 +32,7 @@ class Auth
             return null;
         }
         $stmt = Database::get()->prepare(
-            'SELECT u.id, u.username, u.full_name, u.role, u.department_id, u.student_code
+            'SELECT u.id, u.username, u.full_name, u.role, u.department_id, u.student_code, u.must_change_password
                FROM auth_tokens t JOIN users u ON u.id = t.user_id
               WHERE t.token_hash = ? AND t.expires_at > NOW() AND u.is_active = 1'
         );

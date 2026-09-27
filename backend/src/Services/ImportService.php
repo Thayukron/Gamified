@@ -135,7 +135,7 @@ class ImportService
             $this->users[$username] ??= ['id' => null, 'role' => $role];
         });
         if ($res['status'] === 'new' && $d['password'] === '') {
-            $res['messages'][] = 'รหัสผ่านเริ่มต้น = ' . ($role === 'student' ? 'รหัสนักศึกษา' : 'ชื่อผู้ใช้');
+            $res['messages'][] = 'รหัสผ่านเริ่มต้น = ' . ($role === 'student' ? 'รหัสนักศึกษา' : 'ชื่อผู้ใช้') . ' (ต้องตั้งใหม่เมื่อเข้าสู่ระบบครั้งแรก)';
         }
         unset($res['data']['password']);
         $res['password'] = $d['password']; // kept server-side only for commit
@@ -308,8 +308,9 @@ class ImportService
         $db = Database::get();
         if ($row['status'] === 'new') {
             $pw = $row['password'] !== '' ? $row['password'] : $d['username'];
-            $db->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code, class_group) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                ->execute([$d['username'], password_hash($pw, PASSWORD_DEFAULT), $d['full_name'], $role, $deptId, $role === 'student' ? $d['username'] : null, $group]);
+            // default password (= username) must be replaced at first login
+            $db->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code, class_group, must_change_password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
+                ->execute([$d['username'], password_hash($pw, PASSWORD_DEFAULT), $d['full_name'], $role, $deptId, $role === 'student' ? $d['username'] : null, $group, $row['password'] === '' ? 1 : 0]);
         } else {
             $sql = 'UPDATE users SET full_name = ?, department_id = COALESCE(?, department_id), class_group = COALESCE(?, class_group), is_active = 1';
             $args = [$d['full_name'], $deptId, $group];

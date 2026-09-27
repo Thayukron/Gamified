@@ -17,7 +17,7 @@ class AuthController
         }
 
         $stmt = Database::get()->prepare(
-            'SELECT id, username, password_hash, full_name, role, department_id, student_code
+            'SELECT id, username, password_hash, full_name, role, department_id, student_code, must_change_password
                FROM users WHERE username = ? AND is_active = 1'
         );
         $stmt->execute([$username]);
@@ -26,6 +26,7 @@ class AuthController
             throw new HttpException(401, 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
         }
         unset($user['password_hash']);
+        $user['must_change_password'] = (bool) $user['must_change_password'];
 
         return ['token' => Auth::issueToken((int) $user['id']), 'user' => $user];
     }
@@ -38,6 +39,6 @@ class AuthController
 
     public static function me(Request $req): array
     {
-        return ['user' => $req->user];
+        return ['user' => ['must_change_password' => (bool) $req->user['must_change_password']] + $req->user];
     }
 }

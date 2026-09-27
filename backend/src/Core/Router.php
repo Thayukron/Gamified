@@ -33,6 +33,10 @@ class Router
             $user = null;
             if ($route['roles']) {
                 $user = Auth::require($route['roles']);
+                // after a reset the user must choose a new password before using anything else
+                if (!empty($user['must_change_password']) && !in_array($path, ['/auth/me', '/auth/logout', '/me/profile', '/me/password'], true)) {
+                    throw new HttpException(403, 'กรุณาตั้งรหัสผ่านใหม่ก่อนใช้งาน');
+                }
             }
             $result = ($route['handler'])(new Request($params, $user));
             Response::json($result);

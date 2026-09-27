@@ -11,7 +11,11 @@ const items = [
 const api = useApi()
 const inst = reactive({ name: '', affiliation: '' })
 const instMsg = ref('')
-onMounted(async () => Object.assign(inst, await api('/admin/institution')))
+const pendingResets = ref(0)
+onMounted(async () => {
+  Object.assign(inst, await api('/admin/institution'))
+  pendingResets.value = (await api<any>('/admin/reset-requests')).requests.length
+})
 async function saveInst() {
   instMsg.value = ''
   try {
@@ -31,6 +35,11 @@ async function saveInst() {
       <p class="mt-1 text-slate-400">ควบคุมกลไกและผนึกทั้งหมดของอาณาจักร</p>
     </div>
     <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">CONTROLS</span></div>
+    <NuxtLink v-if="pendingResets" to="/admin/data#requests" class="card card-hover flex items-center gap-3 border-rune-400/50 !py-3" data-testid="pending-resets">
+      <AppIcon name="lock" :size="18" class="text-rune-300" />
+      <span class="flex-1 text-slate-100">มีคำขอรีเซ็ตรหัสผ่าน <b class="text-rune-200">{{ pendingResets }}</b> รายการ</span>
+      <span class="text-sm text-rune-300">จัดการ →</span>
+    </NuxtLink>
     <div class="grid gap-4 lg:grid-cols-3">
       <NuxtLink v-for="l in links" :key="l.to" :to="l.to" class="card card-hover flex items-center gap-4">
         <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border" :class="l.color"><AppIcon :name="l.icon" /></span>

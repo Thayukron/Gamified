@@ -32,6 +32,13 @@ $router->get('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseCon
 $router->post('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'add'], ['teacher', 'admin']);
 $router->delete('/teacher/courses/{id}/students/{sid}', [App\Controllers\TeacherCourseController::class, 'remove'], ['teacher', 'admin']);
 $router->get('/teacher/students', [App\Controllers\TeacherCourseController::class, 'search'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/students/{sid}/reset-password', [App\Controllers\TeacherCourseController::class, 'resetPassword'], ['teacher', 'admin']);
+
+// Own account (any role) + public "forgot password" request
+$router->get('/me/profile', [App\Controllers\AccountController::class, 'profile'], ['*']);
+$router->put('/me/profile', [App\Controllers\AccountController::class, 'updateProfile'], ['*']);
+$router->put('/me/password', [App\Controllers\AccountController::class, 'changePassword'], ['*']);
+$router->post('/auth/forgot', [App\Controllers\AccountController::class, 'forgot']);
 $router->get('/teacher/courses/{id}/dashboard', [App\Controllers\TeacherController::class, 'dashboard'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/guide', [App\Controllers\TeacherController::class, 'guide'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/context', [App\Controllers\TeacherController::class, 'saveContext'], ['teacher', 'admin']);
@@ -61,4 +68,7 @@ $router->post('/admin/import/commit', [App\Controllers\AdminController::class, '
 $router->get('/admin/overview', [App\Controllers\AdminController::class, 'overview'], ['admin']);
 $router->get('/admin/users', [App\Controllers\AdminController::class, 'users'], ['admin']);
 $router->post('/admin/users/{id}/reset-password', [App\Controllers\AdminController::class, 'resetPassword'], ['admin']);
+$router->put('/admin/users/{id}', [App\Controllers\AdminController::class, 'updateUser'], ['admin']);
+$router->get('/admin/reset-requests', [App\Controllers\AdminController::class, 'resetRequests'], ['admin']);
+$router->post('/admin/reset-requests/{id}/dismiss', [App\Controllers\AdminController::class, 'dismissRequest'], ['admin']);
 $router->delete('/admin/courses/{id}', [App\Controllers\AdminController::class, 'deleteCourse'], ['admin']);

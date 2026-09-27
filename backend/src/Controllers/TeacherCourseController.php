@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
+use App\Services\PasswordService;
 
 /**
  * Teachers create their own courses (current term) and pick the students who study with them.
@@ -110,12 +111,27 @@ class TeacherCourseController
     {
         $course = TeacherController::course($req, (int) $req->params['id']);
         $stmt = Database::get()->prepare(
-            "SELECT u.id, u.student_code, u.full_name, u.class_group, d.name AS department_name
+            "SELECT u.id, u.student_code, u.full_name, u.class_group, d.name AS department_name, u.must_change_password,
+                    EXISTS(SELECT 1 FROM password_reset_requests r WHERE r.user_id = u.id AND r.status = 'pending') AS reset_requested
                FROM enrollments e JOIN users u ON u.id = e.student_id LEFT JOIN departments d ON d.id = u.department_id
-              WHERE e.course_id = ? ORDER BY u.class_group, u.student_code"
+              WHERE e.course_id = ? ORDER BY reset_requested DESC, u.class_group, u.student_code"
         );
         $stmt->execute([$course['id']]);
-        return ['course' => $course, 'students' => $stmt->fetchAll()];
+        $students = array_map(fn ($s) => ['reset_requested' => (bool) $s['reset_requested'], 'must_change_password' => (bool) $s['must_change_password']] + $s, $stmt->fetchAll());
+        return ['course' => $course, 'students' => $students];
+    }
+
+    /** POST /teacher/courses/{id}/students/{sid}/reset-password — for a student enrolled in the teacher's course. */
+    public static function resetPassword(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $stmt = Database::get()->prepare(
+            "SELECT u.id FROM enrollments e JOIN users u ON u.id = e.student_id WHERE e.course_id = ? AND u.id = ? AND u.role = 'student'"
+        );
+        $stmt->execute([$course['id'], (int) $req->params['sid']]);
+        $sid = $stmt->fetchColumn() ?: throw new HttpException(404, 'ไม่พบผู้เรียนนี้ในรายวิชา');
+        $code = PasswordService::resetToDefault((int) $sid, (int) $req->user['id']);
+        return ['ok' => true, 'message' => "รีเซ็ตแล้ว — รหัสผ่านชั่วคราว = {$code} (ผู้เรียนต้องตั้งรหัสใหม่เมื่อเข้าสู่ระบบ)"];
     }
 
     /** GET /teacher/students?q=&group=&course= — find students to add (max 200); marks those already in the course. */

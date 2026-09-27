@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -28,6 +28,7 @@ CREATE TABLE users (
     student_code   VARCHAR(30)  NULL,
     class_group    VARCHAR(30)  NULL COMMENT 'กลุ่มเรียน/ห้อง เช่น ปวส.1/1',
     is_active      TINYINT(1)   NOT NULL DEFAULT 1,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'บังคับตั้งรหัสผ่านใหม่เมื่อเข้าสู่ระบบ',
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_users_role (role),
@@ -220,4 +221,17 @@ CREATE TABLE course_groupings (
     saved_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_grp_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_grp_user FOREIGN KEY (saved_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- คำขอรีเซ็ตรหัสผ่าน (ลืมรหัสผ่าน) — แอดมิน/ครูประจำวิชาเป็นผู้รีเซ็ต
+CREATE TABLE password_reset_requests (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT UNSIGNED NOT NULL,
+    note        VARCHAR(200) NULL,
+    status      ENUM('pending','done','dismissed') NOT NULL DEFAULT 'pending',
+    handled_by  INT UNSIGNED NULL,
+    handled_at  DATETIME NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_reset_status (status, user_id),
+    CONSTRAINT fk_reset_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

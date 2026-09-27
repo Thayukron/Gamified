@@ -9,6 +9,7 @@ export interface User {
   role: Role
   department_id: number | null
   student_code: string | null
+  must_change_password?: boolean
 }
 
 const TOKEN_KEY = 'gsp_token'

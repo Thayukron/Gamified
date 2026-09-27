@@ -17,10 +17,13 @@ const roleLabel = { student: 'นักผจญภัย', teacher: 'ผู้�
           <span class="hidden font-display text-sm font-bold tracking-[0.25em] text-rune-300 sm:inline">ARCANA PROFILE</span>
         </NuxtLink>
         <div v-if="auth.user" class="flex items-center gap-3 text-sm">
-          <div class="text-right leading-tight">
-            <div class="font-medium text-slate-100">{{ auth.user.full_name }}</div>
-            <div class="text-xs text-rune-400/80">{{ roleLabel[auth.user.role] }}</div>
-          </div>
+          <NuxtLink to="/account" class="group flex items-center gap-2 rounded-xl px-2 py-1 transition hover:bg-white/5" title="บัญชีของฉัน · เปลี่ยนรหัสผ่าน" data-testid="account-link">
+            <div class="text-right leading-tight">
+              <div class="font-medium text-slate-100 group-hover:text-rune-200">{{ auth.user.full_name }}</div>
+              <div class="text-xs text-rune-400/80">{{ roleLabel[auth.user.role] }} · บัญชีของฉัน</div>
+            </div>
+            <AppIcon name="lock" :size="16" class="text-slate-500 group-hover:text-rune-300" />
+          </NuxtLink>
           <button class="btn-ghost !px-3 !py-2" title="ออกจากระบบ" @click="auth.logout()">
             <AppIcon name="logout" :size="18" />
             <span class="hidden sm:inline">ออกจากระบบ</span>

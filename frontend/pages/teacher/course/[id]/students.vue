@@ -92,6 +92,15 @@ const removeStudent = (s: any) => {
   })
 }
 
+const resetStudent = (s: any) => {
+  if (!confirm(`รีเซ็ตรหัสผ่านของ ${s.full_name}?\nรหัสผ่านชั่วคราว = ${s.student_code} และผู้เรียนต้องตั้งรหัสใหม่เมื่อเข้าสู่ระบบ`)) return
+  run(async () => {
+    msg.value = { ok: true, text: (await api<any>(`/teacher/courses/${id}/students/${s.id}/reset-password`, { method: 'POST' })).message }
+    await load()
+  })
+}
+const pendingResets = computed(() => roster.value.filter((s) => s.reset_requested).length)
+
 const saveCourse = () => run(async () => {
   await api(`/teacher/courses/${id}`, { method: 'PUT', body: formToBody(form.value!) })
   editing.value = false
@@ -217,6 +226,9 @@ const deleteCourse = () => {
           <h2 class="text-lg font-medium text-slate-50">ผู้เรียนในรายวิชา <span class="text-sm font-normal text-slate-400">({{ roster.length }} คน)</span></h2>
           <input v-model="rosterFilter" class="input !w-64 !py-1.5" placeholder="กรองรายชื่อ">
         </div>
+        <p v-if="pendingResets" class="rounded-xl bg-rune-400/10 px-3 py-2 text-sm text-rune-200">
+          <AppIcon name="lock" :size="14" /> ผู้เรียน {{ pendingResets }} คนแจ้งลืมรหัสผ่าน (อยู่บนสุดของรายชื่อ) — กด “รีเซ็ตรหัสผ่าน” แล้วบอกผู้เรียนว่ารหัสชั่วคราวคือรหัสนักศึกษา
+        </p>
         <p v-if="!roster.length" class="text-sm text-slate-500">ยังไม่มีผู้เรียน — เพิ่มจากด้านบน</p>
         <div v-else class="max-h-[60vh] overflow-auto rounded-xl ring-1 ring-white/10">
           <table class="w-full text-sm">
@@ -227,10 +239,16 @@ const deleteCourse = () => {
               <tr v-for="(s, i) in shownRoster" :key="s.id" class="border-t border-white/5">
                 <td class="px-3 py-2 text-slate-500">{{ i + 1 }}</td>
                 <td class="px-3 py-2 text-slate-300">{{ s.student_code }}</td>
-                <td class="px-3 py-2 text-slate-100">{{ s.full_name }}</td>
+                <td class="px-3 py-2 text-slate-100">
+                  {{ s.full_name }}
+                  <span v-if="s.reset_requested" class="ml-1 rounded-full bg-rune-400/20 px-2 py-0.5 text-xs text-rune-200">ขอรีเซ็ตรหัสผ่าน</span>
+                </td>
                 <td class="px-3 py-2 text-slate-300">{{ s.class_group ?? '-' }}</td>
                 <td class="px-3 py-2 text-slate-400">{{ s.department_name ?? '-' }}</td>
-                <td class="px-3 py-2 text-right"><button class="text-xs text-red-300/80 hover:text-red-300" :disabled="busy" @click="removeStudent(s)">นำออก</button></td>
+                <td class="whitespace-nowrap px-3 py-2 text-right">
+                  <button class="mr-3 text-xs" :class="s.reset_requested ? 'text-rune-200 hover:text-rune-100' : 'text-rune-300/70 hover:text-rune-300'" :disabled="busy" :data-testid="`reset-${s.student_code}`" @click="resetStudent(s)">รีเซ็ตรหัสผ่าน</button>
+                  <button class="text-xs text-red-300/80 hover:text-red-300" :disabled="busy" @click="removeStudent(s)">นำออก</button>
+                </td>
               </tr>
             </tbody>
           </table>

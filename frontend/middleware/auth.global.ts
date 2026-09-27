@@ -19,6 +19,10 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   const role = auth.user!.role
+  // after a password reset (or first login with the default password) the user must set a new one first
+  if (auth.user!.must_change_password && to.path !== '/account') {
+    return navigateTo('/account')
+  }
   if (to.path === '/') {
     return navigateTo(homeFor(role))
   }

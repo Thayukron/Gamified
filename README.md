@@ -67,3 +67,7 @@ php backend/database/migrate.php
 | GET | /api/admin/overview · /api/admin/users?q=&role= | admin |
 | POST | /api/admin/users/{id}/reset-password | admin (รีเซ็ตเป็นชื่อผู้ใช้/รหัสนักศึกษา) |
 | DELETE | /api/admin/courses/{id} | admin |
+| GET/PUT | /api/me/profile · PUT /api/me/password | ทุก role (บัญชีของตนเอง) |
+| POST | /api/auth/forgot | สาธารณะ (ส่งคำขอรีเซ็ต) |
+| PUT | /api/admin/users/{id} · GET /api/admin/reset-requests · POST …/{id}/dismiss | admin |
+| POST | /api/teacher/courses/{id}/students/{sid}/reset-password | teacher (ผู้เรียนในวิชาที่สอน), admin |
