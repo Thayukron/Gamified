@@ -203,6 +203,9 @@ class StudentGameController
             'eyes' => $color($in['eyes'] ?? null) ?? '#7c3aed',
             'robe' => $color($in['robe'] ?? null) ?? '#4c1d95',
         ];
+        if (is_string($in['preset'] ?? null) && preg_match('/^hero-[mf][1-9]$/', $in['preset'])) {
+            $avatar['preset'] = $in['preset'];
+        }
         Database::get()->prepare(
             'INSERT INTO player_progress (user_id, avatar) VALUES (?, ?) ON DUPLICATE KEY UPDATE avatar = VALUES(avatar)'
         )->execute([$req->user['id'], json_encode($avatar)]);

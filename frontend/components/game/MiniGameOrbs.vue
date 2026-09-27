@@ -145,6 +145,14 @@ function pop(o: Orb) {
   25%, 75% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
   100% { transform: translate(-50%, -60%) scale(0.3); opacity: 0; }
 }
+/* "Reduce motion" (OS setting) would otherwise freeze orbs on their invisible last frame */
+@media (prefers-reduced-motion: reduce) {
+  .orb {
+    animation: none !important;
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
 .burst {
   animation: burst 0.5s ease-out forwards;
 }

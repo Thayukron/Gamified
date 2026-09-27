@@ -48,6 +48,28 @@ wearing a purple mage robe with a high gold-trimmed collar and a small gold broo
 Semi-realistic anime visual novel character sprite, half body from waist up, ... (style prompt)
 ```
 
+## ตัวละครของผู้เล่น (ให้นักเรียนเลือกตอนสร้างตัวละคร) — 6 แบบ
+ชื่อไฟล์ `hero-{m|f}{1-3}-{สีหน้า}` · อย่างน้อยต้องมี `neutral` และ `happy` (มีครบ 5 สีหน้าจะดีที่สุด)
+ใช้ **Style prompt ตัวละคร** ด้านบนต่อท้ายเหมือนเดิม (พื้นเขียว 9:16 ครึ่งตัว)
+ระบบจะแสดงเฉพาะแบบที่มีภาพแล้ว — ทำทีละตัวได้
+
+| id | ชื่อในเกม | คำอธิบายสำหรับ prompt |
+|---|---|---|
+| `hero-m1` | นักผจญภัยผู้กล้า | a brave 17-year-old Thai boy apprentice adventurer, short spiky black hair, warm tan skin, dark brown eyes, navy blue apprentice mage robe with gold trim over a white shirt, a brown leather belt with pouches, friendly confident smile |
+| `hero-m2` | นักเดินทางไร้พรมแดน | a cheerful 17-year-old Southeast Asian boy traveler, messy dark brown hair, light brown skin, reddish-brown leather travel coat over a cream apprentice robe, a satchel strap across the chest, a small compass pendant |
+| `hero-m3` | นักปราชญ์รุ่นเยาว์ | a calm 17-year-old East Asian boy scholar, neat black hair, round thin glasses, fair skin, forest green scholar robe with gold embroidery, holding an old leather book |
+| `hero-f1` | นักดาบเวทผู้มุ่งมั่น | a determined 17-year-old Thai girl spell-knight apprentice, long black hair in a high ponytail, tan skin, violet eyes, deep purple and silver light armor-robe, a short rune sword at her hip |
+| `hero-f2` | นักประดิษฐ์ร่าเริง | a cheerful 16-year-old girl inventor apprentice, short dark brown bob hair with a gold hair clip, fair skin, amber eyes, orange and teal robe with rolled sleeves, brass goggles on her head, a small wrench in a belt |
+| `hero-f3` | ผู้เยียวยาใจดี | a gentle 17-year-old Southeast Asian girl healer apprentice, long wavy dark hair in a side braid with small white flowers, light brown skin, soft brown eyes, white and sky blue healer robe with gold trim, a glowing herb pouch |
+
+ตัวอย่าง prompt:
+```
+A brave 17-year-old Thai boy apprentice adventurer, short spiky black hair, warm tan skin, dark brown eyes,
+navy blue apprentice mage robe with gold trim over a white shirt, a brown leather belt with pouches, friendly confident smile.
+Semi-realistic anime visual novel character sprite, half body from waist up, ... (style prompt)
+```
+วางไฟล์ที่ `art-source/characters/` แล้วบอก Claude ให้รัน `tools/process-art.js` (หรือวางใน `frontend/public/characters/` เป็น .webp เอง)
+
 ## ฉาก (Background)
 Style prompt ฉาก:
 ```

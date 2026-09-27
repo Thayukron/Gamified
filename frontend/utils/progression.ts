@@ -30,11 +30,45 @@ export interface Avatar {
   skin: string
   eyes: string
   robe: string
+  /** Painted hero chosen from the gallery; overrides the SVG look when its artwork exists. */
+  preset?: string
 }
 
 export const DEFAULT_AVATAR: Avatar = { gender: 'f', hairStyle: 'bob', hair: '#1f2937', skin: '#f1c7a5', eyes: '#7c3aed', robe: '#4c1d95' }
 
+/** Painted heroes (art in public/characters/{id}-{expr}.webp, prompts in docs/art-prompts.md). */
+export const HERO_PRESETS = [
+  { id: 'hero-m1', gender: 'm', title: 'นักผจญภัยผู้กล้า' },
+  { id: 'hero-m2', gender: 'm', title: 'นักเดินทางไร้พรมแดน' },
+  { id: 'hero-m3', gender: 'm', title: 'นักปราชญ์รุ่นเยาว์' },
+  { id: 'hero-f1', gender: 'f', title: 'นักดาบเวทผู้มุ่งมั่น' },
+  { id: 'hero-f2', gender: 'f', title: 'นักประดิษฐ์ร่าเริง' },
+  { id: 'hero-f3', gender: 'f', title: 'ผู้เยียวยาใจดี' },
+] as const
+
+export const HERO_EXPRESSIONS = ['neutral', 'happy', 'surprised', 'sad', 'determined'] as const
+export const heroImages = (id: string) =>
+  Object.fromEntries(HERO_EXPRESSIONS.map((e) => [e, `/characters/${id}-${e}.webp`]))
+
 export function avatarDef(a: Avatar | null | undefined, name = 'คุณ'): CharacterDef {
   const v = a ?? DEFAULT_AVATAR
-  return { name, kind: 'mage', gender: v.gender, hairStyle: v.hairStyle, hair: v.hair, skin: v.skin, eyes: v.eyes, robe: v.robe, color: '#f5c451' }
+  const base: CharacterDef = { name, kind: 'mage', gender: v.gender, hairStyle: v.hairStyle, hair: v.hair, skin: v.skin, eyes: v.eyes, robe: v.robe, color: '#f5c451' }
+  return v.preset ? { ...base, images: heroImages(v.preset) } : base
+}
+
+/** Which hero presets actually have artwork deployed (checked once per session). */
+let availableHeroes: Promise<string[]> | null = null
+export function loadAvailableHeroes() {
+  availableHeroes ??= Promise.all(
+    HERO_PRESETS.map(
+      (h) =>
+        new Promise<string | null>((resolve) => {
+          const img = new Image()
+          img.onload = () => resolve(h.id)
+          img.onerror = () => resolve(null)
+          img.src = `/characters/${h.id}-neutral.webp`
+        }),
+    ),
+  ).then((ids) => ids.filter((x): x is string => !!x))
+  return availableHeroes
 }
