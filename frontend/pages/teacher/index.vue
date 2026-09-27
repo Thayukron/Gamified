@@ -21,7 +21,6 @@ onMounted(async () => {
 })
 
 const upcoming = [
-  { icon: 'castle', title: 'จัดกลุ่มอัจฉริยะ', desc: 'จัดกลุ่มคละจุดแข็งอัตโนมัติ', phase: 'C' },
   { icon: 'scroll', title: 'ส่งออกรายงาน', desc: 'PDF / Excel สำหรับ ว.PA และวิจัยชั้นเรียน', phase: 'D' },
 ]
 </script>

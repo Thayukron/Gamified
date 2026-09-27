@@ -39,3 +39,6 @@ $router->delete('/me/ai', [App\Controllers\AiController::class, 'removeKey'], ['
 $router->get('/admin/ai', [App\Controllers\AiController::class, 'adminStatus'], ['admin']);
 $router->put('/admin/ai', [App\Controllers\AiController::class, 'adminSave'], ['admin']);
 $router->put('/admin/ai/teachers/{id}', [App\Controllers\AiController::class, 'adminAllow'], ['admin']);
+$router->post('/teacher/courses/{id}/groups/preview', [App\Controllers\TeacherController::class, 'groupsPreview'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/groups', [App\Controllers\TeacherController::class, 'groupsSaved'], ['teacher', 'admin']);
+$router->put('/teacher/courses/{id}/groups', [App\Controllers\TeacherController::class, 'groupsSave'], ['teacher', 'admin']);

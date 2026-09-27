@@ -329,6 +329,9 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
         <section class="card">
           <h2 class="sec"><span class="num">6</span> กลุ่มผู้เรียนและแนวทางซ่อมเสริมรายกลุ่ม</h2>
           <p class="hint"><span class="no-print">คลิกกลุ่มเพื่อดูรายชื่อ · </span>ใช้ประกอบการซ่อมเสริมและดูแลรายบุคคล</p>
+          <NuxtLink :to="`/teacher/course/${route.params.id}/groups`" class="no-print btn-ghost mt-3 !py-1.5 text-sm">
+            <AppIcon name="castle" :size="16" /> จัดกลุ่มทำงาน/ซ่อมเสริมอัตโนมัติ →
+          </NuxtLink>
           <div class="mt-4 space-y-2">
             <div v-for="gr in g.groups" :key="gr.key" class="rounded-xl border" :class="gr.tone === 'care' ? 'border-[#d95926]/50' : gr.tone === 'muted' ? 'border-white/10 opacity-80' : 'border-white/10'">
               <button class="flex w-full items-center justify-between gap-3 p-4 text-left" @click="openGroups[gr.key] = !openGroups[gr.key]">

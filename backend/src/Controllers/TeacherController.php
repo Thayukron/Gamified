@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
+use App\Guide\GroupingService;
 use App\Guide\TeachingGuide;
 use App\Services\AiGuideService;
 use App\Services\ProfileService;
@@ -106,6 +107,61 @@ class TeacherController
         $type = (string) $req->input('type', 'course');
         $topic = $type === 'unit' ? (string) $req->input('topic', '') : null;
         return ['result' => AiGuideService::generate((int) $req->user['id'], $course, self::classData($course), $type, $topic)];
+    }
+
+    /** POST /teacher/courses/{id}/groups/preview — { size, mode, seed?, include_unprofiled? } (not saved) */
+    public static function groupsPreview(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $dash = self::classData($course);
+        $mode = $req->input('mode') === 'similar' ? 'similar' : 'mixed';
+        return GroupingService::build(
+            $dash['students'],
+            (int) $req->input('size', 4),
+            $mode,
+            (int) ($req->input('seed') ?: random_int(1, 999999)),
+            (bool) $req->input('include_unprofiled', true)
+        ) + ['saved_at' => null];
+    }
+
+    /** GET /teacher/courses/{id}/groups — the saved grouping, re-described with current profiles. */
+    public static function groupsSaved(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $stmt = Database::get()->prepare('SELECT * FROM course_groupings WHERE course_id = ?');
+        $stmt->execute([$course['id']]);
+        $row = $stmt->fetch();
+        if (!$row) {
+            return ['saved' => null];
+        }
+        $res = GroupingService::fromIds(self::classData($course)['students'], json_decode($row['member_ids'], true) ?: [], $row['mode']);
+        return ['saved' => $res + [
+            'settings' => ['size' => (int) $row['group_size'], 'mode' => $row['mode']],
+            'saved_at' => $row['saved_at'],
+        ]];
+    }
+
+    /** PUT /teacher/courses/{id}/groups — { mode, size, groups: [[student_id,...],...] } */
+    public static function groupsSave(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $students = self::classData($course)['students'];
+        $mode = $req->input('mode') === 'similar' ? 'similar' : 'mixed';
+        $res = GroupingService::fromIds($students, (array) $req->input('groups', []), $mode);
+        if ($req->input('dry_run')) {
+            // after a manual move: recompute roles/notes without saving
+            return ['saved' => $res + ['settings' => ['size' => (int) $req->input('size', 4), 'mode' => $mode], 'saved_at' => null]];
+        }
+        if (!$res['groups']) {
+            throw new HttpException(422, 'ยังไม่มีกลุ่มให้บันทึก');
+        }
+        $ids = array_map(fn ($g) => array_map(fn ($m) => $m['id'], $g['members']), $res['groups']);
+        Database::get()->prepare(
+            'INSERT INTO course_groupings (course_id, mode, group_size, member_ids, saved_by) VALUES (?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE mode = VALUES(mode), group_size = VALUES(group_size), member_ids = VALUES(member_ids),
+                                     saved_by = VALUES(saved_by), saved_at = NOW()'
+        )->execute([$course['id'], $mode, max(2, min(8, (int) $req->input('size', 4))), json_encode($ids), $req->user['id']]);
+        return self::groupsSaved($req);
     }
 
     /** PUT /teacher/courses/{id}/context — course type, level, topics, note. */

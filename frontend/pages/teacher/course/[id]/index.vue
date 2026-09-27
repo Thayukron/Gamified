@@ -149,9 +149,14 @@ const radarSeries = computed(() => {
         <ul class="mt-2 space-y-1.5 text-sm text-slate-200">
           <li v-for="f in findings" :key="f" class="flex gap-2"><span class="text-rune-400">✦</span>{{ f }}</li>
         </ul>
-        <NuxtLink :to="`/teacher/course/${route.params.id}/guide`" class="btn-primary mt-4">
-          <AppIcon name="orb" :size="18" /> ดูไกด์การจัดการเรียนการสอนของห้องนี้
-        </NuxtLink>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <NuxtLink :to="`/teacher/course/${route.params.id}/guide`" class="btn-primary">
+            <AppIcon name="orb" :size="18" /> ดูไกด์การจัดการเรียนการสอนของห้องนี้
+          </NuxtLink>
+          <NuxtLink :to="`/teacher/course/${route.params.id}/groups`" class="btn-ghost">
+            <AppIcon name="castle" :size="18" /> จัดกลุ่มผู้เรียน
+          </NuxtLink>
+        </div>
       </section>
 
       <p v-if="!profiled" class="card text-slate-400">ยังไม่มีผู้เรียนเล่นเกม — ส่งลิงก์ให้ผู้เรียนเข้าเล่นเควสต์ แล้วข้อมูลจะแสดงที่นี่</p>

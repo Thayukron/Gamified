@@ -326,4 +326,12 @@
   .print-doc th {
     text-indent: 0 !important;
   }
+  /* indented blocks must shrink by the indent so they stay inside the page */
+  .print-doc section.card > :not(:first-child) {
+    width: calc(100% - 10mm) !important;
+    max-width: calc(100% - 10mm) !important;
+  }
+  .print-doc section.card > :first-child {
+    padding-right: 0 !important;
+  }
 }

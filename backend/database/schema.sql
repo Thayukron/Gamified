@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -206,4 +206,16 @@ CREATE TABLE user_ai_settings (
     verified_at      DATETIME NULL,
     updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_ai_user_settings FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- การจัดกลุ่มที่ครูบันทึกไว้ (1 ชุดล่าสุดต่อรายวิชา) — ใช้ในรายงาน ว.PA
+CREATE TABLE course_groupings (
+    course_id    INT UNSIGNED PRIMARY KEY,
+    mode         ENUM('mixed','similar') NOT NULL DEFAULT 'mixed',
+    group_size   TINYINT NOT NULL,
+    member_ids   TEXT NOT NULL COMMENT 'JSON: [[student_id,...], ...]',
+    saved_by     INT UNSIGNED NULL,
+    saved_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_grp_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    CONSTRAINT fk_grp_user FOREIGN KEY (saved_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
