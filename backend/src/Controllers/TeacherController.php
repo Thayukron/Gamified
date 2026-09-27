@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
+use App\Guide\TeachingGuide;
 use App\Services\ProfileService;
 
 /**
@@ -20,7 +21,7 @@ class TeacherController
     private static function course(Request $req, int $id): array
     {
         $stmt = Database::get()->prepare(
-            'SELECT c.*, d.name AS department_name, u.full_name AS teacher_name
+            'SELECT c.*, d.name AS department_name, d.code AS department_code, u.full_name AS teacher_name
                FROM courses c
           LEFT JOIN departments d ON d.id = c.department_id
           LEFT JOIN users u ON u.id = c.teacher_id
@@ -61,7 +62,39 @@ class TeacherController
      */
     public static function dashboard(Request $req): array
     {
+        return self::classData(self::course($req, (int) $req->params['id']));
+    }
+
+    /** GET /teacher/courses/{id}/guide — rule-based teaching guide for the class. */
+    public static function guide(Request $req): array
+    {
         $course = self::course($req, (int) $req->params['id']);
+        $dash = self::classData($course);
+        return ['course' => $course, 'term' => $dash['term'], 'guide' => TeachingGuide::build($course, $dash)];
+    }
+
+    /** PUT /teacher/courses/{id}/context — course type, level, topics, note. */
+    public static function saveContext(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $type = $req->input('course_type');
+        if (!in_array($type, ['theory', 'practice', 'mixed'], true)) {
+            throw new HttpException(422, 'ประเภทวิชาไม่ถูกต้อง');
+        }
+        $topics = array_values(array_filter(array_map(fn ($t) => mb_substr(trim((string) $t), 0, 100), (array) $req->input('topics', []))));
+        Database::get()->prepare('UPDATE courses SET course_type = ?, level = ?, topics = ?, context_note = ? WHERE id = ?')->execute([
+            $type,
+            mb_substr(trim((string) $req->input('level', '')), 0, 30) ?: null,
+            json_encode(array_slice($topics, 0, 30), JSON_UNESCAPED_UNICODE),
+            mb_substr(trim((string) $req->input('context_note', '')), 0, 1000) ?: null,
+            $course['id'],
+        ]);
+        return ['ok' => true];
+    }
+
+    /** Roster, Core Profiles and distributions for one course. */
+    private static function classData(array $course): array
+    {
         [$sem, $year] = self::term();
         $db = Database::get();
 

@@ -49,3 +49,5 @@ php backend/database/migrate.php
 | PUT | /api/student/player/avatar | student |
 | GET | /api/teacher/courses | teacher, admin |
 | GET | /api/teacher/courses/{id}/dashboard | teacher (เฉพาะวิชาที่สอน), admin |
+| GET | /api/teacher/courses/{id}/guide | teacher (เฉพาะวิชาที่สอน), admin |
+| PUT | /api/teacher/courses/{id}/context | teacher (เฉพาะวิชาที่สอน), admin |

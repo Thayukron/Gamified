@@ -48,10 +48,13 @@ foreach ($demoFirst as $i => $first) {
     $users->execute(["student$n", $studentPw, "$first {$demoLast[$i % count($demoLast)]}", 'student', 1, "6801$n"]);
 }
 
-$pdo->exec("INSERT INTO courses (code, name, section, semester, academic_year, department_id, teacher_id, context_note) VALUES
-    ('30204-2003', 'โครงสร้างข้อมูลและอัลกอริทึม', 'ปวส.1/1', $sem, $year, 1, 2,
-     'วิชาทฤษฎี+ปฏิบัติ แผนกเทคโนโลยีสารสนเทศ ระดับ ปวส.1 เนื้อหา: อาร์เรย์ ลิงก์ลิสต์ สแตก คิว ทรี กราฟ การค้นหาและการเรียงลำดับ การวิเคราะห์ความซับซ้อน ฝึกเขียนโปรแกรมด้วย Python'),
-    ('20201-2001', 'การบัญชีเบื้องต้น', 'ปวช.1/2', $sem, $year, 2, 3, 'วิชาทฤษฎี แผนกการบัญชี ระดับ ปวช.1')");
+$courseInsert = $pdo->prepare('INSERT INTO courses (code, name, section, semester, academic_year, department_id, teacher_id, course_type, level, topics, context_note) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$courseInsert->execute(['30204-2003', 'โครงสร้างข้อมูลและอัลกอริทึม', 'ปวส.1/1', $sem, $year, 1, 2, 'mixed', 'ปวส.1',
+    json_encode(['อาร์เรย์', 'ลิงก์ลิสต์', 'สแตก', 'คิว', 'ทรี', 'กราฟ', 'การค้นหา', 'การเรียงลำดับ'], JSON_UNESCAPED_UNICODE),
+    'ฝึกเขียนโปรแกรมด้วย Python และวิเคราะห์ความซับซ้อนของอัลกอริทึม']);
+$courseInsert->execute(['20201-2001', 'การบัญชีเบื้องต้น', 'ปวช.1/2', $sem, $year, 2, 3, 'theory', 'ปวช.1',
+    json_encode(['สมการบัญชี', 'การวิเคราะห์รายการค้า', 'สมุดรายวันทั่วไป', 'บัญชีแยกประเภท', 'งบทดลอง'], JSON_UNESCAPED_UNICODE),
+    'วิชาทฤษฎี แผนกการบัญชี']);
 // DSA class: the 10 fresh students (not played yet) + the 36 demo students.
 $pdo->exec("INSERT INTO enrollments (course_id, student_id) SELECT 1, id FROM users WHERE role = 'student'");
 $pdo->exec("INSERT INTO enrollments (course_id, student_id) SELECT 2, id FROM users WHERE role = 'student' AND username BETWEEN 'student031' AND 'student046'");

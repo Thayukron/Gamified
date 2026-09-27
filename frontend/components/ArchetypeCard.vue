@@ -71,17 +71,17 @@ const holland = computed(() => props.result.dominant_riasec.split(''))
           <div class="rounded-xl border border-arcane-400/20 bg-abyss-950/60 p-2">
             <div class="text-[9px] uppercase tracking-widest text-arcane-300/70">Holland</div>
             <div class="font-display text-lg font-bold text-rune-300">{{ result.dominant_riasec }}</div>
-            <div class="truncate text-[10px] text-slate-400">{{ RIASEC[holland[0] as keyof typeof RIASEC]?.th }}</div>
+            <div class="text-[10px] leading-tight text-slate-400">{{ RIASEC[holland[0] as keyof typeof RIASEC]?.th }}</div>
           </div>
           <div class="rounded-xl border border-arcane-400/20 bg-abyss-950/60 p-2">
             <div class="text-[9px] uppercase tracking-widest text-arcane-300/70">เรียนรู้</div>
             <div class="font-display text-lg font-bold text-rune-300">{{ result.dominant_vark ?? '-' }}</div>
-            <div class="truncate text-[10px] text-slate-400">{{ vark.th }}</div>
+            <div class="text-[10px] leading-tight text-slate-400">{{ vark.th }}</div>
           </div>
           <div class="rounded-xl border border-arcane-400/20 bg-abyss-950/60 p-2">
             <div class="text-[9px] uppercase tracking-widest text-arcane-300/70">Mindset</div>
-            <div class="font-display text-lg font-bold capitalize text-rune-300">{{ result.mindset_type }}</div>
-            <div class="truncate text-[10px] text-slate-400">{{ mindset.th }}</div>
+            <div class="font-display text-base font-bold capitalize leading-7 text-rune-300">{{ result.mindset_type }}</div>
+            <div class="text-[10px] leading-tight text-slate-400">{{ mindset.th }}</div>
           </div>
         </div>
 
