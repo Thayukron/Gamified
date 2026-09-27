@@ -10,3 +10,5 @@ backend/vendor/
 .DS_Store
 art-source/
 backend/storage/
+tools/mock-gemini/*.txt
+tools/mock-gemini/*.log
