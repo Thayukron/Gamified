@@ -134,9 +134,6 @@
   .print-doc tr {
     break-inside: avoid;
   }
-  .print-doc h1 {
-    font-size: 20pt;
-  }
   .print-doc h2,
   .print-doc .title-glow {
     color: #000 !important;
@@ -174,36 +171,32 @@
     font-size: 16pt !important;
     line-height: 1.32 !important;
   }
-  .print-doc p,
-  .print-doc li,
-  .print-doc td,
-  .print-doc th,
-  .print-doc span,
-  .print-doc div,
-  .print-doc summary {
+  /* Three levels only (user spec): main headings 18pt bold · sub-headings 16pt bold · body 16pt regular */
+  .print-doc * {
     font-size: 16pt !important;
+    font-weight: 400 !important;
     line-height: 1.32 !important;
   }
-  .print-doc .text-xs,
-  .print-doc .hint,
   .print-doc .print-only {
     font-size: 14pt !important;
   }
-  .print-doc h1 {
-    font-size: 26pt !important;
-    font-weight: 700 !important;
-    line-height: 1.15 !important;
-  }
+  /* level 1 — main headings (document title + numbered sections): 18pt bold */
+  .print-doc h1,
   .print-doc h2,
   .print-doc h2 * {
-    font-size: 20pt !important;
+    font-size: 18pt !important;
     font-weight: 700 !important;
+    line-height: 1.25 !important;
   }
-  .print-doc b,
-  .print-doc strong,
+  /* level 2 — sub-headings (section sub-titles, block titles, group names, table headers): 16pt bold */
+  .print-doc .sub-h,
   .print-doc .font-medium,
   .print-doc .font-semibold,
-  .print-doc th {
+  .print-doc th,
+  .print-doc summary,
+  .print-doc b,
+  .print-doc strong {
+    font-size: 16pt !important;
     font-weight: 700 !important;
   }
 
