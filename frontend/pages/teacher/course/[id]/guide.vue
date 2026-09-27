@@ -148,7 +148,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
 
           <div v-if="aiCourse" class="mt-4 space-y-4">
             <p v-if="aiCourse.stale" class="rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-200">⚠ ข้อมูลผู้เรียนหรือบริบทวิชาเปลี่ยนไปหลังการวิเคราะห์ครั้งนี้ — กด “วิเคราะห์ใหม่” เพื่ออัปเดต</p>
-            <p class="text-slate-100">{{ aiCourse.data.overview }}</p>
+            <p class="print-para text-slate-100">{{ aiCourse.data.overview }}</p>
             <div>
               <p class="sub-h">กลยุทธ์การสอน</p>
               <div class="mt-2 grid gap-3 md:grid-cols-2">
@@ -328,7 +328,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
         <!-- 6. groups -->
         <section class="card">
           <h2 class="sec"><span class="num">6</span> กลุ่มผู้เรียนและแนวทางซ่อมเสริมรายกลุ่ม</h2>
-          <p class="hint">คลิกกลุ่มเพื่อดูรายชื่อ · ใช้ประกอบการซ่อมเสริมและดูแลรายบุคคล</p>
+          <p class="hint"><span class="no-print">คลิกกลุ่มเพื่อดูรายชื่อ · </span>ใช้ประกอบการซ่อมเสริมและดูแลรายบุคคล</p>
           <div class="mt-4 space-y-2">
             <div v-for="gr in g.groups" :key="gr.key" class="rounded-xl border" :class="gr.tone === 'care' ? 'border-[#d95926]/50' : gr.tone === 'muted' ? 'border-white/10 opacity-80' : 'border-white/10'">
               <button class="flex w-full items-center justify-between gap-3 p-4 text-left" @click="openGroups[gr.key] = !openGroups[gr.key]">
@@ -336,7 +336,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
                   <p class="font-medium text-slate-100">{{ gr.title }} <span class="text-sm text-slate-400">· {{ gr.students.length }} คน</span></p>
                   <p v-for="a in gr.advice" :key="a" class="text-sm text-slate-300">{{ a }}</p>
                 </div>
-                <AppIcon name="back" :size="16" class="shrink-0 text-slate-400 transition" :class="openGroups[gr.key] ? 'rotate-90' : '-rotate-90'" />
+                <AppIcon name="back" :size="16" class="no-print shrink-0 text-slate-400 transition" :class="openGroups[gr.key] ? 'rotate-90' : '-rotate-90'" />
               </button>
               <div v-show="openGroups[gr.key]" class="print-show-flex flex flex-wrap gap-1.5 border-t border-white/10 p-4">
                 <span v-for="st in gr.students" :key="st.id" class="rounded-full bg-white/5 px-2.5 py-1 text-xs text-slate-200">{{ st.code }} {{ st.name }}</span>

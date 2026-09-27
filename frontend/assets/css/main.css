@@ -263,4 +263,74 @@
   .print-doc ol {
     margin-top: 1mm !important;
   }
+
+  /* ---- indentation hierarchy (Thai official-document style) ---- */
+  /* document title block centred */
+  .print-doc > div > header {
+    text-align: center !important;
+    margin-bottom: 6mm !important;
+  }
+  .print-doc > div > header .flex {
+    justify-content: center !important;
+  }
+  /* level 1: section headings flush left; level 2: everything under a heading indented */
+  .print-doc section.card > :not(:first-child) {
+    margin-left: 10mm !important;
+  }
+  .print-doc section.card > :first-child .hint {
+    margin-left: 10mm !important;
+  }
+  /* level 3: lists and sub-blocks inside a section indent further */
+  .print-doc section.card .sub-h {
+    margin-top: 3mm !important;
+    font-weight: 700 !important;
+    color: #000 !important;
+  }
+  .print-doc section.card .sub-h + ul,
+  .print-doc section.card .sub-h + ol,
+  .print-doc section.card .sub-h + div,
+  .print-doc .rounded-xl ul,
+  .print-doc .rounded-xl ol {
+    margin-left: 6mm !important;
+  }
+  /* bulleted items ("• text"): wrapped lines align with the text, not the bullet */
+  .print-doc ul > li:not(.flex):not(.rounded-xl) {
+    padding-left: 5mm !important;
+    text-indent: -5mm !important;
+  }
+  .print-doc li * {
+    text-indent: 0 !important;
+  }
+  /* icon + text items (e.g. "✦ …"): keep the icon in its own column */
+  .print-doc li.flex {
+    text-indent: 0 !important;
+    gap: 2.5mm !important;
+  }
+  .print-doc li.flex > span.text-rune-400:first-child {
+    flex-shrink: 0 !important;
+    width: 4mm !important;
+  }
+  .print-doc li.flex > span:first-child {
+    flex-shrink: 0 !important;
+  }
+  .print-doc li.rounded-xl {
+    text-indent: 0 !important;
+    padding-left: 3.5mm !important;
+  }
+  .print-doc ol.list-decimal {
+    padding-left: 6mm !important;
+  }
+  /* prose paragraph: first-line indent */
+  .print-doc .print-para {
+    text-indent: 12mm !important;
+    text-align: justify;
+    text-justify: inter-character;
+  }
+  .print-doc .rounded-xl {
+    margin-left: 0 !important;
+  }
+  .print-doc td,
+  .print-doc th {
+    text-indent: 0 !important;
+  }
 }
