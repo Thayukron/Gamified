@@ -26,10 +26,12 @@ CREATE TABLE users (
     role           ENUM('student','teacher','admin') NOT NULL DEFAULT 'student',
     department_id  INT UNSIGNED NULL,
     student_code   VARCHAR(30)  NULL,
+    class_group    VARCHAR(30)  NULL COMMENT 'กลุ่มเรียน/ห้อง เช่น ปวส.1/1',
     is_active      TINYINT(1)   NOT NULL DEFAULT 1,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_users_role (role),
+    INDEX idx_users_group (class_group),
     CONSTRAINT fk_users_department FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 

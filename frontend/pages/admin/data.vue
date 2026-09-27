@@ -124,17 +124,18 @@ async function removeCourse(c: any) {
         <div class="mt-3 max-h-[50vh] overflow-auto rounded-xl ring-1 ring-white/10">
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-abyss-900 text-left text-slate-400">
-              <tr><th class="px-3 py-2">ชื่อผู้ใช้</th><th class="px-3 py-2">ชื่อ-สกุล</th><th class="px-3 py-2">บทบาท</th><th class="px-3 py-2">แผนก</th><th /></tr>
+              <tr><th class="px-3 py-2">ชื่อผู้ใช้</th><th class="px-3 py-2">ชื่อ-สกุล</th><th class="px-3 py-2">บทบาท</th><th class="px-3 py-2">กลุ่มเรียน</th><th class="px-3 py-2">แผนก</th><th /></tr>
             </thead>
             <tbody>
               <tr v-for="u in users" :key="u.id" class="border-t border-white/5">
                 <td class="px-3 py-2 text-slate-300">{{ u.username }}</td>
                 <td class="px-3 py-2 text-slate-100">{{ u.full_name }}</td>
                 <td class="px-3 py-2 text-slate-300">{{ ROLE_TH[u.role] }}</td>
+                <td class="px-3 py-2 text-slate-300">{{ u.class_group ?? '-' }}</td>
                 <td class="px-3 py-2 text-slate-300">{{ u.department_name ?? '-' }}</td>
                 <td class="px-3 py-2 text-right"><button v-if="u.role !== 'admin'" class="text-xs text-rune-300/80 hover:text-rune-300" @click="resetPw(u)">รีเซ็ตรหัสผ่าน</button></td>
               </tr>
-              <tr v-if="!users.length"><td colspan="5" class="px-3 py-6 text-center text-slate-500">ไม่พบผู้ใช้</td></tr>
+              <tr v-if="!users.length"><td colspan="6" class="px-3 py-6 text-center text-slate-500">ไม่พบผู้ใช้</td></tr>
             </tbody>
           </table>
         </div>

@@ -21,10 +21,11 @@ onMounted(async () => {
 })
 
 const steps = [
-  { icon: 'chart', title: '1. ดูแดชบอร์ด', desc: 'สัดส่วน VARK / RIASEC / Mindset และโปรไฟล์รายคน' },
-  { icon: 'orb', title: '2. ไกด์การสอน', desc: 'สื่อ วิธีสอน แผนรายหน่วย (+AI ถ้ากรอก Key)' },
-  { icon: 'castle', title: '3. จัดกลุ่ม', desc: 'คละจุดแข็งหรือกลุ่มซ่อมเสริม แล้วบันทึก' },
-  { icon: 'scroll', title: '4. รายงาน ว.PA', desc: 'พิมพ์ PDF และดาวน์โหลด Excel' },
+  { icon: 'book', title: '1. สร้างรายวิชา', desc: 'เลือกกลุ่มเรียนที่เรียนกับคุณ ผู้เรียนเล่นเกมครั้งเดียวใช้ได้ทุกวิชา' },
+  { icon: 'chart', title: '2. ดูแดชบอร์ด', desc: 'สัดส่วน VARK / RIASEC / Mindset และโปรไฟล์รายคน' },
+  { icon: 'orb', title: '3. ไกด์การสอน', desc: 'สื่อ วิธีสอน แผนรายหน่วย (+AI ถ้ากรอก Key)' },
+  { icon: 'castle', title: '4. จัดกลุ่ม', desc: 'คละจุดแข็งหรือกลุ่มซ่อมเสริม แล้วบันทึก' },
+  { icon: 'scroll', title: '5. รายงาน ว.PA', desc: 'พิมพ์ PDF และดาวน์โหลด Excel' },
 ]
 </script>
 
@@ -51,9 +52,19 @@ const steps = [
     <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">MY COURSES</span></div>
 
     <p v-if="loading" class="text-slate-500">กำลังโหลดรายวิชา...</p>
-    <p v-else-if="!courses.length" class="card text-slate-400">ยังไม่มีรายวิชาที่คุณสอนในระบบ — ติดต่อผู้ดูแลระบบเพื่อผูกรายวิชา</p>
 
     <div class="grid gap-4 md:grid-cols-2">
+      <NuxtLink
+        to="/teacher/course/new"
+        class="card card-hover flex animate-fade-up items-center gap-4 border-dashed border-rune-400/40"
+        data-testid="new-course"
+      >
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-rune-400/50 font-display text-2xl text-rune-300">+</span>
+        <div>
+          <p class="text-lg font-semibold text-slate-50">สร้างรายวิชาของฉัน</p>
+          <p class="text-sm text-slate-400">กรอกข้อมูลวิชา แล้วเลือกกลุ่มเรียนที่เรียนกับคุณ — ใช้ผลเกมที่ผู้เรียนเล่นไว้แล้วได้ทันที</p>
+        </div>
+      </NuxtLink>
       <NuxtLink
         v-for="(c, i) in courses"
         :key="c.id"
@@ -84,7 +95,7 @@ const steps = [
     </div>
 
     <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">HOW TO USE</span></div>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <div v-for="u in steps" :key="u.title" class="card flex gap-3 !p-4">
         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rune-400/30 text-rune-300"><AppIcon :name="u.icon" /></span>
         <div>

@@ -66,7 +66,7 @@ class AdminController
     {
         $q = '%' . trim((string) $req->query('q', '')) . '%';
         $role = (string) $req->query('role', '');
-        $sql = 'SELECT u.id, u.username, u.full_name, u.role, u.student_code, u.is_active, d.name AS department_name
+        $sql = 'SELECT u.id, u.username, u.full_name, u.role, u.student_code, u.class_group, u.is_active, d.name AS department_name
                   FROM users u LEFT JOIN departments d ON d.id = u.department_id
                  WHERE (u.username LIKE ? OR u.full_name LIKE ?)';
         $args = [$q, $q];

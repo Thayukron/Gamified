@@ -56,6 +56,7 @@ $courseInsert->execute(['20201-2001', 'การบัญชีเบื้อ�
     json_encode(['สมการบัญชี', 'การวิเคราะห์รายการค้า', 'สมุดรายวันทั่วไป', 'บัญชีแยกประเภท', 'งบทดลอง'], JSON_UNESCAPED_UNICODE),
     'วิชาทฤษฎี แผนกการบัญชี']);
 // DSA class: the 10 fresh students (not played yet) + the 36 demo students.
+$pdo->exec("UPDATE users SET class_group = 'ปวส.1/1' WHERE role = 'student'");
 $pdo->exec("INSERT INTO enrollments (course_id, student_id) SELECT 1, id FROM users WHERE role = 'student'");
 $pdo->exec("INSERT INTO enrollments (course_id, student_id) SELECT 2, id FROM users WHERE role = 'student' AND username BETWEEN 'student031' AND 'student046'");
 

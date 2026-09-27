@@ -48,6 +48,10 @@ php backend/database/migrate.php
 | GET | /api/student/player | student |
 | PUT | /api/student/player/avatar | student |
 | GET | /api/teacher/courses | teacher, admin |
+| GET | /api/teacher/meta · /api/teacher/students?q=&group=&course= | teacher, admin |
+| POST | /api/teacher/courses | teacher, admin (สร้างวิชาของตนเอง + class_groups) |
+| PUT/DELETE | /api/teacher/courses/{id} | teacher (เฉพาะวิชาที่สอน), admin |
+| GET/POST | /api/teacher/courses/{id}/students · DELETE …/students/{sid} | teacher (เฉพาะวิชาที่สอน), admin |
 | GET | /api/teacher/courses/{id}/dashboard | teacher (เฉพาะวิชาที่สอน), admin |
 | GET | /api/teacher/courses/{id}/guide | teacher (เฉพาะวิชาที่สอน), admin |
 | PUT | /api/teacher/courses/{id}/context | teacher (เฉพาะวิชาที่สอน), admin |

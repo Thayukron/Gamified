@@ -127,10 +127,15 @@ const radarSeries = computed(() => {
 
     <div v-else class="mt-3 space-y-6">
       <!-- header -->
-      <header class="animate-fade-up">
-        <p class="font-mono text-xs text-rune-300/80">{{ data.course.code }} · {{ data.course.section }} · แผนก{{ data.course.department_name }}</p>
-        <h1 class="title-glow mt-1 text-2xl sm:text-3xl">{{ data.course.name }}</h1>
-        <p class="text-sm text-slate-400">แดชบอร์ดโปรไฟล์ผู้เรียน · ภาคเรียน {{ data.term.semester }}/{{ data.term.academic_year }} · ครูผู้สอน {{ data.course.teacher_name }}</p>
+      <header class="flex animate-fade-up flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="font-mono text-xs text-rune-300/80">{{ data.course.code }} · {{ data.course.section }} · แผนก{{ data.course.department_name }}</p>
+          <h1 class="title-glow mt-1 text-2xl sm:text-3xl">{{ data.course.name }}</h1>
+          <p class="text-sm text-slate-400">แดชบอร์ดโปรไฟล์ผู้เรียน · ภาคเรียน {{ data.term.semester }}/{{ data.term.academic_year }} · ครูผู้สอน {{ data.course.teacher_name }}</p>
+        </div>
+        <NuxtLink :to="`/teacher/course/${route.params.id}/students`" class="btn-ghost !py-2 text-sm" data-testid="manage-students">
+          <AppIcon name="quill" :size="16" /> จัดการรายชื่อ / แก้ไขวิชา
+        </NuxtLink>
       </header>
 
       <!-- stat tiles -->

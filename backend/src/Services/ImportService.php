@@ -107,6 +107,9 @@ class ImportService
             'department_code' => mb_strtoupper(self::s($r['department_code'] ?? '')),
             'password' => (string) ($r['password'] ?? ''),
         ];
+        if ($role === 'student') {
+            $d['class_group'] = mb_substr(self::s($r['class_group'] ?? ''), 0, 30);
+        }
         $err = [];
         $label = $role === 'student' ? 'รหัสนักศึกษา' : 'ชื่อผู้ใช้';
         if (!preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
@@ -301,14 +304,15 @@ class ImportService
         $d = $row['data'];
         $d['username'] = $d[$role === 'student' ? 'student_code' : 'username'];
         $deptId = $d['department_code'] !== '' ? $this->depts[$d['department_code']] : null;
+        $group = ($d['class_group'] ?? '') !== '' ? $d['class_group'] : null;
         $db = Database::get();
         if ($row['status'] === 'new') {
             $pw = $row['password'] !== '' ? $row['password'] : $d['username'];
-            $db->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code) VALUES (?, ?, ?, ?, ?, ?)')
-                ->execute([$d['username'], password_hash($pw, PASSWORD_DEFAULT), $d['full_name'], $role, $deptId, $role === 'student' ? $d['username'] : null]);
+            $db->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code, class_group) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                ->execute([$d['username'], password_hash($pw, PASSWORD_DEFAULT), $d['full_name'], $role, $deptId, $role === 'student' ? $d['username'] : null, $group]);
         } else {
-            $sql = 'UPDATE users SET full_name = ?, department_id = COALESCE(?, department_id), is_active = 1';
-            $args = [$d['full_name'], $deptId];
+            $sql = 'UPDATE users SET full_name = ?, department_id = COALESCE(?, department_id), class_group = COALESCE(?, class_group), is_active = 1';
+            $args = [$d['full_name'], $deptId, $group];
             if ($row['password'] !== '') {
                 $sql .= ', password_hash = ?';
                 $args[] = password_hash($row['password'], PASSWORD_DEFAULT);

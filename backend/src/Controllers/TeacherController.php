@@ -20,7 +20,7 @@ class TeacherController
     }
 
     /** Course row the current user may access, or 404/403. */
-    private static function course(Request $req, int $id): array
+    public static function course(Request $req, int $id): array
     {
         $stmt = Database::get()->prepare(
             'SELECT c.*, d.name AS department_name, d.code AS department_code, u.full_name AS teacher_name

@@ -23,6 +23,15 @@ $router->put('/student/player/avatar', [StudentGameController::class, 'saveAvata
 
 // Teacher dashboard (teachers see only their own courses; admins see all)
 $router->get('/teacher/courses', [App\Controllers\TeacherController::class, 'courses'], ['teacher', 'admin']);
+// Teachers create their own courses and pick their students (shared student accounts/results)
+$router->get('/teacher/meta', [App\Controllers\TeacherCourseController::class, 'meta'], ['teacher', 'admin']);
+$router->post('/teacher/courses', [App\Controllers\TeacherCourseController::class, 'create'], ['teacher', 'admin']);
+$router->put('/teacher/courses/{id}', [App\Controllers\TeacherCourseController::class, 'update'], ['teacher', 'admin']);
+$router->delete('/teacher/courses/{id}', [App\Controllers\TeacherCourseController::class, 'delete'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'roster'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'add'], ['teacher', 'admin']);
+$router->delete('/teacher/courses/{id}/students/{sid}', [App\Controllers\TeacherCourseController::class, 'remove'], ['teacher', 'admin']);
+$router->get('/teacher/students', [App\Controllers\TeacherCourseController::class, 'search'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/dashboard', [App\Controllers\TeacherController::class, 'dashboard'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/guide', [App\Controllers\TeacherController::class, 'guide'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/context', [App\Controllers\TeacherController::class, 'saveContext'], ['teacher', 'admin']);
