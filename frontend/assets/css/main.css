@@ -70,3 +70,83 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ───────────── Print: light A4 document (backgrounds are dropped by browsers) ───────────── */
+.print-only {
+  display: none;
+}
+@page {
+  size: A4;
+  margin: 14mm 12mm;
+}
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 11pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+    color: #555 !important;
+    margin-bottom: 4mm;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .print-doc,
+  .print-doc * {
+    color: #1a1a1a !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    backdrop-filter: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .print-doc .card,
+  .print-doc section,
+  .print-doc .rounded-xl {
+    border-color: #c8c8c8 !important;
+  }
+  .print-doc .card,
+  .print-doc .rounded-xl,
+  .print-doc li,
+  .print-doc tr {
+    break-inside: avoid;
+  }
+  .print-doc h1 {
+    font-size: 20pt;
+  }
+  .print-doc h2,
+  .print-doc .title-glow {
+    color: #000 !important;
+  }
+  .print-doc .num {
+    border: 1.5px solid #333 !important;
+  }
+  .print-doc .text-slate-400,
+  .print-doc .text-slate-500,
+  .print-doc .hint {
+    color: #555 !important;
+  }
+  /* show folded content (group rosters, generated unit plans) */
+  .print-doc .print-show-flex {
+    display: flex !important;
+  }
+  .print-doc .print-show-row {
+    display: table-row !important;
+  }
+  .print-doc details > *:not(summary) {
+    display: block !important;
+  }
+  .print-doc a {
+    text-decoration: none !important;
+  }
+}

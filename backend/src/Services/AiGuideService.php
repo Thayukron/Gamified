@@ -297,7 +297,7 @@ TXT;
             'objective' => self::str($d['objective'] ?? '', 500),
             'duration_minutes' => (int) ($d['duration_minutes'] ?? 0),
             'steps' => array_map(fn ($s) => [
-                'phase' => self::str($s['phase'] ?? '', 60),
+                'phase' => self::str($s['phase'] ?? '', 120),
                 'minutes' => (int) ($s['minutes'] ?? 0),
                 'activity' => self::str($s['activity'] ?? '', 800),
                 'styles' => array_values(array_intersect(['V', 'A', 'R', 'K'], array_map('strtoupper', (array) ($s['styles'] ?? [])))),

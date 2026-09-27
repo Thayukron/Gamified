@@ -7,8 +7,8 @@ const roleLabel = { student: 'นักผจญภัย', teacher: 'ผู้�
 
 <template>
   <div class="relative min-h-screen">
-    <MysticBackground />
-    <header class="sticky top-0 z-20 border-b border-arcane-400/15 bg-abyss-950/60 backdrop-blur-xl">
+    <MysticBackground class="no-print" />
+    <header class="no-print sticky top-0 z-20 border-b border-arcane-400/15 bg-abyss-950/60 backdrop-blur-xl">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <NuxtLink to="/" class="group flex items-center gap-2.5">
           <span class="flex h-9 w-9 items-center justify-center rounded-full border border-rune-400/50 text-rune-300 shadow-glow-gold transition duration-700 group-hover:rotate-180">

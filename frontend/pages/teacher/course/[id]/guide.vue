@@ -83,7 +83,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
 </script>
 
 <template>
-  <div class="guide">
+  <div class="guide print-doc">
     <div class="no-print flex flex-wrap items-center justify-between gap-2">
       <NuxtLink :to="`/teacher/course/${route.params.id}`" class="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-rune-300">
         <AppIcon name="back" :size="16" /> กลับแดชบอร์ด
@@ -99,6 +99,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
 
     <div v-else class="mt-3 space-y-6">
       <!-- header -->
+      <p class="print-only text-xs">ARCANA PROFILE · ระบบประเมินโปรไฟล์ผู้เรียน · พิมพ์เมื่อ {{ new Date().toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }) }}</p>
       <header class="animate-fade-up">
         <p class="font-display text-xs tracking-[0.4em] text-arcane-300/80">TEACHING GUIDE</p>
         <h1 class="title-glow mt-1 text-2xl sm:text-3xl">ไกด์การจัดการเรียนการสอน</h1>
@@ -264,12 +265,12 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
                       <p v-if="aiError?.where === u.topic" class="mt-1 text-xs text-red-300">{{ aiError.text }}</p>
                     </td>
                   </tr>
-                  <tr v-if="openUnit === u.topic && aiUnits[u.topic]" class="border-b border-white/5">
+                  <tr v-if="aiUnits[u.topic]" v-show="openUnit === u.topic" class="print-show-row border-b border-white/5">
                     <td :colspan="3 + u.activities.length" class="pb-5">
                       <div class="rounded-xl border border-sky-400/40 bg-sky-500/5 p-4">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                           <p class="font-medium text-sky-200">แผนการสอนหน่วย “{{ u.topic }}” · {{ aiUnits[u.topic].data.duration_minutes }} นาที</p>
-                          <button class="btn-ghost !px-3 !py-1 text-xs" :disabled="!!aiBusy" @click="generate('unit', u.topic)">{{ aiBusy === u.topic ? 'กำลังออกแบบ...' : 'ออกแบบใหม่' }}</button>
+                          <button class="no-print btn-ghost !px-3 !py-1 text-xs" :disabled="!!aiBusy" @click="generate('unit', u.topic)">{{ aiBusy === u.topic ? 'กำลังออกแบบ...' : 'ออกแบบใหม่' }}</button>
                         </div>
                         <p v-if="aiUnits[u.topic].stale" class="mt-2 text-xs text-amber-200">⚠ ข้อมูลผู้เรียนเปลี่ยนไปหลังออกแบบแผนนี้</p>
                         <p class="mt-2 text-sm text-slate-200"><b>จุดประสงค์:</b> {{ aiUnits[u.topic].data.objective }}</p>
@@ -337,7 +338,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
                 </div>
                 <AppIcon name="back" :size="16" class="shrink-0 text-slate-400 transition" :class="openGroups[gr.key] ? 'rotate-90' : '-rotate-90'" />
               </button>
-              <div v-if="openGroups[gr.key]" class="flex flex-wrap gap-1.5 border-t border-white/10 p-4">
+              <div v-show="openGroups[gr.key]" class="print-show-flex flex flex-wrap gap-1.5 border-t border-white/10 p-4">
                 <span v-for="st in gr.students" :key="st.id" class="rounded-full bg-white/5 px-2.5 py-1 text-xs text-slate-200">{{ st.code }} {{ st.name }}</span>
               </div>
             </div>
@@ -397,7 +398,4 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
 .hint { @apply mt-1 text-xs text-slate-400; }
 .sub-h { @apply text-xs font-medium uppercase tracking-wider text-slate-400; }
 .ai-card { @apply border-sky-400/40; background-image: radial-gradient(ellipse at top right, rgba(56,189,248,0.10), transparent 60%); }
-@media print {
-  .no-print { display: none !important; }
-}
 </style>
