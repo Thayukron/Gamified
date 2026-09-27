@@ -59,3 +59,7 @@ php backend/database/migrate.php
 | GET/PUT | /api/teacher/courses/{id}/groups | teacher (เฉพาะวิชาที่สอน), admin |
 | GET | /api/teacher/courses/{id}/report | teacher (เฉพาะวิชาที่สอน), admin |
 | GET/PUT | /api/admin/institution | admin |
+| POST | /api/admin/import/preview · /api/admin/import/commit | admin (นำเข้าแผนก/ครู/นักศึกษา/รายวิชา/การลงทะเบียน) |
+| GET | /api/admin/overview · /api/admin/users?q=&role= | admin |
+| POST | /api/admin/users/{id}/reset-password | admin (รีเซ็ตเป็นชื่อผู้ใช้/รหัสนักศึกษา) |
+| DELETE | /api/admin/courses/{id} | admin |

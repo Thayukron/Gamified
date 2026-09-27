@@ -1,7 +1,10 @@
 <script setup lang="ts">
+const links = [
+  { to: '/admin/import', icon: 'upload', color: 'border-rune-400/50 text-rune-300', title: 'นำเข้าข้อมูล', desc: 'แผนก · ครู · นักศึกษา · รายวิชา · การลงทะเบียน จากไฟล์ Excel / CSV' },
+  { to: '/admin/data', icon: 'castle', color: 'border-arcane-400/50 text-arcane-300', title: 'ข้อมูลในระบบ', desc: 'แผนกวิชา รายวิชา/กลุ่มเรียน ผู้ใช้ · รีเซ็ตรหัสผ่าน · ลบรายวิชา' },
+  { to: '/admin/ai', icon: 'key', color: 'border-sky-400/50 text-sky-300', title: 'ตั้งค่า AI ของระบบ', desc: 'เปิด/ปิด AI · Key กลาง (ไม่บังคับ) · อนุญาตครูรายคน · ดูการใช้งาน' },
+]
 const items = [
-  { icon: 'castle', title: 'รายวิชาและแผนกวิชา', desc: 'จัดการอาณาจักร รายวิชา แผนก และกลุ่มเรียน', phase: 6 },
-  { icon: 'upload', title: 'นำเข้าข้อมูลนักศึกษา', desc: 'อัญเชิญรายชื่อผ่านไฟล์ CSV / Excel', phase: 6 },
   { icon: 'globe', title: 'ชุดเนื้อเรื่องสากล', desc: 'เปิด/ปิดชุดเนื้อเรื่องมาตรฐานกลาง (Core Profile)', phase: 3 },
 ]
 
@@ -28,14 +31,16 @@ async function saveInst() {
       <p class="mt-1 text-slate-400">ควบคุมกลไกและผนึกทั้งหมดของอาณาจักร</p>
     </div>
     <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">CONTROLS</span></div>
-    <NuxtLink to="/admin/ai" class="card card-hover flex items-center gap-4 border-sky-400/30">
-      <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-sky-400/50 text-sky-300"><AppIcon name="key" /></span>
-      <div class="flex-1">
-        <p class="font-medium text-slate-100">ตั้งค่า AI ของระบบ</p>
-        <p class="text-sm text-slate-400">เปิด/ปิด AI · Key กลาง (ไม่บังคับ) · อนุญาตครูรายคน · ดูการใช้งาน</p>
-      </div>
-      <AppIcon name="back" :size="18" class="rotate-180 text-slate-500" />
-    </NuxtLink>
+    <div class="grid gap-4 lg:grid-cols-3">
+      <NuxtLink v-for="l in links" :key="l.to" :to="l.to" class="card card-hover flex items-center gap-4">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border" :class="l.color"><AppIcon :name="l.icon" /></span>
+        <div class="flex-1">
+          <p class="font-medium text-slate-100">{{ l.title }}</p>
+          <p class="text-sm text-slate-400">{{ l.desc }}</p>
+        </div>
+        <AppIcon name="back" :size="18" class="rotate-180 text-slate-500" />
+      </NuxtLink>
+    </div>
     <section class="card">
       <h2 class="text-lg font-medium text-slate-50">ข้อมูลสถานศึกษา (แสดงบนหน้าปกรายงาน)</h2>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">

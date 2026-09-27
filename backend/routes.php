@@ -45,3 +45,11 @@ $router->put('/teacher/courses/{id}/groups', [App\Controllers\TeacherController:
 $router->get('/teacher/courses/{id}/report', [App\Controllers\TeacherController::class, 'report'], ['teacher', 'admin']);
 $router->get('/admin/institution', [App\Controllers\SettingsController::class, 'institution'], ['admin']);
 $router->put('/admin/institution', [App\Controllers\SettingsController::class, 'saveInstitution'], ['admin']);
+
+// Admin: bulk import + master data
+$router->post('/admin/import/preview', [App\Controllers\AdminController::class, 'importPreview'], ['admin']);
+$router->post('/admin/import/commit', [App\Controllers\AdminController::class, 'importCommit'], ['admin']);
+$router->get('/admin/overview', [App\Controllers\AdminController::class, 'overview'], ['admin']);
+$router->get('/admin/users', [App\Controllers\AdminController::class, 'users'], ['admin']);
+$router->post('/admin/users/{id}/reset-password', [App\Controllers\AdminController::class, 'resetPassword'], ['admin']);
+$router->delete('/admin/courses/{id}', [App\Controllers\AdminController::class, 'deleteCourse'], ['admin']);

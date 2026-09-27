@@ -1,0 +1,144 @@
+<script setup lang="ts">
+const api = useApi()
+const data = ref<any>(null)
+const q = ref('')
+const role = ref('')
+const users = ref<any[]>([])
+const msg = ref<{ ok: boolean; text: string } | null>(null)
+const courseFilter = ref('')
+
+const ROLE_TH: Record<string, string> = { student: 'นักศึกษา', teacher: 'ครู', admin: 'ผู้ดูแลระบบ' }
+
+async function load() {
+  data.value = await api('/admin/overview')
+}
+async function search() {
+  users.value = (await api<any>('/admin/users', { query: { q: q.value, role: role.value } })).users
+}
+let timer: ReturnType<typeof setTimeout>
+watch([q, role], () => {
+  clearTimeout(timer)
+  timer = setTimeout(search, 300)
+})
+onMounted(() => Promise.all([load(), search()]))
+
+const courses = computed(() => {
+  const f = courseFilter.value.trim().toLowerCase()
+  const list = data.value?.courses ?? []
+  return f ? list.filter((c: any) => `${c.code} ${c.name} ${c.section} ${c.teacher_name ?? ''} ${c.department_name ?? ''}`.toLowerCase().includes(f)) : list
+})
+
+async function resetPw(u: any) {
+  if (!confirm(`รีเซ็ตรหัสผ่านของ ${u.full_name} เป็น "${u.username}"?`)) return
+  try {
+    msg.value = { ok: true, text: (await api<any>(`/admin/users/${u.id}/reset-password`, { method: 'POST' })).message }
+  } catch (e) {
+    msg.value = { ok: false, text: apiErrorMessage(e) }
+  }
+}
+
+async function removeCourse(c: any) {
+  if (!confirm(`ลบรายวิชา ${c.code} ${c.name} (${c.section}) ${c.semester}/${c.academic_year}?\nการลงทะเบียน ${c.enrolled} คน และการจัดกลุ่มของวิชานี้จะถูกลบ (ผลการเล่นเกมของนักศึกษายังอยู่)`)) return
+  try {
+    await api(`/admin/courses/${c.id}`, { method: 'DELETE' })
+    msg.value = { ok: true, text: `ลบรายวิชา ${c.code} แล้ว` }
+    await load()
+  } catch (e) {
+    msg.value = { ok: false, text: apiErrorMessage(e) }
+  }
+}
+</script>
+
+<template>
+  <div class="mx-auto max-w-6xl space-y-6">
+    <NuxtLink to="/admin" class="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-rune-300"><AppIcon name="back" :size="16" /> หอคอยผู้คุมระบบ</NuxtLink>
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <p class="font-display text-xs tracking-[0.4em] text-arcane-300/80">REALM LEDGER</p>
+        <h1 class="title-glow mt-1 text-2xl sm:text-3xl">ข้อมูลในระบบ</h1>
+        <p class="mt-1 text-sm text-slate-400">แผนกวิชา รายวิชา/กลุ่มเรียน และผู้ใช้ — เพิ่ม/แก้ไขทีละมากผ่านหน้านำเข้าข้อมูล</p>
+      </div>
+      <NuxtLink to="/admin/import" class="btn-primary !py-2 text-sm"><AppIcon name="upload" :size="16" /> นำเข้าข้อมูล</NuxtLink>
+    </div>
+
+    <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'">{{ msg.text }}</p>
+    <p v-if="!data" class="text-slate-500">กำลังโหลด...</p>
+    <template v-else>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div v-for="(label, k) in { students: 'นักศึกษา', teachers: 'ครู', departments: 'แผนกวิชา', courses: 'รายวิชา/กลุ่มเรียน' }" :key="k" class="card !p-4 text-center">
+          <p class="font-display text-3xl text-rune-300">{{ data.counts[k] }}</p>
+          <p class="text-sm text-slate-400">{{ label }}</p>
+        </div>
+      </div>
+
+      <section class="card">
+        <h2 class="text-lg font-medium text-slate-50">แผนกวิชา</h2>
+        <div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div v-for="d in data.departments" :key="d.id" class="rounded-xl bg-white/5 px-3 py-2 ring-1 ring-white/10">
+            <p class="text-slate-100"><span class="font-display text-rune-300">{{ d.code }}</span> {{ d.name }}</p>
+            <p class="text-xs text-slate-400">นักศึกษา {{ d.students }} · ครู {{ d.teachers }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-medium text-slate-50">รายวิชา/กลุ่มเรียน ({{ courses.length }})</h2>
+          <input v-model="courseFilter" class="input !w-64 !py-1.5" placeholder="ค้นหารหัส ชื่อวิชา ครู แผนก">
+        </div>
+        <div class="mt-3 max-h-[50vh] overflow-auto rounded-xl ring-1 ring-white/10">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 bg-abyss-900 text-left text-slate-400">
+              <tr><th class="px-3 py-2">รหัสวิชา</th><th class="px-3 py-2">ชื่อวิชา</th><th class="px-3 py-2">กลุ่ม</th><th class="px-3 py-2">ภาค/ปี</th><th class="px-3 py-2">แผนก</th><th class="px-3 py-2">ครูผู้สอน</th><th class="px-3 py-2 text-right">ผู้เรียน</th><th /></tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in courses" :key="c.id" class="border-t border-white/5">
+                <td class="whitespace-nowrap px-3 py-2 text-slate-300">{{ c.code }}</td>
+                <td class="px-3 py-2 text-slate-100">{{ c.name }}</td>
+                <td class="whitespace-nowrap px-3 py-2 text-slate-300">{{ c.section }}</td>
+                <td class="whitespace-nowrap px-3 py-2 text-slate-300">{{ c.semester }}/{{ c.academic_year }}</td>
+                <td class="px-3 py-2 text-slate-300">{{ c.department_name ?? '-' }}</td>
+                <td class="px-3 py-2 text-slate-300">{{ c.teacher_name ?? '-' }}</td>
+                <td class="px-3 py-2 text-right text-slate-100">{{ c.enrolled }}</td>
+                <td class="px-3 py-2 text-right"><button class="text-xs text-red-300/80 hover:text-red-300" @click="removeCourse(c)">ลบ</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-medium text-slate-50">ผู้ใช้</h2>
+          <div class="flex gap-2">
+            <select v-model="role" class="input !w-auto !py-1.5">
+              <option value="">ทุกบทบาท</option>
+              <option value="student">นักศึกษา</option>
+              <option value="teacher">ครู</option>
+              <option value="admin">ผู้ดูแลระบบ</option>
+            </select>
+            <input v-model="q" class="input !w-64 !py-1.5" placeholder="ค้นหาชื่อผู้ใช้ / ชื่อ-สกุล">
+          </div>
+        </div>
+        <p class="mt-1 text-xs text-slate-500">แสดงไม่เกิน 100 รายการ · รีเซ็ตรหัสผ่าน = ชื่อผู้ใช้ (รหัสนักศึกษา) และออกจากระบบทุกอุปกรณ์</p>
+        <div class="mt-3 max-h-[50vh] overflow-auto rounded-xl ring-1 ring-white/10">
+          <table class="w-full text-sm">
+            <thead class="sticky top-0 bg-abyss-900 text-left text-slate-400">
+              <tr><th class="px-3 py-2">ชื่อผู้ใช้</th><th class="px-3 py-2">ชื่อ-สกุล</th><th class="px-3 py-2">บทบาท</th><th class="px-3 py-2">แผนก</th><th /></tr>
+            </thead>
+            <tbody>
+              <tr v-for="u in users" :key="u.id" class="border-t border-white/5">
+                <td class="px-3 py-2 text-slate-300">{{ u.username }}</td>
+                <td class="px-3 py-2 text-slate-100">{{ u.full_name }}</td>
+                <td class="px-3 py-2 text-slate-300">{{ ROLE_TH[u.role] }}</td>
+                <td class="px-3 py-2 text-slate-300">{{ u.department_name ?? '-' }}</td>
+                <td class="px-3 py-2 text-right"><button v-if="u.role !== 'admin'" class="text-xs text-rune-300/80 hover:text-rune-300" @click="resetPw(u)">รีเซ็ตรหัสผ่าน</button></td>
+              </tr>
+              <tr v-if="!users.length"><td colspan="5" class="px-3 py-6 text-center text-slate-500">ไม่พบผู้ใช้</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </template>
+  </div>
+</template>

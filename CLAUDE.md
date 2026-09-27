@@ -87,7 +87,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 3 Scenario Builder + Story Library** — CRUD scene/choice ผูกคะแนน, export JSON, คัดลอกจากคลังกลาง, แอดมินเปิด/ปิดชุดสากล
 - [ ] **เฟส 4 Dashboard** — Pie/Bar ระดับห้อง, Radar รายบุคคล (Chart.js), จัดกลุ่มทำงานอัจฉริยะ
 - [ ] **เฟส 5 AI** — ตั้งค่า BYOK, Contextual AI Prompting + ai_insights_cache, AI Story Generator
-- [ ] **เฟส 6 Management & Reports** — CRUD รายวิชา/แผนก, นำเข้า CSV/Excel, ส่งออก PDF/Excel (ว.PA)
+- [x] **เฟส 6 Management & Reports** — นำเข้า Excel/CSV (`/admin/import`), ข้อมูลในระบบ (`/admin/data`), ส่งออก PDF/Excel (ว.PA)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
@@ -109,3 +109,4 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - 2026-09-27: แก้การพิมพ์ PDF ไกด์ (เดิมอ่านไม่ได้เพราะธีมมืด) → print stylesheet ทั้งระบบใน main.css (ใช้ class `print-doc` / `no-print` / `print-only` กับหน้าใหม่ที่ต้องพิมพ์) · **PDF ใช้ฟอนต์ TH SarabunPSK คอลัมน์เดียว เยื้องย่อหน้าแบบเอกสารราชการ · ขนาด: หัวข้อหลัก 18pt หนา / หัวข้อรอง 16pt หนา / เนื้อหา 16pt ธรรมดา** (ผู้ใช้กำหนด ใช้กับรายงานขั้น D ด้วย) · ถัดไป: C จัดกลุ่ม → D รายงาน ว.PA
 - 2026-09-27: **ขั้น C จัดกลุ่มอัจฉริยะ เสร็จ** (`GroupingService`, หน้า `/teacher/course/[id]/groups`, ตาราง `course_groupings`) · ถัดไป: **ขั้น D รายงาน ว.PA** (ใช้ข้อมูลแดชบอร์ด+ไกด์+การจัดกลุ่มที่บันทึก, ฟอนต์ TH SarabunPSK 18/16/16) + Excel
 - 2026-09-27: **ขั้น D รายงาน ว.PA เสร็จ** (หน้า `/teacher/course/[id]/report` PDF 13 หน้า + Excel 3 ชีต, สถานศึกษา วิทยาลัยการอาชีพศรีสะเกษ) → **ครบ A–E ฝั่งครูแล้ว รอผู้ใช้ตรวจ** · ⚠ ติดตั้ง npm package แล้วต้อง restart nuxt + ลบ .nuxt/node_modules/.vite · งานที่เหลือตาม requirement: นำเข้า CSV/Excel + จัดการรายวิชา (แอดมิน), Scenario Builder, PWA, ทดสอบโหลด 500–1000 คน
+- 2026-09-27: **ระบบนำเข้าข้อมูล (แอดมิน) เสร็จ** — `/admin/import` แม่แบบ Excel 5 ชีต (แผนก → ครู → นักศึกษา → รายวิชา → การลงทะเบียน) หรือ CSV, อ่านไฟล์ในเบราว์เซอร์ (`utils/importData.ts`, หัวคอลัมน์ไทย/อังกฤษ, ข้ามแถวคำอธิบาย/ตัวอย่าง, ส่ง `_row` = เลขแถวจริง) → ตรวจสอบ (`ImportService::validate`) → บันทึกใน transaction เดียว · นำเข้าซ้ำ = อัปเดต ไม่ซ้ำ · รหัสผ่านว่าง = ชื่อผู้ใช้/รหัสนักศึกษา · `/admin/data` ภาพรวม/รายวิชา(ลบ)/ค้นหาผู้ใช้(รีเซ็ตรหัสผ่าน) · ทดสอบโดย backup/restore DB (Key ครูยังอยู่) · ถัดไป: ปรับรายงานตามแบบฟอร์มจริง (รอผู้ใช้), Scenario Builder, เควสต์วิทยาลัย, PWA, ทดสอบโหลด
