@@ -2,9 +2,9 @@
   "start": "intro",
   "meta": { "icon": "book", "color": "#a78bfa", "subtitle": "บทที่ 1 · หอสมุดเวทมนตร์" },
   "characters": {
-    "lumin": { "name": "ลูมิน", "kind": "owl", "color": "#f5c451" },
-    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd", "hairStyle": "long" },
-    "kael": { "name": "เคล", "kind": "mage", "robe": "#991b1b", "hair": "#1f2937", "eyes": "#ef4444", "skin": "#f1c7a5", "accessory": ["hood"], "color": "#fca5a5", "hairStyle": "short" }
+    "lumin": { "name": "ลูมิน", "kind": "owl", "color": "#f5c451", "images": {"neutral": "/characters/lumin-neutral.webp", "happy": "/characters/lumin-happy.webp", "surprised": "/characters/lumin-surprised.webp", "sad": "/characters/lumin-sad.webp", "determined": "/characters/lumin-determined.webp"} },
+    "mira": { "name": "มิร่า", "kind": "mage", "robe": "#7c3aed", "hair": "#f472b6", "eyes": "#a78bfa", "skin": "#fde2cf", "color": "#c4b5fd", "hairStyle": "long", "images": {"neutral": "/characters/mira-neutral.webp", "happy": "/characters/mira-happy.webp", "surprised": "/characters/mira-surprised.webp", "sad": "/characters/mira-sad.webp", "determined": "/characters/mira-determined.webp"} },
+    "kael": { "name": "เคล", "kind": "mage", "robe": "#991b1b", "hair": "#1f2937", "eyes": "#ef4444", "skin": "#f1c7a5", "accessory": ["hood"], "color": "#fca5a5", "hairStyle": "short", "images": {"neutral": "/characters/kael-neutral.webp", "happy": "/characters/kael-happy.webp", "surprised": "/characters/kael-surprised.webp", "sad": "/characters/kael-sad.webp", "determined": "/characters/kael-determined.webp"} }
   },
   "scenes": {
     "intro": {

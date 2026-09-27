@@ -8,3 +8,4 @@ backend/vendor/
 *.log
 .env
 .DS_Store
+art-source/

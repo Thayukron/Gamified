@@ -95,6 +95,7 @@ onMounted(async () => {
     scenes.value = content.scenes
     characters.value = content.characters ?? {}
     startScene.value = content.start
+    preloadArt()
     if (res.session) {
       resumeFrom.value = res.session.current_scene
       log.value = res.session.choices_log
@@ -108,6 +109,19 @@ onMounted(async () => {
     loading.value = false
   }
 })
+// Warm the cache with every character pose and painted backdrop this quest uses.
+function preloadArt() {
+  const urls = new Set<string>()
+  for (const c of Object.values(characters.value)) {
+    if (c.image) urls.add(c.image)
+    Object.values(c.images ?? {}).forEach((u) => u && urls.add(u))
+  }
+  for (const s of Object.values(scenes.value)) {
+    if (s.background) urls.add(/^(https?:)?\//.test(s.background) ? s.background : `/backgrounds/${s.background}.webp`)
+  }
+  urls.forEach((u) => { const img = new Image(); img.src = u })
+}
+
 onBeforeUnmount(() => {
   audio.stopBgm()
   clearInterval(typeTimer)

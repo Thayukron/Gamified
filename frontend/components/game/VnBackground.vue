@@ -2,7 +2,13 @@
 // Built-in illustrated backdrops (gradients + SVG silhouettes). A URL renders as a cover image.
 const props = defineProps<{ name?: string }>()
 
-const isUrl = computed(() => !!props.name && /^(https?:)?\/|^data:/.test(props.name))
+// Painted artwork for the built-in scenes (public/backgrounds); the SVG versions remain as fallback.
+const PAINTED_BACKGROUNDS = ['night', 'gate', 'hall', 'library', 'corridor', 'courtyard', 'crystal', 'market', 'alley', 'sky', 'observatory']
+const src = computed(() => {
+  if (!props.name) return null
+  if (/^(https?:)?\/|^data:/.test(props.name)) return props.name
+  return PAINTED_BACKGROUNDS.includes(props.name) ? `/backgrounds/${props.name}.webp` : null
+})
 
 const gradients: Record<string, string> = {
   night: 'radial-gradient(ellipse at 70% 20%, #2d1f5e 0%, #0b0718 55%, #05030d 100%)',
@@ -36,7 +42,7 @@ const skyStars = Array.from({ length: 60 }, () => ({ x: Math.random() * 400, y: 
       leave-to-class="opacity-0"
     >
       <div :key="name" class="absolute inset-0">
-        <img v-if="isUrl" :src="name" alt="" class="h-full w-full object-cover">
+        <img v-if="src" :src="src" alt="" class="bg-img h-full w-full object-cover">
         <template v-else>
           <div class="absolute inset-0" :style="{ background: gradients[name || 'night'] || gradients.night }" />
 
@@ -177,6 +183,8 @@ const skyStars = Array.from({ length: 60 }, () => ({ x: Math.random() * 400, y: 
 </template>
 
 <style scoped>
+.bg-img { animation: kenburns 30s ease-in-out infinite alternate; }
+@keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.08); } }
 .mote { box-shadow: 0 0 8px 2px rgba(253, 230, 138, 0.6); animation: mote 8s ease-in-out infinite; opacity: 0; }
 @keyframes mote { 0% { transform: translate(0, 0); opacity: 0; } 20% { opacity: .8; } 100% { transform: translate(30px, -160px); opacity: 0; } }
 .lantern { animation: sway 3s ease-in-out infinite; transform-box: fill-box; transform-origin: top center; }
