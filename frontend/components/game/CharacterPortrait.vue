@@ -6,7 +6,7 @@ const props = defineProps<{ def: CharacterDef; expr?: Expr }>()
 
 // Sprite box size + offset (as fractions of the square frame) that centre each kind's face.
 const crop = computed(() => {
-  if (props.def.fullBody) return { w: 3.6, h: 6.45, l: -1.3, t: -0.2 }
+  if (props.def.fullBody) return { w: 2.2, h: 3.94, l: -0.6, t: -0.03 }
   if (props.def.image || props.def.images) return { w: 2.0, h: 3.53, l: -0.5, t: -0.35 }
   return {
     mage: { w: 2.3, h: 4.06, l: -0.65, t: -0.95 },
