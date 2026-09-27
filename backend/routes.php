@@ -20,3 +20,7 @@ $router->get('/student/results/{id}', [StudentGameController::class, 'result'], 
 $router->get('/student/profile', [StudentGameController::class, 'profile'], ['student']);
 $router->get('/student/player', [StudentGameController::class, 'player'], ['student']);
 $router->put('/student/player/avatar', [StudentGameController::class, 'saveAvatar'], ['student']);
+
+// Teacher dashboard (teachers see only their own courses; admins see all)
+$router->get('/teacher/courses', [App\Controllers\TeacherController::class, 'courses'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/dashboard', [App\Controllers\TeacherController::class, 'dashboard'], ['teacher', 'admin']);
