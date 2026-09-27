@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>สรุปนำเสนอระบบ ARCANA PROFILE</title>
+<!-- One-page A4 summary. Rendered to docs/สรุปนำเสนอระบบ-ARCANA-PROFILE.pdf with Edge (print). -->
+<style>
+  @font-face { font-family: 'TH SarabunPSK'; src: url('../../frontend/public/fonts/THSarabun.ttf'); font-weight: 400; }
+  @font-face { font-family: 'TH SarabunPSK'; src: url('../../frontend/public/fonts/THSarabun-Bold.ttf'); font-weight: 700; }
+  @page { size: A4; margin: 12mm 14mm 10mm; }
+  :root { --ink: #1a1a2e; --accent: #5b3fa6; --gold: #a07410; --line: #d9d3ea; --soft: #f5f2fb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'TH SarabunPSK', sans-serif; font-size: 16pt; line-height: 1.07; color: var(--ink); }
+  h1 { font-size: 20pt; margin: 0; line-height: 1; }
+  h2 { font-size: 18pt; margin: 0 0 1pt; color: var(--accent); line-height: 1.05; }
+  h3 { font-size: 16pt; margin: 0; }
+  p { margin: 0; }
+  ul, ol { margin: 0; padding-left: 16pt; }
+  li { margin: 0; }
+  b { font-weight: 700; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2pt solid var(--accent); padding-bottom: 2pt; }
+  .head .brand { font-size: 26pt; font-weight: 700; letter-spacing: 1pt; color: var(--accent); line-height: .9; }
+  .head .brand span { color: var(--gold); }
+  .head .org { white-space: nowrap; text-align: right; font-size: 16pt; line-height: 1; }
+  .sec { margin-top: 4pt; }
+  .flow { display: flex; gap: 3pt; align-items: center; margin-top: 2pt; font-weight: 700; }
+  .flow span { white-space: nowrap; background: var(--soft); border: .8pt solid var(--line); border-radius: 4pt; padding: 0 5pt; }
+  .flow i { font-style: normal; color: var(--gold); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10pt; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5pt; }
+  .box { border: .8pt solid var(--line); border-radius: 5pt; padding: 2pt 6pt 3pt; background: var(--soft); }
+  .box h3 { color: var(--accent); }
+  .box .q { color: var(--gold); font-weight: 700; }
+  .box ul { padding-left: 12pt; }
+  .note { margin-top: 5pt; border-left: 3pt solid var(--gold); padding: 1pt 7pt; background: #fbf7ec; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div>
+    <div class="brand">ARCANA <span>PROFILE</span></div>
+    <h1>ระบบคัดกรองผู้เรียนผ่านเกม เพื่อสร้างไกด์การจัดการเรียนการสอนที่เหมาะกับผู้เรียนที่แตกต่างกัน</h1>
+  </div>
+  <div class="org">วิทยาลัยการอาชีพศรีสะเกษ<br>สังกัด สอศ.</div>
+</div>
+
+<div class="sec">
+  <h2>1. ระบบนี้คืออะไร</h2>
+  <p>เว็บแอปพลิเคชันที่ให้ผู้เรียนเล่น <b>เกมผจญภัยแบบ Visual Novel</b> ประมาณ 10–15 นาที ทุกการตัดสินใจในเกมถูกแปลงเป็น <b>โปรไฟล์ผู้เรียน 3 ด้าน</b>
+  แล้วระบบประมวลเป็น <b>ไกด์การจัดการเรียนการสอน</b> ให้ครูแต่ละรายวิชาและกลุ่มเรียน — เกมเป็นเพียงเครื่องมือคัดกรอง เป้าหมายคือการสอนที่ตรงกับผู้เรียน</p>
+  <div class="flow"><span>เล่นเกม</span><i>➜</i><span>โปรไฟล์ 3 ด้าน</span><i>➜</i><span>ไกด์การสอนรายวิชา</span><i>➜</i><span>จัดกลุ่ม/ซ่อมเสริม</span><i>➜</i><span>รายงาน ว.PA</span></div>
+</div>
+
+<div class="sec grid2">
+  <div>
+    <h2>2. ที่มาและความสำคัญ</h2>
+    <ul>
+      <li>ผู้เรียนแต่ละห้องแตกต่างกันทั้งวิธีเรียน ความสนใจ และแรงจูงใจ แต่ครูมีเวลาน้อยในการรู้จักผู้เรียนรายคน</li>
+      <li>แบบสอบถามแบบเดิมน่าเบื่อ ผู้เรียนมักตอบส่ง ๆ หรือตอบตามที่ “ควรเป็น” ข้อมูลจึงไม่สะท้อนตัวจริง</li>
+      <li>พ.ร.บ.การศึกษาแห่งชาติ 2542 ม.22, 24 และเกณฑ์ ว.PA ให้จัดการเรียนรู้ตามความแตกต่างระหว่างบุคคลโดยมีหลักฐานเชิงข้อมูล</li>
+    </ul>
+  </div>
+  <div>
+    <h2>3. วัตถุประสงค์</h2>
+    <ol>
+      <li>เพื่อคัดกรองผู้เรียนรายบุคคลและรายห้อง ด้านสไตล์การเรียนรู้ ความสนใจอาชีพ และกรอบความคิด</li>
+      <li>เพื่อสร้างแนวทางเลือกสื่อ วิธีสอน การซ่อมเสริม และการจัดกลุ่มที่เหมาะกับผู้เรียนแต่ละรายวิชาและแผนก</li>
+      <li>เพื่อลดภาระครูในการจัดทำหลักฐานและรายงานผลการพัฒนางาน (ว.PA)</li>
+    </ol>
+  </div>
+</div>
+
+<div class="sec">
+  <h2>4. หลักการและทฤษฎีที่ใช้วัด</h2>
+  <div class="grid3">
+    <div class="box"><h3>VARK · สไตล์การเรียนรู้</h3><p>Fleming (1987) · ภาพ เสียง อ่าน ลงมือทำ</p><p class="q">➜ สอนอย่างไร ใช้สื่อแบบไหน</p></div>
+    <div class="box"><h3>RIASEC · ความสนใจอาชีพ</h3><p>Holland (1959) · 6 แบบบุคลิกอาชีพ</p><p class="q">➜ เชื่อมกับอาชีพ บทบาทในกลุ่ม</p></div>
+    <div class="box"><h3>Mindset · กรอบความคิด</h3><p>Dweck (2006) · Growth / Fixed</p><p class="q">➜ เสริมแรง ซ่อมเสริม</p></div>
+  </div>
+  <p style="margin-top:2pt">วัดแบบ <b>Stealth Assessment</b> (ฝังในเกม ผู้เรียนไม่รู้สึกว่าถูกทดสอบ) และคิดคะแนนแบบ <b>Rule-based</b> ตรวจสอบย้อนกลับได้ทุกข้อ</p>
+</div>
+
+<div class="sec">
+  <h2>5. สิ่งที่ระบบทำได้</h2>
+  <div class="grid3">
+    <div class="box"><h3>ผู้เรียน</h3><ul>
+      <li>เล่นเควสต์ มีตัวละคร มินิเกม</li>
+      <li>ได้การ์ด Archetype + โปรไฟล์</li>
+      <li>เล่นครั้งเดียว ใช้ได้ทุกวิชา</li>
+    </ul></div>
+    <div class="box"><h3>ครูผู้สอน</h3><ul>
+      <li>สร้างวิชา เลือกกลุ่มเรียนเอง</li>
+      <li>แดชบอร์ดห้อง + รายคน</li>
+      <li>ไกด์การสอนรายหน่วย (+AI)</li>
+      <li>จัดกลุ่ม · รายงาน ว.PA</li>
+    </ul></div>
+    <div class="box"><h3>ผู้ดูแลระบบ</h3><ul>
+      <li>นำเข้าข้อมูลจาก Excel / CSV</li>
+      <li>จัดการผู้ใช้ รีเซ็ตรหัสผ่าน</li>
+      <li>ตั้งค่า AI และข้อมูลสถานศึกษา</li>
+    </ul></div>
+  </div>
+</div>
+
+<div class="sec grid2">
+  <div>
+    <h2>6. ประโยชน์ที่คาดว่าจะได้รับ</h2>
+    <ul>
+      <li><b>ผู้เรียน</b> รู้จักจุดแข็งของตนเอง ได้เรียนด้วยวิธีที่หลากหลายและเหมาะสม</li>
+      <li><b>ครู</b> รู้จักผู้เรียนตั้งแต่ต้นภาคเรียน ได้แนวทางสอนพร้อมใช้ มีหลักฐานประกอบ ว.PA</li>
+      <li><b>สถานศึกษา</b> เห็นภาพรวมผู้เรียนรายแผนก ใช้วางแผนพัฒนาการสอนและงานแนะแนว</li>
+    </ul>
+  </div>
+  <div>
+    <h2>7. จุดเด่นของระบบ</h2>
+    <ul>
+      <li><b>ต้นทุนต่ำ</b> ไม่เสียค่า AI ระหว่างเล่น · AI ใช้ API Key ของครูเอง เรียกเมื่อกดเท่านั้น</li>
+      <li><b>ปลอดภัยตาม PDPA</b> ครูเห็นเฉพาะผู้เรียนในวิชาตน ไม่ส่งชื่อผู้เรียนให้ AI</li>
+      <li><b>ใช้งานง่าย</b> เปิดผ่านเว็บได้ทั้งมือถือและคอมพิวเตอร์</li>
+    </ul>
+  </div>
+</div>
+
+<div class="note">
+  <b>ข้อควรคำนึงและการพัฒนาต่อ</b> — ผลจากระบบเป็นข้อมูลคัดกรองเบื้องต้น ไม่ใช่การวินิจฉัย ควรใช้ร่วมกับการสังเกตในชั้นเรียน ·
+  แผนต่อไป: หาคุณภาพเครื่องมือ (IOC, ความเชื่อมั่น) · เพิ่มเควสต์ฉากวิทยาลัย/สายอาชีพ · เครื่องมือสร้างเนื้อเรื่อง · รองรับผู้ใช้ 500–1,000 คน
+</div>
+
+</body>
+</html>
