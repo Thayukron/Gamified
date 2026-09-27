@@ -63,7 +63,7 @@ async function allow(t: any, value: boolean) {
           สถานะ: <span class="font-mono">{{ data.central.has_key ? `${data.central.key_hint} · ${data.central.model}` : 'ยังไม่ได้ตั้ง' }}</span>
         </p>
         <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-          <input v-model="centralKey" type="password" class="input font-mono" placeholder="AIza..." autocomplete="off">
+          <input v-model="centralKey" type="password" class="input font-mono" placeholder="วาง API Key ที่นี่ (ขึ้นต้นด้วย AQ. หรือ AIza)" autocomplete="off">
           <button class="btn-primary shrink-0" :disabled="busy || centralKey.length < 20" @click="save({ central_key: centralKey }, 'ตรวจสอบและบันทึก Key กลางแล้ว')">ตรวจสอบและบันทึก</button>
           <button v-if="data.central.has_key" class="btn-ghost shrink-0 !text-red-300" :disabled="busy" @click="save({ central_key: '' }, 'ลบ Key กลางแล้ว')">ลบ</button>
         </div>

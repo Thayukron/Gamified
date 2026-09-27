@@ -101,7 +101,7 @@ const fmt = (s?: string) => (s ? new Date(s.replace(' ', 'T')).toLocaleString('t
       <section class="card">
         <h2 class="text-lg font-medium text-slate-50">{{ ai.has_own_key ? 'เปลี่ยน API Key' : 'กรอก API Key' }}</h2>
         <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-          <input v-model="keyInput" type="password" class="input font-mono" placeholder="AIza..." autocomplete="off">
+          <input v-model="keyInput" type="password" class="input font-mono" placeholder="วาง API Key ที่นี่ (ขึ้นต้นด้วย AQ. หรือ AIza)" autocomplete="off">
           <button class="btn-primary shrink-0" :disabled="busy || keyInput.length < 20" @click="saveKey">
             {{ busy ? 'กำลังตรวจสอบ...' : 'ตรวจสอบและบันทึก' }}
           </button>
@@ -115,7 +115,7 @@ const fmt = (s?: string) => (s ? new Date(s.replace(' ', 'T')).toLocaleString('t
         <h2 class="text-lg font-medium text-slate-50">วิธีขอ API Key ของ Gemini (ฟรี)</h2>
         <ol class="mt-3 space-y-2 text-sm text-slate-200">
           <li><b class="text-rune-300">1.</b> เข้า <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="text-sky-300 underline">aistudio.google.com/apikey</a> แล้วล็อกอินด้วยบัญชี Google</li>
-          <li><b class="text-rune-300">2.</b> กด <b>Create API key</b> แล้วคัดลอก Key ที่ขึ้นต้นด้วย <code class="rounded bg-white/10 px-1">AIza</code></li>
+          <li><b class="text-rune-300">2.</b> กด <b>Create API key</b> แล้วคัดลอก Key (ขึ้นต้นด้วย <code class="rounded bg-white/10 px-1">AQ.</code> หรือ <code class="rounded bg-white/10 px-1">AIza</code>)</li>
           <li><b class="text-rune-300">3.</b> นำมาวางในช่องด้านบน แล้วกด “ตรวจสอบและบันทึก”</li>
         </ol>
         <ul class="mt-4 space-y-1 text-xs text-slate-400">

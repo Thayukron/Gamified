@@ -14,6 +14,11 @@ if (str_starts_with($key, 'AIzaMOCKQUOTA') && str_contains($path, 'generateConte
     echo json_encode(['error' => ['code' => 429, 'message' => 'Resource has been exhausted', 'status' => 'RESOURCE_EXHAUSTED']]);
     exit;
 }
+if (str_starts_with($key, 'AIzaMOCKBUSY') && str_contains($path, 'gemini-3.8-flash:')) {
+    http_response_code(503);
+    echo json_encode(['error' => ['code' => 503, 'message' => 'This model is currently experiencing high demand.', 'status' => 'UNAVAILABLE']]);
+    exit;
+}
 if (preg_match('#/models$#', $path)) {
     $m = fn ($n, $methods = ['generateContent']) => ['name' => "models/$n", 'supportedGenerationMethods' => $methods];
     echo json_encode(['models' => [$m('gemini-3.1-flash-lite'), $m('gemini-3.8-flash'), $m('gemini-3.7-flash'), $m('gemini-3.8-flash-lite-tts'), $m('gemini-3.8-pro'), $m('text-embedding-005', ['embedContent'])]]);

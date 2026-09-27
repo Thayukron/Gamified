@@ -69,7 +69,7 @@ class AiGuideService
     public static function saveKey(int $userId, string $key, ?string $model): array
     {
         $key = trim($key);
-        if (strlen($key) < 20 || preg_match('/\s/', $key)) {
+        if (strlen($key) < 20 || preg_match('/\s/', $key)) { // Google keys: legacy "AIza…" or newer "AQ.…"
             throw new HttpException(422, 'รูปแบบ API Key ไม่ถูกต้อง');
         }
         $models = (new GeminiClient($key))->listModels();
@@ -196,9 +196,11 @@ class AiGuideService
             throw new HttpException(409, 'กรุณากรอก API Key ของ Gemini ที่หน้า “ตั้งค่า AI ของฉัน” ก่อนใช้ฟังก์ชันนี้');
         }
         $model = $r['model'] ?: 'gemini-flash-latest';
+        set_time_limit(300); // retries + fallbacks can exceed the default 30s
 
         [$system, $prompt] = $type === 'course' ? self::coursePrompt($ctx) : self::unitPrompt($ctx, $topic);
-        $res = (new GeminiClient($r['key']))->generateJson($model, $system, $prompt);
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($model, $system, $prompt);
+        $model = $res['model']; // may be a fallback if the preferred model was overloaded
         $data = $type === 'course' ? self::normalizeCourse($res['data']) : self::normalizeUnit($res['data']);
 
         Database::get()->prepare(

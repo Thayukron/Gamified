@@ -40,7 +40,7 @@ class GeminiClient
     private static function statusFor(int $status): int
     {
         // 401/403 from Google means the key is wrong — a user-fixable 422, not our auth failure.
-        return in_array($status, [400, 401, 403], true) ? 422 : ($status === 429 ? 429 : 502);
+        return in_array($status, [400, 401, 403], true) ? 422 : (in_array($status, [429, 404], true) ? $status : 503);
     }
 
     private static function explain(int $status, string $msg): string
@@ -50,6 +50,7 @@ class GeminiClient
             in_array($status, [401, 403], true) => 'API Key ไม่ถูกต้องหรือไม่มีสิทธิ์ใช้ Gemini API',
             $status === 429 => 'ใช้งาน Gemini เกินโควตาของ API Key นี้ — รอสักครู่แล้วลองใหม่ (ระบบยังใช้ไกด์แบบกฎได้ตามปกติ)',
             $status === 404 => 'ไม่พบรุ่นโมเดลนี้ — กดทดสอบการเชื่อมต่อใหม่เพื่อเลือกรุ่นที่ใช้ได้',
+            in_array($status, [500, 503], true) => 'ขณะนี้ Google Gemini มีผู้ใช้งานหนาแน่น (เซิร์ฟเวอร์ของ Google ไม่ว่าง) ระบบลองใหม่และลองรุ่นสำรองแล้วแต่ยังไม่สำเร็จ — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)',
             default => "Gemini ตอบกลับผิดพลาด ($status): " . mb_substr($msg, 0, 200),
         };
     }
@@ -72,18 +73,64 @@ class GeminiClient
     }
 
     /**
-     * Pick a sensible default: the newest stable general-purpose "flash" model
-     * (fast and inexpensive — ideal for text guidance).
+     * Text-generation candidates in preference order: stable "flash" models newest first,
+     * then "flash-lite" models. Excludes speech/image/embedding/preview variants.
      */
+    public static function rank(array $models): array
+    {
+        $skip = '/(tts|image|audio|live|embedding|vision|preview|exp|thinking|aqa|learnlm|robotics|computer)/i';
+        $version = fn (string $m): float => preg_match('/gemini-(\d+(?:\.\d+)?)/', $m, $v) ? (float) $v[1] : 0;
+        $sort = function (array $list) use ($version): array {
+            usort($list, fn ($a, $b) => [$version($b), -strlen($b)] <=> [$version($a), -strlen($a)]);
+            return $list;
+        };
+        $usable = array_filter($models, fn ($m) => str_contains($m, 'flash') && !preg_match($skip, $m));
+        $flash = $sort(array_filter($usable, fn ($m) => !str_contains($m, 'lite')));
+        $lite = $sort(array_filter($usable, fn ($m) => str_contains($m, 'lite')));
+        return array_values([...$flash, ...$lite]);
+    }
+
+    /** Default model: the newest stable flash (fast and inexpensive — ideal for text guidance). */
     public static function pickDefault(array $models): ?string
     {
-        $skip = '/(tts|image|audio|live|embedding|vision|preview|exp|thinking|lite|aqa|learnlm|robotics|computer)/i';
-        $flash = array_values(array_filter($models, fn ($m) => str_contains($m, 'flash') && !preg_match($skip, $m)));
-        $version = function (string $m): float {
-            return preg_match('/gemini-(\d+(?:\.\d+)?)/', $m, $v) ? (float) $v[1] : 0;
-        };
-        usort($flash, fn ($a, $b) => [$version($b), -strlen($b)] <=> [$version($a), -strlen($a)]);
-        return $flash[0] ?? ($models[0] ?? null);
+        return self::rank($models)[0] ?? ($models[0] ?? null);
+    }
+
+    /**
+     * generateJson with resilience against Google-side overload:
+     * retry the chosen model briefly on 500/503, then fall back to other models this key can use.
+     * @return array{data: array, prompt_tokens: ?int, output_tokens: ?int, model: string}
+     */
+    public function generateJsonResilient(string $preferred, string $system, string $prompt, int $maxFallbacks = 2): array
+    {
+        $candidates = [$preferred];
+        $lastError = null;
+        $fallbacksLoaded = false;
+        for ($i = 0; $i < count($candidates) && $i <= $maxFallbacks; $i++) {
+            $model = $candidates[$i];
+            foreach ([0, 2, 5] as $attempt => $wait) {
+                if ($wait) {
+                    sleep($wait);
+                }
+                try {
+                    return $this->generateJson($model, $system, $prompt) + ['model' => $model];
+                } catch (HttpException $e) {
+                    $lastError = $e;
+                    $overloaded = $e->status === 503 || $e->status === 429 || str_contains($e->getMessage(), 'ไม่พบรุ่น');
+                    if (!$overloaded) {
+                        throw $e; // bad key, bad output, etc. — retrying won't help
+                    }
+                    if ($e->status === 429 || str_contains($e->getMessage(), 'ไม่พบรุ่น')) {
+                        break; // quota/404 are per-model: go straight to the next model
+                    }
+                }
+            }
+            if (!$fallbacksLoaded) {
+                $fallbacksLoaded = true;
+                $candidates = [$preferred, ...array_values(array_diff(self::rank($this->listModels()), [$preferred]))];
+            }
+        }
+        throw $lastError;
     }
 
     /**
