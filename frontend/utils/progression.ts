@@ -36,7 +36,7 @@ export interface Avatar {
 
 export const DEFAULT_AVATAR: Avatar = { gender: 'f', hairStyle: 'bob', hair: '#1f2937', skin: '#f1c7a5', eyes: '#7c3aed', robe: '#4c1d95' }
 
-/** Painted heroes (art in public/characters/{id}-{expr}.webp, prompts in docs/art-prompts.md). */
+/** Painted heroes: one pose each, public/characters/{id}.webp (prompts in docs/art-prompts.md). */
 export const HERO_PRESETS = [
   { id: 'hero-m1', gender: 'm', title: 'นักผจญภัยผู้กล้า' },
   { id: 'hero-m2', gender: 'm', title: 'นักเดินทางไร้พรมแดน' },
@@ -46,14 +46,12 @@ export const HERO_PRESETS = [
   { id: 'hero-f3', gender: 'f', title: 'ผู้เยียวยาใจดี' },
 ] as const
 
-export const HERO_EXPRESSIONS = ['neutral', 'happy', 'surprised', 'sad', 'determined'] as const
-export const heroImages = (id: string) =>
-  Object.fromEntries(HERO_EXPRESSIONS.map((e) => [e, `/characters/${id}-${e}.webp`]))
+export const heroImage = (id: string) => `/characters/${id}.webp`
 
 export function avatarDef(a: Avatar | null | undefined, name = 'คุณ'): CharacterDef {
   const v = a ?? DEFAULT_AVATAR
   const base: CharacterDef = { name, kind: 'mage', gender: v.gender, hairStyle: v.hairStyle, hair: v.hair, skin: v.skin, eyes: v.eyes, robe: v.robe, color: '#f5c451' }
-  return v.preset ? { ...base, images: heroImages(v.preset) } : base
+  return v.preset ? { ...base, image: heroImage(v.preset), fullBody: true } : base
 }
 
 /** Which hero presets actually have artwork deployed (checked once per session). */
@@ -66,7 +64,7 @@ export function loadAvailableHeroes() {
           const img = new Image()
           img.onload = () => resolve(h.id)
           img.onerror = () => resolve(null)
-          img.src = `/characters/${h.id}-neutral.webp`
+          img.src = heroImage(h.id)
         }),
     ),
   ).then((ids) => ids.filter((x): x is string => !!x))

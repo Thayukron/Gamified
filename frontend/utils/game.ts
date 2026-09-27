@@ -16,6 +16,8 @@ export interface CharacterDef {
   accessory?: string[]
   /** Optional artwork file(s) replacing the SVG, e.g. "/characters/mira.png" or one per expression. */
   image?: string
+  /** Artwork shows the whole figure (head near the top) rather than a half-body sprite. */
+  fullBody?: boolean
   images?: Partial<Record<Expr, string>>
 }
 

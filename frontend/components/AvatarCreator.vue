@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { avatarDef, DEFAULT_AVATAR, HERO_PRESETS, heroImages, loadAvailableHeroes, type Avatar } from '~/utils/progression'
+import { avatarDef, DEFAULT_AVATAR, HERO_PRESETS, heroImage, loadAvailableHeroes, type Avatar } from '~/utils/progression'
 
 // Pick your adventurer. Shows a gallery of painted heroes (same art style as the quests);
 // falls back to the drawn builder when no hero artwork has been deployed yet.
@@ -72,7 +72,7 @@ async function save() {
             <img
               v-if="a.preset"
               :key="a.preset"
-              :src="heroImages(a.preset).happy"
+              :src="heroImage(a.preset)"
               :alt="selectedHero?.title"
               class="relative h-full w-full object-contain object-bottom drop-shadow-[0_0_25px_rgba(245,196,81,0.35)]"
             >
@@ -103,7 +103,7 @@ async function save() {
           >
             <div class="relative aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-b from-abyss-700 to-abyss-900">
               <img
-                :src="heroImages(h.id)[hovered === h.id || a.preset === h.id ? 'happy' : 'neutral']"
+                :src="heroImage(h.id)"
                 :alt="h.title"
                 loading="lazy"
                 class="absolute left-1/2 top-0 h-[190%] max-w-none -translate-x-1/2 object-contain object-top transition duration-500 group-hover:scale-105"
