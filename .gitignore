@@ -12,3 +12,4 @@ art-source/
 backend/storage/
 tools/mock-gemini/*.txt
 tools/mock-gemini/*.log
+docs/ตัวอย่างไกด์การสอน-DSA.pdf
