@@ -26,3 +26,16 @@ $router->get('/teacher/courses', [App\Controllers\TeacherController::class, 'cou
 $router->get('/teacher/courses/{id}/dashboard', [App\Controllers\TeacherController::class, 'dashboard'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/guide', [App\Controllers\TeacherController::class, 'guide'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/context', [App\Controllers\TeacherController::class, 'saveContext'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/ai', [App\Controllers\TeacherController::class, 'aiCached'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/ai/all', [App\Controllers\TeacherController::class, 'aiAll'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/ai', [App\Controllers\TeacherController::class, 'aiGenerate'], ['teacher', 'admin']);
+
+// AI settings: each teacher brings their own Gemini key (BYOK); admin controls the global switch and optional central key
+$router->get('/me/ai', [App\Controllers\AiController::class, 'status'], ['teacher', 'admin']);
+$router->put('/me/ai', [App\Controllers\AiController::class, 'saveKey'], ['teacher', 'admin']);
+$router->post('/me/ai/test', [App\Controllers\AiController::class, 'test'], ['teacher', 'admin']);
+$router->put('/me/ai/model', [App\Controllers\AiController::class, 'setModel'], ['teacher', 'admin']);
+$router->delete('/me/ai', [App\Controllers\AiController::class, 'removeKey'], ['teacher', 'admin']);
+$router->get('/admin/ai', [App\Controllers\AiController::class, 'adminStatus'], ['admin']);
+$router->put('/admin/ai', [App\Controllers\AiController::class, 'adminSave'], ['admin']);
+$router->put('/admin/ai/teachers/{id}', [App\Controllers\AiController::class, 'adminAllow'], ['admin']);

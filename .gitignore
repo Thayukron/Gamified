@@ -9,3 +9,4 @@ backend/vendor/
 .env
 .DS_Store
 art-source/
+backend/storage/

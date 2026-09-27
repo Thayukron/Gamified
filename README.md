@@ -51,3 +51,7 @@ php backend/database/migrate.php
 | GET | /api/teacher/courses/{id}/dashboard | teacher (เฉพาะวิชาที่สอน), admin |
 | GET | /api/teacher/courses/{id}/guide | teacher (เฉพาะวิชาที่สอน), admin |
 | PUT | /api/teacher/courses/{id}/context | teacher (เฉพาะวิชาที่สอน), admin |
+| GET/PUT/DELETE | /api/me/ai | teacher, admin (API Key ของตนเอง) |
+| POST | /api/me/ai/test · PUT /api/me/ai/model | teacher, admin |
+| GET/POST | /api/teacher/courses/{id}/ai · GET …/ai/all | teacher (เฉพาะวิชาที่สอน), admin |
+| GET/PUT | /api/admin/ai · PUT /api/admin/ai/teachers/{id} | admin |

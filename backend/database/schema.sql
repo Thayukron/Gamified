@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -147,16 +147,21 @@ CREATE TABLE game_sessions (
     CONSTRAINT fk_sess_scen FOREIGN KEY (scenario_id) REFERENCES scenarios(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Cache คำแนะนำจาก AI
+-- Cache คำแนะนำจาก AI (1 แถวต่อ รายวิชา + ประเภท + หัวข้อ; สร้างใหม่เมื่อครูกดเท่านั้น)
 CREATE TABLE ai_insights_cache (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_id    INT UNSIGNED NULL,
-    cache_key    CHAR(64) NOT NULL UNIQUE COMMENT 'sha256 ของ prompt + ข้อมูลสรุป',
-    insight_type VARCHAR(50) NOT NULL DEFAULT 'teaching_plan',
+    cache_key    CHAR(64) NOT NULL UNIQUE COMMENT 'sha256(course_id|insight_type|topic)',
+    fingerprint  CHAR(64) NOT NULL COMMENT 'sha256 ของสถิติห้อง+บริบทวิชา ตอนสร้าง → ใช้บอกว่าข้อมูลเปลี่ยนแล้ว',
+    insight_type VARCHAR(50) NOT NULL DEFAULT 'course',
+    topic        VARCHAR(100) NULL,
     prompt       LONGTEXT NOT NULL,
     response     LONGTEXT NOT NULL,
     provider     VARCHAR(30) NULL,
     model        VARCHAR(80) NULL,
+    key_source   ENUM('own','central') NULL,
+    prompt_tokens INT NULL,
+    output_tokens INT NULL,
     created_by   INT UNSIGNED NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_ai_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
@@ -188,4 +193,17 @@ CREATE TABLE player_progress (
     avatar      TEXT NULL COMMENT 'JSON: gender, hairStyle, hair, skin, eyes, robe',
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_prog_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ตั้งค่า AI รายครู (BYOK): API Key ของครูเอง เข้ารหัส AES-256-GCM
+CREATE TABLE user_ai_settings (
+    user_id          INT UNSIGNED PRIMARY KEY,
+    provider         VARCHAR(30) NOT NULL DEFAULT 'gemini',
+    api_key_enc      TEXT NULL,
+    key_hint         VARCHAR(20) NULL COMMENT 'แสดงผลแบบปิดบัง เช่น AIza…1234',
+    model            VARCHAR(80) NULL,
+    central_allowed  TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'แอดมินอนุญาตให้ใช้ Key กลาง',
+    verified_at      DATETIME NULL,
+    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_ai_user_settings FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

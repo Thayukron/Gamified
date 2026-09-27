@@ -5,6 +5,7 @@ use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
 use App\Guide\TeachingGuide;
+use App\Services\AiGuideService;
 use App\Services\ProfileService;
 
 /**
@@ -71,6 +72,40 @@ class TeacherController
         $course = self::course($req, (int) $req->params['id']);
         $dash = self::classData($course);
         return ['course' => $course, 'term' => $dash['term'], 'guide' => TeachingGuide::build($course, $dash)];
+    }
+
+    /** GET /teacher/courses/{id}/ai?type=course|unit&topic= — cached AI result (never calls the AI). */
+    public static function aiCached(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $dash = self::classData($course);
+        $type = (string) $req->query('type', 'course');
+        $topic = $type === 'unit' ? (string) $req->query('topic', '') : null;
+        return ['result' => AiGuideService::cached($course, $dash, $type, $topic), 'ai' => AiGuideService::status((int) $req->user['id'])];
+    }
+
+    /** GET /teacher/courses/{id}/ai/all — every cached AI result for the course (no AI call). */
+    public static function aiAll(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $dash = self::classData($course);
+        $topics = json_decode($course['topics'] ?? '[]', true) ?: [];
+        $units = [];
+        foreach ($topics as $t) {
+            if ($r = AiGuideService::cached($course, $dash, 'unit', $t)) {
+                $units[$t] = $r;
+            }
+        }
+        return ['course' => AiGuideService::cached($course, $dash, 'course', null), 'units' => (object) $units, 'ai' => AiGuideService::status((int) $req->user['id'])];
+    }
+
+    /** POST /teacher/courses/{id}/ai — { type, topic? } generate with Gemini (explicit request only). */
+    public static function aiGenerate(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $type = (string) $req->input('type', 'course');
+        $topic = $type === 'unit' ? (string) $req->input('topic', '') : null;
+        return ['result' => AiGuideService::generate((int) $req->user['id'], $course, self::classData($course), $type, $topic)];
     }
 
     /** PUT /teacher/courses/{id}/context — course type, level, topics, note. */

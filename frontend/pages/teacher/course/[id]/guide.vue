@@ -7,8 +7,44 @@ const editing = ref(false)
 const saving = ref(false)
 const ctx = reactive({ course_type: 'mixed', level: '', topicsText: '', context_note: '' })
 
+// ---- AI (Gemini, teacher's own key) — reads cache only; calls AI only on button press ----
+const ai = ref<any>(null)
+const aiCourse = ref<any>(null)
+const aiUnits = ref<Record<string, any>>({})
+const aiBusy = ref<string | null>(null) // 'course' or a topic name
+const aiError = ref<{ where: string; text: string } | null>(null)
+const openUnit = ref<string | null>(null)
+const aiReady = computed(() => ai.value?.enabled && ai.value?.active_source)
+
+async function loadAi() {
+  const res = await api(`/teacher/courses/${route.params.id}/ai/all`)
+  ai.value = res.ai
+  aiCourse.value = res.course
+  aiUnits.value = res.units ?? {}
+}
+
+async function generate(type: 'course' | 'unit', topic?: string) {
+  aiBusy.value = type === 'course' ? 'course' : topic!
+  aiError.value = null
+  try {
+    const res = await api(`/teacher/courses/${route.params.id}/ai`, { method: 'POST', body: { type, topic } })
+    if (type === 'course') aiCourse.value = res.result
+    else {
+      aiUnits.value = { ...aiUnits.value, [topic!]: res.result }
+      openUnit.value = topic!
+    }
+  } catch (e) {
+    aiError.value = { where: type === 'course' ? 'course' : topic!, text: apiErrorMessage(e) }
+  } finally {
+    aiBusy.value = null
+  }
+}
+const fmtTime = (s: string) => new Date(s.replace(' ', 'T')).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })
+const STYLE_TH: Record<string, string> = { V: 'ภาพ', A: 'ฟัง', R: 'อ่านเขียน', K: 'ลงมือทำ' }
+
 async function load() {
   try {
+    loadAi().catch(() => {})
     data.value = await api(`/teacher/courses/${route.params.id}/guide`)
     const c = data.value.course
     ctx.course_type = c.course_type
@@ -87,6 +123,69 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
           </ul>
         </section>
 
+        <!-- AI: course-level guide -->
+        <section class="card ai-card">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="sec"><span class="num !bg-sky-400">AI</span> ไกด์เชิงลึกเฉพาะรายวิชา (Gemini)</h2>
+              <p class="hint">AI วิเคราะห์จากสถิติรวมของห้องและเนื้อหาวิชา (ไม่ส่งชื่อนักเรียน) · เรียก AI เฉพาะเมื่อกดปุ่ม และจำผลไว้ใช้ซ้ำ</p>
+            </div>
+            <template v-if="aiReady">
+              <button class="no-print btn-primary !py-2 text-sm" :disabled="!!aiBusy" @click="generate('course')">
+                <AppIcon name="sparkle" :size="16" />
+                {{ aiBusy === 'course' ? 'AI กำลังวิเคราะห์... (10–30 วินาที)' : aiCourse ? 'วิเคราะห์ใหม่' : 'วิเคราะห์ด้วย AI' }}
+              </button>
+            </template>
+          </div>
+
+          <p v-if="ai && !ai.enabled" class="mt-3 rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-200">ผู้ดูแลระบบปิดการใช้งาน AI อยู่ — ใช้ไกด์แบบกฎด้านล่างได้ตามปกติ</p>
+          <div v-else-if="ai && !ai.active_source" class="no-print mt-3 rounded-xl border border-sky-400/40 bg-sky-500/10 p-4 text-sm text-sky-100">
+            ต้องกรอก <b>API Key ของ Gemini</b> ของคุณเองก่อนใช้ฟังก์ชันนี้ (ขอได้ฟรี ใช้เวลา 1 นาที)
+            <NuxtLink to="/teacher/settings" class="btn-ghost mt-3 !border-sky-400/60 !py-1.5 text-sm !text-sky-200">ไปตั้งค่า AI ของฉัน →</NuxtLink>
+          </div>
+          <p v-if="aiError?.where === 'course'" class="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{{ aiError.text }}</p>
+
+          <div v-if="aiCourse" class="mt-4 space-y-4">
+            <p v-if="aiCourse.stale" class="rounded-xl bg-amber-500/10 px-3 py-2 text-sm text-amber-200">⚠ ข้อมูลผู้เรียนหรือบริบทวิชาเปลี่ยนไปหลังการวิเคราะห์ครั้งนี้ — กด “วิเคราะห์ใหม่” เพื่ออัปเดต</p>
+            <p class="text-slate-100">{{ aiCourse.data.overview }}</p>
+            <div>
+              <p class="sub-h">กลยุทธ์การสอน</p>
+              <div class="mt-2 grid gap-3 md:grid-cols-2">
+                <div v-for="s in aiCourse.data.strategies" :key="s.title" class="rounded-xl border border-white/10 p-3">
+                  <p class="font-medium text-sky-200">{{ s.title }}</p>
+                  <p class="mt-1 text-sm text-slate-300">{{ s.detail }}</p>
+                  <p v-if="s.for" class="mt-1 text-xs text-slate-500">เหมาะกับ: {{ s.for }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <p class="sub-h">สื่อ/เครื่องมือที่แนะนำ</p>
+                <ul class="mt-2 space-y-1 text-sm text-slate-300"><li v-for="t in aiCourse.data.tools" :key="t.name">• <b class="text-slate-100">{{ t.name }}</b> — {{ t.use }}</li></ul>
+              </div>
+              <div>
+                <p class="sub-h">การวัดผลที่เหมาะสม</p>
+                <ul class="mt-2 space-y-1 text-sm text-slate-300"><li v-for="t in aiCourse.data.assessment" :key="t">• {{ t }}</li></ul>
+              </div>
+            </div>
+            <div v-if="aiCourse.data.misconceptions.length">
+              <p class="sub-h">ความเข้าใจผิดที่พบบ่อยและวิธีแก้</p>
+              <ul class="mt-2 space-y-2 text-sm">
+                <li v-for="m in aiCourse.data.misconceptions" :key="m.issue" class="rounded-xl border border-white/10 p-3">
+                  <span class="text-rune-300">{{ m.topic }}</span> · <span class="text-slate-200">{{ m.issue }}</span>
+                  <p class="mt-1 text-slate-400">แก้โดย: {{ m.fix }}</p>
+                </li>
+              </ul>
+            </div>
+            <p v-if="aiCourse.data.fixed_mindset" class="rounded-xl border border-[#d95926]/40 p-3 text-sm text-slate-200"><b>ผู้เรียน Fixed Mindset:</b> {{ aiCourse.data.fixed_mindset }}</p>
+            <p class="text-xs text-slate-500">
+              สร้างโดย {{ aiCourse.model }} · {{ fmtTime(aiCourse.created_at) }} · ใช้ Key {{ aiCourse.key_source === 'central' ? 'กลางของวิทยาลัย' : 'ของคุณ' }}
+              <template v-if="aiCourse.tokens.prompt"> · {{ aiCourse.tokens.prompt + aiCourse.tokens.output }} tokens</template>
+              · เนื้อหาจาก AI ควรตรวจทานก่อนนำไปใช้
+            </p>
+          </div>
+        </section>
+
         <!-- 2. media -->
         <section class="card">
           <h2 class="sec"><span class="num">2</span> สื่อ เครื่องมือ และกิจกรรมที่แนะนำ</h2>
@@ -136,14 +235,74 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
                 <tr class="border-b border-white/10">
                   <th class="w-10 py-2 pr-2">หน่วย</th><th class="w-32 py-2 pr-3">หัวข้อ</th>
                   <th v-for="a in g.units[0].activities" :key="a.key" class="py-2 pr-3">{{ a.label }}</th>
+                  <th class="no-print w-40 py-2">แผนละเอียด (AI)</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="u in g.units" :key="u.no" class="border-b border-white/5 align-top">
-                  <td class="py-3 pr-2 font-display text-rune-300">{{ u.no }}</td>
-                  <td class="py-3 pr-3 font-medium text-slate-100">{{ u.topic }}</td>
-                  <td v-for="a in u.activities" :key="a.key" class="py-3 pr-3 text-slate-300">{{ a.text }}</td>
-                </tr>
+                <template v-for="u in g.units" :key="u.no">
+                  <tr class="border-b border-white/5 align-top">
+                    <td class="py-3 pr-2 font-display text-rune-300">{{ u.no }}</td>
+                    <td class="py-3 pr-3 font-medium text-slate-100">{{ u.topic }}</td>
+                    <td v-for="a in u.activities" :key="a.key" class="py-3 pr-3 text-slate-300">{{ a.text }}</td>
+                    <td class="no-print py-3">
+                      <button
+                        v-if="aiUnits[u.topic]"
+                        class="btn-ghost !border-sky-400/50 !px-3 !py-1.5 text-xs !text-sky-200"
+                        @click="openUnit = openUnit === u.topic ? null : u.topic"
+                      >
+                        {{ openUnit === u.topic ? 'ซ่อนแผน' : 'ดูแผน' }}<span v-if="aiUnits[u.topic].stale" title="ข้อมูลเปลี่ยนแล้ว"> ⚠</span>
+                      </button>
+                      <button
+                        v-else-if="aiReady"
+                        class="btn-ghost !px-3 !py-1.5 text-xs"
+                        :disabled="!!aiBusy"
+                        @click="generate('unit', u.topic)"
+                      >
+                        <AppIcon name="sparkle" :size="13" /> {{ aiBusy === u.topic ? 'กำลังออกแบบ...' : 'ออกแบบด้วย AI' }}
+                      </button>
+                      <span v-else class="text-xs text-slate-500">ต้องมี API Key</span>
+                      <p v-if="aiError?.where === u.topic" class="mt-1 text-xs text-red-300">{{ aiError.text }}</p>
+                    </td>
+                  </tr>
+                  <tr v-if="openUnit === u.topic && aiUnits[u.topic]" class="border-b border-white/5">
+                    <td :colspan="3 + u.activities.length" class="pb-5">
+                      <div class="rounded-xl border border-sky-400/40 bg-sky-500/5 p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                          <p class="font-medium text-sky-200">แผนการสอนหน่วย “{{ u.topic }}” · {{ aiUnits[u.topic].data.duration_minutes }} นาที</p>
+                          <button class="btn-ghost !px-3 !py-1 text-xs" :disabled="!!aiBusy" @click="generate('unit', u.topic)">{{ aiBusy === u.topic ? 'กำลังออกแบบ...' : 'ออกแบบใหม่' }}</button>
+                        </div>
+                        <p v-if="aiUnits[u.topic].stale" class="mt-2 text-xs text-amber-200">⚠ ข้อมูลผู้เรียนเปลี่ยนไปหลังออกแบบแผนนี้</p>
+                        <p class="mt-2 text-sm text-slate-200"><b>จุดประสงค์:</b> {{ aiUnits[u.topic].data.objective }}</p>
+                        <ol class="mt-3 space-y-2">
+                          <li v-for="(s, i) in aiUnits[u.topic].data.steps" :key="i" class="flex gap-3 text-sm">
+                            <span class="w-16 shrink-0 text-right tabular-nums text-slate-400">{{ s.minutes }} นาที</span>
+                            <div>
+                              <span class="font-medium text-slate-100">{{ s.phase }}</span>
+                              <span v-for="st in s.styles" :key="st" class="ml-1 rounded bg-white/10 px-1.5 text-[10px] text-slate-300">{{ STYLE_TH[st] }}</span>
+                              <p class="text-slate-300">{{ s.activity }}</p>
+                            </div>
+                          </li>
+                        </ol>
+                        <div class="mt-3 grid gap-3 md:grid-cols-2">
+                          <div>
+                            <p class="sub-h">ปรับตามสไตล์ผู้เรียน</p>
+                            <ul class="mt-1 space-y-1 text-sm text-slate-300">
+                              <li v-for="(v, k) in aiUnits[u.topic].data.differentiation" v-show="v" :key="k"><b class="text-slate-100">{{ STYLE_TH[k] }}:</b> {{ v }}</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <p class="sub-h">สื่อ/อุปกรณ์</p>
+                            <ul class="mt-1 space-y-1 text-sm text-slate-300"><li v-for="m in aiUnits[u.topic].data.materials" :key="m">• {{ m }}</li></ul>
+                            <p class="sub-h mt-3">คำถามทบทวนท้ายคาบ</p>
+                            <ol class="mt-1 list-decimal space-y-1 pl-5 text-sm text-slate-300"><li v-for="q in aiUnits[u.topic].data.check_questions" :key="q">{{ q }}</li></ol>
+                          </div>
+                        </div>
+                        <p v-if="aiUnits[u.topic].data.fixed_mindset_support" class="mt-3 text-sm text-slate-300"><b>ผู้เรียน Fixed Mindset:</b> {{ aiUnits[u.topic].data.fixed_mindset_support }}</p>
+                        <p class="mt-3 text-xs text-slate-500">สร้างโดย {{ aiUnits[u.topic].model }} · {{ fmtTime(aiUnits[u.topic].created_at) }} · ควรตรวจทานก่อนนำไปใช้</p>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
               </tbody>
             </table>
           </div>
@@ -236,6 +395,8 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
 .sec { @apply flex items-center gap-2 text-lg font-medium text-slate-50; }
 .num { @apply flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rune-400 font-display text-sm font-bold text-abyss-950; }
 .hint { @apply mt-1 text-xs text-slate-400; }
+.sub-h { @apply text-xs font-medium uppercase tracking-wider text-slate-400; }
+.ai-card { @apply border-sky-400/40; background-image: radial-gradient(ellipse at top right, rgba(56,189,248,0.10), transparent 60%); }
 @media print {
   .no-print { display: none !important; }
 }

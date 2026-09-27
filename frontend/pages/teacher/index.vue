@@ -37,6 +37,15 @@ const upcoming = [
       </p>
     </div>
 
+    <NuxtLink to="/teacher/settings" class="card card-hover flex animate-fade-up items-center gap-4 border-sky-400/30 !p-4">
+      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-sky-400/50 text-sky-300"><AppIcon name="key" /></span>
+      <div class="flex-1">
+        <p class="font-medium text-slate-100">ตั้งค่า AI ของฉัน</p>
+        <p class="text-sm text-slate-400">กรอก API Key ของ Gemini (ฟรี) เพื่อให้ AI ช่วยออกแบบแผนการสอนรายวิชาและรายหน่วย</p>
+      </div>
+      <AppIcon name="back" :size="18" class="rotate-180 text-slate-500" />
+    </NuxtLink>
+
     <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">MY COURSES</span></div>
 
     <p v-if="loading" class="text-slate-500">กำลังโหลดรายวิชา...</p>

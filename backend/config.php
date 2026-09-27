@@ -12,6 +12,10 @@ $config = [
     'token_ttl_hours' => 24 * 7,
     'academic_year' => 2569,
     'semester' => 1,
+    'gemini' => [
+        'base_url' => 'https://generativelanguage.googleapis.com/v1beta',
+        'timeout' => 90,
+    ],
 ];
 
 if (file_exists(__DIR__ . '/config.local.php')) {
