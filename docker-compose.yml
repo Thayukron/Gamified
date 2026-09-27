@@ -1,0 +1,58 @@
+# ARCANA PROFILE — run everything with:  docker compose up -d --build
+# Settings come from .env (copy .env.example). See DEPLOY.md.
+name: arcana
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-gamified}
+      MARIADB_USER: ${DB_USER:-arcana}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+      TZ: Asia/Bangkok
+    volumes:
+      - db_data:/var/lib/mysql
+    # only reachable from this machine (for HeidiSQL/DBeaver); remove the line to hide it completely
+    ports:
+      - "127.0.0.1:${DB_PUBLISH_PORT:-3320}:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-gamified}
+      DB_USER: ${DB_USER:-arcana}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ACADEMIC_YEAR: ${ACADEMIC_YEAR:-2569}
+      SEMESTER: ${SEMESTER:-1}
+      SEED_DEMO: ${SEED_DEMO:-0}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      TZ: Asia/Bangkok
+    volumes:
+      # app.key encrypts teachers' Gemini keys — back it up together with the database
+      - api_storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8090}:80"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
+  api_storage:

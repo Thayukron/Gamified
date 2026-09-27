@@ -1,7 +1,11 @@
 <?php
 /**
- * Rebuild the database from schema.sql and insert demo seed data.
- * Usage: php backend/database/migrate.php [--no-seed]
+ * ⚠ DROPS AND REBUILDS every table from schema.sql, then seeds data.
+ * Usage: php backend/database/migrate.php [--no-seed | --base-only]
+ *   (default)    base data + demo college (teachers, 46 students, courses, played results)
+ *   --base-only  admin account, archetypes, universal quests, settings — for a real deployment
+ *   --no-seed    tables only
+ * For Docker/production use install.php, which never touches an existing database.
  */
 require __DIR__ . '/../bootstrap.php';
 
@@ -9,25 +13,35 @@ use App\Core\Database;
 use App\Services\Progression;
 use App\Services\ScenarioEngine;
 
+$dbName = app_config('db')['name'];
 $pdo = Database::connect(app_config('db'), false);
-$pdo->exec(file_get_contents(__DIR__ . '/schema.sql'));
+// schema.sql names the database "gamified"; follow the configured name instead
+$pdo->exec(preg_replace('/^(CREATE DATABASE IF NOT EXISTS|USE) gamified/m', '$1 `' . $dbName . '`', file_get_contents(__DIR__ . '/schema.sql')));
 echo "Schema created.\n";
 
 if (in_array('--no-seed', $argv, true)) {
     exit(0);
 }
+$demo = !in_array('--base-only', $argv, true);
 
-$pdo->exec('USE ' . app_config('db')['name']);
+$pdo->exec("USE `$dbName`");
 $year = app_config('academic_year');
 $sem = app_config('semester');
 
+$users = $pdo->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code) VALUES (?, ?, ?, ?, ?, ?)');
+$adminPw = getenv('ADMIN_PASSWORD') ?: 'admin1234';
+$users->execute(['admin', password_hash($adminPw, PASSWORD_DEFAULT), 'ผู้ดูแลระบบ', 'admin', null, null]);
+if (!$demo && !getenv('ADMIN_PASSWORD')) {
+    // default password on a real deployment: must be changed at first login
+    $pdo->exec("UPDATE users SET must_change_password = 1 WHERE username = 'admin'");
+}
+
+if ($demo) {
 $pdo->exec("INSERT INTO departments (code, name) VALUES
     ('IT', 'เทคโนโลยีสารสนเทศ'),
     ('ACC', 'การบัญชี'),
     ('MKT', 'การตลาด')");
 
-$users = $pdo->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code) VALUES (?, ?, ?, ?, ?, ?)');
-$users->execute(['admin', password_hash('admin1234', PASSWORD_DEFAULT), 'ผู้ดูแลระบบ', 'admin', null, null]);
 $users->execute(['teacher1', password_hash('teacher1234', PASSWORD_DEFAULT), 'ครูสมศรี ใจดี', 'teacher', 1, null]);
 $users->execute(['teacher2', password_hash('teacher1234', PASSWORD_DEFAULT), 'ครูวิชัย บัญชีดี', 'teacher', 2, null]);
 
@@ -59,6 +73,7 @@ $courseInsert->execute(['20201-2001', 'การบัญชีเบื้อ�
 $pdo->exec("UPDATE users SET class_group = 'ปวส.1/1' WHERE role = 'student'");
 $pdo->exec("INSERT INTO enrollments (course_id, student_id) SELECT 1, id FROM users WHERE role = 'student'");
 $pdo->exec("INSERT INTO enrollments (course_id, student_id) SELECT 2, id FROM users WHERE role = 'student' AND username BETWEEN 'student031' AND 'student046'");
+} // demo college
 
 $archetypes = [
     ['BUILDER',   'The Builder',   'นักสร้างสรรค์ลงมือทำ', 'คุณเรียนรู้ได้ดีที่สุดเมื่อได้ลงมือทำจริง ชอบแก้ปัญหาที่จับต้องได้ และภูมิใจกับผลงานที่สร้างขึ้นด้วยมือตัวเอง', ['ลงมือปฏิบัติได้คล่อง', 'แก้ปัญหาเฉพาะหน้าเก่ง', 'อดทนและมุ่งมั่น'], ['เรียนผ่านโปรเจกต์และการทดลอง', 'แบ่งงานใหญ่เป็นชิ้นเล็กที่ทำเสร็จได้'], 'R', '#f97316', 'hammer'],
@@ -91,6 +106,11 @@ foreach ($universal as [$file, $title, $desc]) {
 $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES
     ('ai_enabled', '1'), ('ai_central_key_enc', ''), ('ai_central_key_hint', ''), ('ai_central_model', ''),
     ('institution_name', 'วิทยาลัยการอาชีพศรีสะเกษ'), ('institution_affiliation', 'สำนักงานคณะกรรมการการอาชีวศึกษา กระทรวงศึกษาธิการ')");
+
+if (!$demo) {
+    echo "Base data inserted. Login: admin / " . (getenv('ADMIN_PASSWORD') ? '(ADMIN_PASSWORD)' : 'admin1234 (must be changed at first login)') . "\n";
+    exit(0);
+}
 
 // ---- demo play-throughs (simulated personas through the real engine) ----
 require __DIR__ . '/DemoPlayer.php';

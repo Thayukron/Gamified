@@ -101,7 +101,7 @@ async function removeCourse(c: any) {
           <p class="text-xs text-slate-500">{{ new Date(r.created_at.replace(' ', 'T')).toLocaleString('th-TH') }}<template v-if="r.note"> · “{{ r.note }}”</template></p>
         </div>
         <button v-if="r.role !== 'admin'" class="btn-primary !px-3 !py-1.5 text-sm" @click="resetPw({ id: r.user_id, full_name: r.full_name, username: r.username })">รีเซ็ตรหัสผ่าน</button>
-        <span v-else class="text-xs text-slate-400">ผู้ดูแลระบบ: ใช้ php tools/reset-password.php</span>
+        <span v-else class="text-xs text-slate-400">ผู้ดูแลระบบ: ใช้คำสั่ง reset-password บนเซิร์ฟเวอร์ (ดู DEPLOY.md)</span>
         <button class="text-xs text-slate-500 hover:text-slate-300" @click="dismiss(r)">ปิดคำขอ</button>
       </div>
     </section>

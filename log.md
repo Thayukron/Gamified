@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-09-28 — รันด้วย Docker + deploy ผ่าน git
+
+- ผู้ใช้ขอให้ขึ้น Docker เพื่อรันง่ายและ deploy ผ่าน git
+- `docker-compose.yml` (project `arcana`): `db` MariaDB 11.4 (volume `db_data`, healthcheck, พอร์ต 127.0.0.1:3320) · `api` PHP 8.2 + Apache (`backend/Dockerfile`, volume `api_storage` เก็บ app.key) · `web` Nuxt generate → Nginx (`frontend/Dockerfile`, พอร์ต 8090, proxy `/api` → api) — หน้าเว็บและ API อยู่ origin เดียวกัน ไม่ต้องใช้ CORS
+- `.env.example` (คำอธิบายไทย) · `.env` ถูก gitignore · เลือกพอร์ตไม่ชนโปรเจกต์ btech-sice (8000/8080/8081/3307)
+- `config.php` อ่านค่าจาก environment (DB_*, CORS_ORIGINS, ACADEMIC_YEAR, SEMESTER)
+- `backend/database/install.php` รันทุกครั้งที่ API เริ่ม: DB ว่าง → สร้างตาราง (`SEED_DEMO=1` ข้อมูลตัวอย่าง / ไม่ใส่ = เฉพาะ admin ที่ต้องเปลี่ยนรหัส) · DB มีข้อมูล → ใช้ไฟล์ใน `database/upgrades/` ที่ยังไม่เคยใช้ (ตาราง `schema_migrations`) **ไม่ลบข้อมูล**
+- `migrate.php` เพิ่ม `--base-only` และใช้ชื่อฐานข้อมูลตาม config · ย้าย `tools/reset-password.php` → `backend/bin/reset-password.php` (ใช้ใน container ได้)
+- `.gitattributes` บังคับ LF ให้ `.sh`/Dockerfile/`.conf` (+ Dockerfile ตัด CR อีกชั้น)
+- แก้ระหว่างทดสอบ: Nginx redirect `/login` → `http://127.0.0.1/login/` (พอร์ตหาย เพราะ nuxt generate สร้างโฟลเดอร์ `login/`) → `absolute_redirect off` + `try_files $uri $uri/index.html /index.html` · ไฟล์ภาพ/ฟอนต์ที่ไม่มีจริงตอบ 404 แทนหน้าแอป
+- `DEPLOY.md` คู่มือติดตั้ง/อัปเดต/สำรอง-กู้คืน (ต้องสำรอง DB + app.key คู่กัน)/คำสั่งที่ใช้บ่อย/HTTPS
+- ย้ายข้อมูลปัจจุบันของผู้ใช้ (พอร์ต 3310) + app.key เข้า Docker แล้ว — Key Gemini ของครูถอดรหัสได้
+- ทดสอบ: ติดตั้งใหม่จาก DB ว่าง (admin ถูกบังคับเปลี่ยนรหัส, API ตอบ 403 จนกว่าจะเปลี่ยน) · restart ไม่กระทบข้อมูล · E2E ผ่าน Docker 32 ข้อ (ครูสร้างรายวิชา 12 + บัญชี/รหัสผ่าน 20) · แม่แบบ Excel, รายงาน ว.PA (ฟอนต์ TH Sarabun), หน้าผู้เรียน+ภาพตัวละคร · คำสั่งสำรอง/กู้คืน/reset-password ตามคู่มือใช้ได้จริง · คืน DB หลังทดสอบ
+
+---
+
 ## 2026-09-28 — เอกสารสรุปนำเสนอระบบ 1 หน้า (PDF)
 
 - ผู้ใช้ขอเอกสารนำเสนอแบบสรุปประเด็นสำคัญ 1 หน้ากระดาษ เป็น PDF ฟอนต์ที่ใช้กัน

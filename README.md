@@ -8,6 +8,14 @@
 - **Backend:** PHP 8.2 RESTful API (ไม่ใช้ framework) — `backend/`
 - **Database:** MySQL / MariaDB — `backend/database/schema.sql`
 
+## 🐳 รันด้วย Docker (แนะนำ · ใช้ deploy จริง)
+```bash
+cp .env.example .env     # ตั้งรหัสผ่านฐานข้อมูล
+docker compose up -d --build
+```
+เปิด http://localhost:8090 → `admin` / `admin1234` (ระบบบังคับเปลี่ยนรหัสครั้งแรก) · อัปเดต: `git pull && docker compose up -d --build`
+รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [DEPLOY.md](DEPLOY.md)
+
 ## เริ่มต้นใช้งาน (Development)
 
 ```powershell

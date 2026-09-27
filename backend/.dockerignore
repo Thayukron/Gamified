@@ -1,0 +1,4 @@
+storage
+config.local.php
+*.log
+.git
