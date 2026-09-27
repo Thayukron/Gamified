@@ -11,7 +11,7 @@ const color = props.color ?? '#f5c451'
 interface Orb { id: number; x: number; y: number; size: number; popped: boolean }
 const orbs = ref<Orb[]>([])
 const bursts = ref<{ id: number; x: number; y: number }[]>([])
-const phase = ref<'ready' | 'play' | 'end'>('ready')
+const phase = ref<'rules' | 'ready' | 'play' | 'end'>('rules')
 const countdown = ref(3)
 const left = ref(total)
 const score = ref(0)
@@ -21,10 +21,11 @@ const timers: ReturnType<typeof setTimeout | typeof setInterval>[] = []
 function spawn() {
   const orb = { id: nextId++, x: 8 + Math.random() * 80, y: 20 + Math.random() * 55, size: 52 + Math.random() * 22, popped: false }
   orbs.value.push(orb)
-  timers.push(setTimeout(() => (orbs.value = orbs.value.filter((o) => o.id !== orb.id)), 1500))
+  timers.push(setTimeout(() => (orbs.value = orbs.value.filter((o) => o.id !== orb.id)), 1900))
 }
 
-onMounted(() => {
+function begin() {
+  phase.value = 'ready'
   const cd = setInterval(() => {
     countdown.value--
     audio.note(countdown.value > 0 ? 660 : 990, 0.2)
@@ -34,13 +35,15 @@ onMounted(() => {
     }
   }, 700)
   timers.push(cd)
-})
+}
 onBeforeUnmount(() => timers.forEach((t) => clearTimeout(t as any)))
 
 function start() {
   phase.value = 'play'
   spawn()
-  timers.push(setInterval(spawn, 520))
+  spawn()
+  // keep 3-4 targets on screen so there is always something to tap
+  timers.push(setInterval(() => orbs.value.length < 4 && spawn(), 330))
   const tick = setInterval(() => {
     left.value = Math.max(0, +(left.value - 0.1).toFixed(1))
     if (left.value <= 0) {
@@ -52,6 +55,7 @@ function start() {
 }
 
 function finish() {
+  if (phase.value === 'end') return
   phase.value = 'end'
   timers.forEach((t) => clearInterval(t as any))
   orbs.value = []
@@ -68,19 +72,31 @@ function pop(o: Orb) {
   bursts.value.push({ id: o.id, x: o.x, y: o.y })
   setTimeout(() => (bursts.value = bursts.value.filter((b) => b.id !== o.id)), 500)
   orbs.value = orbs.value.filter((x) => x.id !== o.id)
+  // goal reached: finish right away instead of waiting for the clock
+  if (score.value >= goal) setTimeout(finish, 300)
 }
 </script>
 
 <template>
-  <div class="absolute inset-0 z-30 overflow-hidden bg-abyss-950/60 backdrop-blur-[2px]">
+  <GameMiniGameRules
+    v-if="phase === 'rules'"
+    :title="title ?? 'เก็บเศษแสง'"
+    icon="hand"
+    :rules="['ลูกแสงจะโผล่ขึ้นทั่วจอแล้วค่อย ๆ จางหายไป', 'แตะลูกแสงให้เร็วที่สุดก่อนมันหาย (แตะโดน = +1)', `มีเวลา ${total} วินาที ดูแถบเวลาด้านบน`]"
+    :goal="`เก็บให้ได้อย่างน้อย ${goal} ลูก`"
+    @start="begin"
+  />
+  <div class="absolute inset-0 z-30 overflow-hidden bg-abyss-950/25">
     <!-- HUD -->
     <div class="absolute inset-x-0 top-14 z-10 flex flex-col items-center px-6">
       <p class="font-display text-xs tracking-[0.4em] text-arcane-300">MINI GAME</p>
       <h2 class="title-glow text-xl sm:text-2xl">{{ title ?? 'เก็บเศษแสง' }}</h2>
+      <p v-if="phase === 'play'" class="mt-1 rounded-full bg-abyss-950/80 px-3 py-0.5 text-sm text-slate-200">👆 แตะลูกแสงให้ได้ {{ goal }} ลูก!</p>
       <div class="mt-2 flex items-center gap-3 text-sm">
-        <span class="rounded-full border border-rune-400/50 bg-abyss-950/80 px-3 py-1 text-rune-200">
+        <span class="rounded-full border border-rune-400/50 bg-abyss-950/80 px-3 py-1 font-display text-base text-rune-200">
           ✦ {{ score }} / {{ goal }}
         </span>
+        <span class="rounded-full border border-white/15 bg-abyss-950/80 px-3 py-1 text-slate-300">⏱ {{ Math.ceil(left) }} วิ</span>
       </div>
       <div class="mt-2 h-1.5 w-48 overflow-hidden rounded-full bg-white/10">
         <div class="h-full rounded-full transition-all duration-100" :style="{ width: `${(left / total) * 100}%`, background: color }" />
@@ -120,7 +136,7 @@ function pop(o: Orb) {
 
 <style scoped>
 .orb {
-  animation: orb-life 1.5s ease-in-out forwards;
+  animation: orb-life 1.9s ease-in-out forwards;
   touch-action: manipulation;
 }
 @keyframes orb-life {

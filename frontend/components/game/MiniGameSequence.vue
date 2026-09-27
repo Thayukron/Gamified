@@ -16,7 +16,7 @@ const RUNES = [
 const len = props.length ?? 4
 const speed = props.speed ?? 600
 const sequence = Array.from({ length: len }, () => Math.floor(Math.random() * RUNES.length))
-const phase = ref<'intro' | 'show' | 'input' | 'win' | 'lose'>('intro')
+const phase = ref<'rules' | 'intro' | 'show' | 'input' | 'win' | 'lose'>('rules')
 const lit = ref<number | null>(null)
 const wrong = ref<number | null>(null)
 const progress = ref(0)
@@ -29,13 +29,14 @@ function flash(i: number, ms = speed * 0.7) {
   later(() => (lit.value = null), ms)
 }
 
-onMounted(() => {
+function begin() {
+  phase.value = 'intro'
   later(() => {
     phase.value = 'show'
     sequence.forEach((r, k) => later(() => flash(r), 500 + k * speed))
     later(() => (phase.value = 'input'), 500 + len * speed)
-  }, 1400)
-})
+  }, 1200)
+}
 onBeforeUnmount(() => timers.forEach(clearTimeout))
 
 function tap(i: number) {
@@ -57,19 +58,28 @@ function tap(i: number) {
 }
 
 const status = computed(() => ({
-  intro: 'จำลำดับแสงของรูนให้ดี...',
-  show: 'ดูให้ดี!',
-  input: `ถึงตาเจ้าแล้ว! (${progress.value}/${len})`,
+  rules: '',
+  intro: 'เตรียมตัว... รูนกำลังจะสว่าง',
+  show: `👀 จำลำดับให้ดี! (${len} ครั้ง)`,
+  input: `👆 ถึงตาเจ้าแล้ว! แตะรูนตามลำดับเดิม (${progress.value}/${len})`,
   win: 'สำเร็จ! ผนึกคลายออกแล้ว',
   lose: 'ผิดลำดับ! รูนดับวูบ...',
 })[phase.value])
 </script>
 
 <template>
+  <GameMiniGameRules
+    v-if="phase === 'rules'"
+    :title="title ?? 'ผนึกรูน'"
+    icon="eye"
+    :rules="['ดูรูนทั้ง 6 ช่อง จะมีรูนสว่างขึ้นทีละช่องพร้อมเสียง', `จำลำดับให้ได้ทั้งหมด ${len} ครั้ง`, 'เมื่อขึ้นว่า “ถึงตาเจ้าแล้ว” ให้แตะรูนตามลำดับเดิม']"
+    :goal="`แตะถูกครบทั้ง ${len} ครั้งติดกันเพื่อคลายผนึก`"
+    @start="begin"
+  />
   <div class="absolute inset-0 z-30 flex flex-col items-center justify-center bg-abyss-950/75 px-6 backdrop-blur-sm" :class="{ 'animate-shake': phase === 'lose' }">
     <p class="font-display text-xs tracking-[0.4em] text-arcane-300">MINI GAME</p>
     <h2 class="title-glow mt-1 text-center text-2xl">{{ title ?? 'ผนึกรูน' }}</h2>
-    <p class="mt-2 h-6 text-sm" :class="phase === 'lose' ? 'text-red-300' : phase === 'win' ? 'text-emerald-300' : 'text-slate-300'">{{ status }}</p>
+    <p class="mt-2 min-h-[1.5rem] px-2 text-center text-sm" :class="phase === 'lose' ? 'text-red-300' : phase === 'win' ? 'text-emerald-300' : 'text-slate-300'">{{ status }}</p>
 
     <div class="mt-6 grid grid-cols-3 gap-3 sm:gap-4">
       <button

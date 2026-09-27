@@ -13,7 +13,7 @@ const props = defineProps<{
 }>()
 
 const box = computed(() => ({
-  normal: 'bottom-[4.5rem] top-16 sm:bottom-24',
+  normal: 'bottom-[6.5rem] top-16 sm:bottom-[7.5rem]',
   raised: 'bottom-[44%] top-14',
   low: '-bottom-4 top-[66%]',
 })[props.variant ?? 'normal'])

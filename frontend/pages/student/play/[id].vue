@@ -68,6 +68,7 @@ watch(() => lv.value.level, (now, before) => {
 })
 
 const speakerDef = computed(() => characters.value[line.value.speaker] ?? (line.value.speaker === 'player' ? playerDef.value : undefined))
+const speakerOffStage = computed(() => !!speakerDef.value && !cast.value.some((m) => m.id === line.value.speaker))
 const speakerName = computed(() => speakerDef.value?.name ?? line.value.speaker)
 const speakerColor = computed(() => speakerDef.value?.color ?? '#f5c451')
 
@@ -197,8 +198,33 @@ async function enterScene(id: string, transition = true) {
   else afterLines()
 }
 
+// ---- how-to-play guide (auto on first quest ever, then via the ? button) ----
+const TUTORIAL_KEY = 'gsp_tutorial_seen'
+const helpOpen = ref(false)
+let startAfterHelp = false
+function openHelp() {
+  auto.value = false
+  clearTimeout(autoTimer)
+  helpOpen.value = true
+}
+function closeHelp() {
+  helpOpen.value = false
+  try { localStorage.setItem(TUTORIAL_KEY, '1') } catch {}
+  if (startAfterHelp) {
+    startAfterHelp = false
+    enterScene(resumeFrom.value || startScene.value, false)
+  }
+}
+
 function start() {
   audio.unlock()
+  let seen = false
+  try { seen = localStorage.getItem(TUTORIAL_KEY) === '1' } catch {}
+  if (!seen) {
+    startAfterHelp = true
+    mode.value = 'dialogue'
+    return openHelp()
+  }
   enterScene(resumeFrom.value || startScene.value, false)
 }
 
@@ -350,7 +376,10 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
             {{ resumeFrom ? 'เดินทางต่อจากจุดที่บันทึกไว้' : 'เริ่มการผจญภัย' }}
           </button>
           <p class="text-xs text-slate-500"><AppIcon name="volume" :size="12" class="inline" /> เปิดเสียงเพื่อประสบการณ์เต็มที่</p>
-          <NuxtLink to="/student" class="text-sm text-slate-500 hover:text-slate-300">ย้อนกลับ</NuxtLink>
+          <div class="flex gap-4 text-sm">
+            <button class="text-rune-300/80 hover:text-rune-200" @click="helpOpen = true">? วิธีเล่น</button>
+            <NuxtLink to="/student" class="text-slate-500 hover:text-slate-300">ย้อนกลับ</NuxtLink>
+          </div>
         </div>
       </template>
     </div>
@@ -391,6 +420,7 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
         <div class="flex items-center gap-1 rounded-full border border-amber-400/40 bg-abyss-950/70 px-2 py-1 text-xs font-semibold text-amber-200">
           <span class="coin" /> {{ coins }}
         </div>
+        <button class="hud-btn" title="วิธีเล่น" @click.stop="openHelp"><span class="font-display text-sm font-bold">?</span></button>
         <button class="hud-btn relative" title="กระเป๋าไอเทม" @click.stop="bagOpen = true">
           <AppIcon name="bag" :size="18" />
           <span v-if="items.length" class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rune-400 px-1 text-[10px] font-bold text-abyss-950">{{ items.length }}</span>
@@ -410,16 +440,18 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
       <template v-if="mode === 'dialogue' || mode === 'reply'">
         <div class="absolute inset-0 z-10 cursor-pointer" @click="advance" />
         <div class="absolute inset-x-0 bottom-0 z-20 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-6" @click="advance">
-          <div class="dialog-box" :class="{ '!pl-[5.75rem] sm:!pl-[7.75rem]': speakerDef }" :style="line.speaker ? { borderColor: `${speakerColor}88` } : {}">
-            <div v-if="speakerDef" :key="line.speaker" class="portrait absolute bottom-3 left-3 w-[4.5rem] sm:w-24">
+          <div class="dialog-box" :style="line.speaker ? { borderColor: `${speakerColor}88` } : {}">
+            <div v-if="line.speaker" class="nameplate flex items-center gap-1.5" :class="{ '!pl-1': speakerOffStage }" :style="{ background: speakerColor }">
+              <!-- small face only when the speaker is not standing on stage (e.g. a voice from off-screen) -->
               <GameCharacterPortrait
-                :def="speakerDef"
+                v-if="speakerOffStage"
+                :key="line.speaker"
+                :def="speakerDef!"
                 :expr="exprs[line.speaker] ?? 'neutral'"
-                class="rounded-xl border-2 bg-abyss-800"
-                :style="{ borderColor: speakerColor, boxShadow: `0 0 18px ${speakerColor}66` }"
+                class="portrait h-7 w-7 rounded-full border border-white/70 bg-abyss-800"
               />
+              {{ speakerName }}
             </div>
-            <div v-if="line.speaker" class="nameplate" :class="{ '!left-[5.75rem] sm:!left-[7.5rem]': speakerDef }" :style="{ background: speakerColor }">{{ speakerName }}</div>
             <p class="text-[1.05rem] leading-relaxed sm:text-lg" :class="line.speaker ? 'text-slate-50' : 'text-center italic text-rune-100/90'">
               {{ typed }}<span v-if="typing" class="ml-0.5 inline-block h-5 w-0.5 translate-y-1 animate-pulse bg-rune-300" />
             </p>
@@ -446,6 +478,8 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
         <GameMiniGameOrbs v-else :key="sceneId" v-bind="scene.minigame" @done="onMinigameDone" />
       </template>
     </template>
+
+    <GameHowToPlay v-if="helpOpen" @close="closeHelp" />
 
     <!-- reward popup -->
     <Transition enter-from-class="opacity-0 scale-50" leave-to-class="opacity-0 -translate-y-6" enter-active-class="transition duration-300 ease-out" leave-active-class="transition duration-300">
@@ -496,7 +530,7 @@ const titleCast = computed(() => Object.entries(characters.value).slice(0, 3))
   @apply inline-flex items-center gap-1 rounded-full border border-arcane-400/30 bg-abyss-900/70 px-2.5 py-1;
 }
 .dialog-box {
-  @apply relative mx-auto min-h-[7.5rem] max-w-3xl cursor-pointer rounded-2xl border border-rune-400/30 bg-abyss-900/90 px-5 pb-6 pt-6 shadow-[0_-10px_60px_-10px_rgba(124,58,237,0.45)] backdrop-blur-md transition-colors sm:min-h-[8.5rem] sm:px-7;
+  @apply relative mx-auto min-h-[5.75rem] max-w-3xl cursor-pointer rounded-2xl border border-rune-400/30 bg-abyss-900/85 px-5 pb-5 pt-6 shadow-[0_-10px_60px_-10px_rgba(124,58,237,0.45)] backdrop-blur-md transition-colors sm:min-h-[6.5rem] sm:px-7;
 }
 .nameplate {
   @apply absolute -top-4 left-5 rounded-lg px-3 py-1 font-display text-sm font-bold text-abyss-950 shadow-glow-gold;
