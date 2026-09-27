@@ -42,3 +42,6 @@ $router->put('/admin/ai/teachers/{id}', [App\Controllers\AiController::class, 'a
 $router->post('/teacher/courses/{id}/groups/preview', [App\Controllers\TeacherController::class, 'groupsPreview'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/groups', [App\Controllers\TeacherController::class, 'groupsSaved'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/groups', [App\Controllers\TeacherController::class, 'groupsSave'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/report', [App\Controllers\TeacherController::class, 'report'], ['teacher', 'admin']);
+$router->get('/admin/institution', [App\Controllers\SettingsController::class, 'institution'], ['admin']);
+$router->put('/admin/institution', [App\Controllers\SettingsController::class, 'saveInstitution'], ['admin']);

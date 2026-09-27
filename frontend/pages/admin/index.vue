@@ -4,6 +4,20 @@ const items = [
   { icon: 'upload', title: 'นำเข้าข้อมูลนักศึกษา', desc: 'อัญเชิญรายชื่อผ่านไฟล์ CSV / Excel', phase: 6 },
   { icon: 'globe', title: 'ชุดเนื้อเรื่องสากล', desc: 'เปิด/ปิดชุดเนื้อเรื่องมาตรฐานกลาง (Core Profile)', phase: 3 },
 ]
+
+const api = useApi()
+const inst = reactive({ name: '', affiliation: '' })
+const instMsg = ref('')
+onMounted(async () => Object.assign(inst, await api('/admin/institution')))
+async function saveInst() {
+  instMsg.value = ''
+  try {
+    Object.assign(inst, await api('/admin/institution', { method: 'PUT', body: inst }))
+    instMsg.value = 'บันทึกแล้ว — ใช้บนหน้าปกรายงาน ว.PA'
+  } catch (e) {
+    instMsg.value = apiErrorMessage(e)
+  }
+}
 </script>
 
 <template>
@@ -22,6 +36,17 @@ const items = [
       </div>
       <AppIcon name="back" :size="18" class="rotate-180 text-slate-500" />
     </NuxtLink>
+    <section class="card">
+      <h2 class="text-lg font-medium text-slate-50">ข้อมูลสถานศึกษา (แสดงบนหน้าปกรายงาน)</h2>
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div><p class="label">ชื่อสถานศึกษา</p><input v-model="inst.name" class="input"></div>
+        <div><p class="label">สังกัด</p><input v-model="inst.affiliation" class="input"></div>
+      </div>
+      <div class="mt-3 flex items-center gap-3">
+        <button class="btn-primary !py-2 text-sm" @click="saveInst">บันทึก</button>
+        <span class="text-sm text-slate-400">{{ instMsg }}</span>
+      </div>
+    </section>
     <ComingSoonGrid :items="items" />
   </div>
 </template>

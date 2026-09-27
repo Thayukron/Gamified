@@ -109,6 +109,39 @@ class TeacherController
         return ['result' => AiGuideService::generate((int) $req->user['id'], $course, self::classData($course), $type, $topic)];
     }
 
+    /**
+     * GET /teacher/courses/{id}/report — everything the ว.PA report needs in one call
+     * (never calls the AI; uses cached AI results only).
+     */
+    public static function report(Request $req): array
+    {
+        $course = self::course($req, (int) $req->params['id']);
+        $dash = self::classData($course);
+        $settings = Database::get()->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'institution_%'")->fetchAll(\PDO::FETCH_KEY_PAIR);
+
+        $topics = json_decode($course['topics'] ?? '[]', true) ?: [];
+        $aiUnits = [];
+        foreach ($topics as $t) {
+            if ($r = AiGuideService::cached($course, $dash, 'unit', $t)) {
+                $aiUnits[$t] = $r;
+            }
+        }
+        $stmt = Database::get()->prepare('SELECT * FROM course_groupings WHERE course_id = ?');
+        $stmt->execute([$course['id']]);
+        $row = $stmt->fetch();
+        $grouping = $row ? GroupingService::fromIds($dash['students'], json_decode($row['member_ids'], true) ?: [], $row['mode'])
+            + ['mode' => $row['mode'], 'saved_at' => $row['saved_at']] : null;
+
+        return [
+            'institution' => ['name' => $settings['institution_name'] ?? '', 'affiliation' => $settings['institution_affiliation'] ?? ''],
+            'generated_at' => date('c'),
+            'guide' => TeachingGuide::build($course, $dash),
+            'ai_course' => AiGuideService::cached($course, $dash, 'course', null),
+            'ai_units' => (object) $aiUnits,
+            'grouping' => $grouping,
+        ] + $dash;
+    }
+
     /** POST /teacher/courses/{id}/groups/preview — { size, mode, seed?, include_unprofiled? } (not saved) */
     public static function groupsPreview(Request $req): array
     {

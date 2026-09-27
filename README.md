@@ -57,3 +57,5 @@ php backend/database/migrate.php
 | GET/PUT | /api/admin/ai · PUT /api/admin/ai/teachers/{id} | admin |
 | POST | /api/teacher/courses/{id}/groups/preview | teacher (เฉพาะวิชาที่สอน), admin |
 | GET/PUT | /api/teacher/courses/{id}/groups | teacher (เฉพาะวิชาที่สอน), admin |
+| GET | /api/teacher/courses/{id}/report | teacher (เฉพาะวิชาที่สอน), admin |
+| GET/PUT | /api/admin/institution | admin |

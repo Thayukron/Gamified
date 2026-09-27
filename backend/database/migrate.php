@@ -88,7 +88,8 @@ foreach ($universal as [$file, $title, $desc]) {
     $insert->execute([$title, $desc, json_encode($json, JSON_UNESCAPED_UNICODE)]);
 }
 $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES
-    ('ai_enabled', '1'), ('ai_central_key_enc', ''), ('ai_central_key_hint', ''), ('ai_central_model', '')");
+    ('ai_enabled', '1'), ('ai_central_key_enc', ''), ('ai_central_key_hint', ''), ('ai_central_model', ''),
+    ('institution_name', 'วิทยาลัยการอาชีพศรีสะเกษ'), ('institution_affiliation', 'สำนักงานคณะกรรมการการอาชีวศึกษา กระทรวงศึกษาธิการ')");
 
 // ---- demo play-throughs (simulated personas through the real engine) ----
 require __DIR__ . '/DemoPlayer.php';

@@ -156,6 +156,9 @@ const radarSeries = computed(() => {
           <NuxtLink :to="`/teacher/course/${route.params.id}/groups`" class="btn-ghost">
             <AppIcon name="castle" :size="18" /> จัดกลุ่มผู้เรียน
           </NuxtLink>
+          <NuxtLink :to="`/teacher/course/${route.params.id}/report`" class="btn-ghost">
+            <AppIcon name="scroll" :size="18" /> รายงาน ว.PA (PDF/Excel)
+          </NuxtLink>
         </div>
       </section>
 

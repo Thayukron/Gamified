@@ -20,8 +20,11 @@ onMounted(async () => {
   }
 })
 
-const upcoming = [
-  { icon: 'scroll', title: 'ส่งออกรายงาน', desc: 'PDF / Excel สำหรับ ว.PA และวิจัยชั้นเรียน', phase: 'D' },
+const steps = [
+  { icon: 'chart', title: '1. ดูแดชบอร์ด', desc: 'สัดส่วน VARK / RIASEC / Mindset และโปรไฟล์รายคน' },
+  { icon: 'orb', title: '2. ไกด์การสอน', desc: 'สื่อ วิธีสอน แผนรายหน่วย (+AI ถ้ากรอก Key)' },
+  { icon: 'castle', title: '3. จัดกลุ่ม', desc: 'คละจุดแข็งหรือกลุ่มซ่อมเสริม แล้วบันทึก' },
+  { icon: 'scroll', title: '4. รายงาน ว.PA', desc: 'พิมพ์ PDF และดาวน์โหลด Excel' },
 ]
 </script>
 
@@ -80,14 +83,13 @@ const upcoming = [
       </NuxtLink>
     </div>
 
-    <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">COMING NEXT</span></div>
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div v-for="u in upcoming" :key="u.title" class="card flex gap-3 opacity-80">
+    <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">HOW TO USE</span></div>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div v-for="u in steps" :key="u.title" class="card flex gap-3 !p-4">
         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rune-400/30 text-rune-300"><AppIcon :name="u.icon" /></span>
         <div>
           <p class="font-medium text-slate-100">{{ u.title }}</p>
           <p class="text-sm text-slate-400">{{ u.desc }}</p>
-          <span class="mt-2 inline-block rounded-full border border-arcane-400/30 px-2 py-0.5 text-xs text-arcane-300">ขั้น {{ u.phase }}</span>
         </div>
       </div>
     </div>
