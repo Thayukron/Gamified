@@ -72,6 +72,19 @@
 }
 
 /* ───────────── Print: light A4 document (backgrounds are dropped by browsers) ───────────── */
+/* Thai official-document font (bundled so every teacher gets the same PDF). */
+@font-face {
+  font-family: 'THSarabunPSK';
+  src: local('TH SarabunPSK'), url('/fonts/THSarabun.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'THSarabunPSK';
+  src: local('TH SarabunPSK Bold'), url('/fonts/THSarabun-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
 .print-only {
   display: none;
 }
@@ -148,5 +161,106 @@
   }
   .print-doc a {
     text-decoration: none !important;
+  }
+
+  /* ---- typography: TH SarabunPSK, official-document sizes ---- */
+  .print-doc,
+  .print-doc * {
+    font-family: 'THSarabunPSK', 'TH SarabunPSK', 'Sarabun', sans-serif !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+  .print-doc {
+    font-size: 16pt !important;
+    line-height: 1.32 !important;
+  }
+  .print-doc p,
+  .print-doc li,
+  .print-doc td,
+  .print-doc th,
+  .print-doc span,
+  .print-doc div,
+  .print-doc summary {
+    font-size: 16pt !important;
+    line-height: 1.32 !important;
+  }
+  .print-doc .text-xs,
+  .print-doc .hint,
+  .print-doc .print-only {
+    font-size: 14pt !important;
+  }
+  .print-doc h1 {
+    font-size: 26pt !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+  }
+  .print-doc h2,
+  .print-doc h2 * {
+    font-size: 20pt !important;
+    font-weight: 700 !important;
+  }
+  .print-doc b,
+  .print-doc strong,
+  .print-doc .font-medium,
+  .print-doc .font-semibold,
+  .print-doc th {
+    font-weight: 700 !important;
+  }
+
+  /* ---- layout: single column, document-style sections ---- */
+  .print-doc .grid {
+    display: block !important;
+  }
+  .print-doc .grid > * {
+    margin-bottom: 2.5mm !important;
+  }
+  .print-doc section.card {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 0 7mm !important;
+  }
+  .print-doc section.card > h2,
+  .print-doc section.card > div > div > h2 {
+    border-bottom: 1.5pt solid #333 !important;
+    padding-bottom: 1.5mm !important;
+    margin-bottom: 2mm !important;
+    break-after: avoid;
+  }
+  .print-doc .rounded-xl {
+    border-width: 0.75pt !important;
+    border-radius: 1.5mm !important;
+    padding: 2.5mm 3.5mm !important;
+  }
+  .print-doc .num {
+    width: auto !important;
+    height: auto !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+  .print-doc .num::after {
+    content: '.';
+  }
+  .print-doc table {
+    border-collapse: collapse !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .print-doc th,
+  .print-doc td {
+    border: 0.75pt solid #999 !important;
+    padding: 1.5mm 2mm !important;
+    vertical-align: top !important;
+  }
+  .print-doc thead {
+    display: table-header-group;
+  }
+  .print-doc .pill {
+    border: none !important;
+    padding: 0 3mm 0 0 !important;
+  }
+  .print-doc ul,
+  .print-doc ol {
+    margin-top: 1mm !important;
   }
 }
