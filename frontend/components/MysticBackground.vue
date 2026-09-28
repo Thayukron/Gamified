@@ -31,7 +31,7 @@ const embers = Array.from({ length: 22 }, () => ({
       v-for="(s, i) in stars"
       :key="'s' + i"
       class="absolute animate-twinkle rounded-full bg-white"
-      :style="{ left: s.left, top: s.top, width: s.size, height: s.size, animationDelay: s.delay, animationDuration: s.duration }"
+      :style="{ left: s.left, top: s.top, width: s.size, height: s.size, animationDelay: s.delay, animationDuration: s.duration, '--twinkle-dur': s.duration }"
     />
 
     <!-- fog -->

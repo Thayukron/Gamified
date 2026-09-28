@@ -69,6 +69,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* star twinkle only fades brightness (no movement), so it stays on for reduced-motion users */
+  .animate-twinkle {
+    animation-duration: var(--twinkle-dur, 3s) !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 /* ───────────── Print: light A4 document (backgrounds are dropped by browsers) ───────────── */
