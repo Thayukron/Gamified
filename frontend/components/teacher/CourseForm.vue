@@ -52,10 +52,15 @@ const filled = computed(() => ['objectives', 'competencies', 'description'].filt
         </div>
       </div>
       <div><p class="label">ระดับชั้น</p><input v-model="form.level" class="input" placeholder="เช่น ปวช.1, ปวส.1"></div>
-      <div class="grid grid-cols-3 gap-2">
-        <div><p class="label">ทฤษฎี ชม./สัปดาห์</p><input v-model="form.theory_hours" class="input" data-testid="f-th"></div>
-        <div><p class="label">ปฏิบัติ ชม./สัปดาห์</p><input v-model="form.practice_hours" class="input" data-testid="f-ph"></div>
-        <div><p class="label">หน่วยกิต</p><input v-model="form.credits" class="input"></div>
+      <div>
+        <p class="label">ชั่วโมงต่อสัปดาห์ · หน่วยกิต</p>
+        <!-- one-line label; the unit sits inside each box so all inputs line up with "ระดับชั้น" -->
+        <div class="grid grid-cols-3 gap-2">
+          <label v-for="f in [{ k: 'theory_hours', unit: 'ทฤษฎี', id: 'f-th' }, { k: 'practice_hours', unit: 'ปฏิบัติ', id: 'f-ph' }, { k: 'credits', unit: 'หน่วยกิต', id: 'f-cr' }]" :key="f.k" class="relative block">
+            <input v-model="(form as any)[f.k]" inputmode="decimal" class="input !pr-16 text-center" placeholder="0" :data-testid="f.id">
+            <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">{{ f.unit }}</span>
+          </label>
+        </div>
       </div>
       <div class="sm:col-span-2">
         <p class="label">หน่วยการเรียนรู้ (1 บรรทัด = 1 หน่วย)</p>
