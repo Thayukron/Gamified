@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS course_plans, lesson_plans, password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS lesson_sheets, course_plans, lesson_plans, password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -266,4 +266,19 @@ CREATE TABLE IF NOT EXISTS course_plans (
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_cplan_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_cplan_user FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- เอกสารประกอบแผนรายหน่วย (ใบความรู้ ใบงาน ใบกิจกรรม ใบมอบหมายงาน แบบประเมิน)
+CREATE TABLE IF NOT EXISTS lesson_sheets (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    plan_id     INT UNSIGNED NOT NULL,
+    type        ENUM('knowledge','job','activity','assignment','assessment') NOT NULL,
+    number      VARCHAR(20) NOT NULL DEFAULT '' COMMENT 'ใบ…ที่',
+    title       VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'ชื่อเรื่อง/ชื่องาน',
+    content     LONGTEXT NOT NULL COMMENT 'JSON',
+    ai_model    VARCHAR(80) NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_sheet_plan (plan_id, type),
+    CONSTRAINT fk_sheet_plan FOREIGN KEY (plan_id) REFERENCES lesson_plans(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

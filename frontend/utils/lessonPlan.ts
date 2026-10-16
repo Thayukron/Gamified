@@ -29,6 +29,74 @@ export interface CourseBook {
   author: string
 }
 
+// ---- supporting sheets of a unit plan (ใบความรู้ ใบงาน ใบกิจกรรม ใบมอบหมายงาน แบบประเมิน)
+export type SheetType = 'knowledge' | 'job' | 'activity' | 'assignment' | 'assessment'
+export interface Sheet { id: number; type: SheetType; type_th: string; number: string; title: string; content: Record<string, any>; completeness: number; ai_model?: string | null }
+/** one numbered section of a sheet; numbered = items become "<no>.1, <no>.2 …"; pageBreak = starts a new page (form rule) */
+export interface SheetSection { key: string; no: number; title: string; rows?: number; numbered?: boolean; pageBreak?: boolean; hint?: string }
+
+const shared = (outcomeTitle: string, competencyTitle: string): SheetSection[] => [
+  { key: 'outcome', no: 1, title: outcomeTitle, rows: 2 },
+  { key: 'standard', no: 2, title: 'อ้างอิงมาตรฐาน/เชื่อมโยงกลุ่มอาชีพ', rows: 2, hint: 'ว่างได้ถ้าไม่อ้างอิงมาตรฐานอาชีพ' },
+  { key: 'competency', no: 3, title: competencyTitle, rows: 3, numbered: true },
+  { key: 'objectives', no: 4, title: 'จุดประสงค์เชิงพฤติกรรม', rows: 4, numbered: true },
+]
+
+export const SHEET_TYPES: Record<SheetType, { th: string; nameLabel: string; desc: string; sections: SheetSection[] }> = {
+  knowledge: {
+    th: 'ใบความรู้', nameLabel: 'ชื่อเรื่อง', desc: 'เนื้อหาสาระให้ผู้เรียนอ่าน + แบบฝึกหัด/แบบทดสอบ + เฉลย',
+    sections: [
+      ...shared('ผลลัพธ์การเรียนรู้ระดับหน่วยการเรียน', 'สมรรถนะประจำหน่วย'),
+      { key: 'content', no: 5, title: 'เนื้อหาสาระ', rows: 12 },
+      { key: 'exercises', no: 6, title: 'แบบฝึกหัด/แบบทดสอบ', rows: 8 },
+      { key: 'references', no: 7, title: 'เอกสารอ้างอิง', rows: 3, pageBreak: true },
+      { key: 'appendix', no: 8, title: 'ภาคผนวก (เฉลยแบบฝึกหัด เฉลยแบบทดสอบ)', rows: 5 },
+    ],
+  },
+  job: {
+    th: 'ใบงาน', nameLabel: 'ชื่องาน', desc: 'งานปฏิบัติ: เครื่องมือ ข้อควรระวัง ขั้นตอนการปฏิบัติงาน',
+    sections: [
+      ...shared('ผลลัพธ์การเรียนรู้จากการปฏิบัติงาน', 'สมรรถนะการปฏิบัติงาน'),
+      { key: 'tools', no: 5, title: 'เครื่องมือ วัสดุ และอุปกรณ์', rows: 4, numbered: true },
+      { key: 'advice', no: 6, title: 'คำแนะนำ/ข้อควรระวัง', rows: 3 },
+      { key: 'steps', no: 7, title: 'ขั้นตอนการปฏิบัติงาน', rows: 8 },
+      { key: 'conclusion', no: 8, title: 'สรุปและวิจารณ์ผล', rows: 3 },
+      { key: 'evaluation', no: 9, title: 'การประเมินผล', rows: 3 },
+      { key: 'references', no: 10, title: 'เอกสารอ้างอิง/เอกสารค้นคว้าเพิ่มเติม', rows: 2 },
+    ],
+  },
+  activity: {
+    th: 'ใบกิจกรรม', nameLabel: 'ชื่องาน', desc: 'กิจกรรมกลุ่ม/คู่: ขั้นตอนการทำกิจกรรม สรุปและอภิปราย',
+    sections: [
+      ...shared('ผลลัพธ์การเรียนรู้การปฏิบัติกิจกรรม', 'สมรรถนะประจำกิจกรรม'),
+      { key: 'tools', no: 5, title: 'เครื่องมือ วัสดุ และอุปกรณ์', rows: 4, numbered: true },
+      { key: 'steps', no: 6, title: 'ขั้นตอนการทำกิจกรรม', rows: 8 },
+      { key: 'conclusion', no: 7, title: 'สรุปและอภิปราย', rows: 3 },
+      { key: 'evaluation', no: 8, title: 'การประเมินผล', rows: 3 },
+      { key: 'references', no: 9, title: 'เอกสารอ้างอิง/เอกสารค้นคว้าเพิ่มเติม', rows: 2 },
+    ],
+  },
+  assignment: {
+    th: 'ใบมอบหมายงาน', nameLabel: 'ชื่องาน', desc: 'งานมอบหมาย: รายละเอียดงาน กำหนดส่ง แนวทางปฏิบัติ',
+    sections: [
+      ...shared('ผลงานหรือผลการปฏิบัติงาน', 'สมรรถนะการปฏิบัติงาน'),
+      { key: 'details', no: 5, title: 'รายละเอียดของงาน', rows: 5, hint: 'อาจมีแบบ รูปภาพ หรืออื่น ๆ ประกอบ (แทรกเพิ่มใน Word ได้)' },
+      { key: 'deadline', no: 6, title: 'กำหนดเวลาส่งงาน', rows: 1 },
+      { key: 'guidelines', no: 7, title: 'แนวทางในการปฏิบัติงาน', rows: 4 },
+      { key: 'sources', no: 8, title: 'แหล่งข้อมูลค้นคว้าเพิ่มเติม', rows: 2 },
+      { key: 'evaluation', no: 9, title: 'การประเมินผล', rows: 3 },
+    ],
+  },
+  assessment: {
+    th: 'แบบประเมิน', nameLabel: 'ชื่อเรื่อง', desc: 'แบบประเมินความสามารถในการปฏิบัติงาน/ผลลัพธ์การเรียนรู้/สมรรถนะ (Rubric 4 ระดับ)',
+    sections: [
+      { key: 'instructions', no: 1, title: 'คำชี้แจง', rows: 2 },
+      { key: 'pass', no: 2, title: 'เกณฑ์การผ่าน', rows: 2 },
+    ],
+  },
+}
+export const SHEET_ORDER: SheetType[] = ['knowledge', 'activity', 'job', 'assignment', 'assessment']
+
 interface Field { key: string; label: string; hint?: string; rows?: number }
 export interface PlanSection { no: string; title: string; key: keyof PlanContent; hint: string; fields?: Field[]; rows?: number; adaptive?: boolean }
 

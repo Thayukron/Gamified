@@ -5,6 +5,7 @@ use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
 use App\Services\LessonPlanService;
+use App\Services\LessonSheetService;
 
 /** Unit lesson plans (OVEC 2567 form). Teachers only reach plans of courses they teach. */
 class LessonPlanController
@@ -108,7 +109,7 @@ class LessonPlanController
     {
         [$plan, $course] = self::plan($req);
         return [
-            'plan' => self::out($plan),
+            'plan' => self::withSheets([self::out($plan)])[0],
             'course' => $course,
             'learners' => LessonPlanService::learners($course, TeacherController::classData($course)),
             'level_higher' => LessonPlanService::isHigher($course),
@@ -153,6 +154,125 @@ class LessonPlanController
         return ['content' => LessonPlanService::prefill($course, $dash, $h), 'model' => null];
     }
 
+    // ------------------------------------------------------------------ supporting sheets of a plan
+
+    private static function outSheet(array $s): array
+    {
+        $c = LessonSheetService::normalize($s['type'], json_decode($s['content'], true));
+        return [
+            'id' => (int) $s['id'], 'plan_id' => (int) $s['plan_id'], 'type' => $s['type'], 'type_th' => LessonSheetService::TYPE_TH[$s['type']],
+            'number' => $s['number'], 'title' => $s['title'], 'content' => $c,
+            'completeness' => LessonSheetService::completeness($s['type'], $c), 'ai_model' => $s['ai_model'], 'updated_at' => $s['updated_at'],
+        ];
+    }
+
+    /** Sheets of the given plans, grouped by plan id, in form order (ความรู้ → กิจกรรม → งาน → มอบหมายงาน → ประเมิน). */
+    private static function sheetsOf(array $planIds): array
+    {
+        if (!$planIds) {
+            return [];
+        }
+        $in = implode(',', array_fill(0, count($planIds), '?'));
+        $stmt = Database::get()->prepare("SELECT * FROM lesson_sheets WHERE plan_id IN ($in)
+            ORDER BY plan_id, FIELD(type, 'knowledge', 'activity', 'job', 'assignment', 'assessment'), number, id");
+        $stmt->execute(array_map('intval', $planIds));
+        $out = [];
+        foreach ($stmt->fetchAll() as $s) {
+            $out[(int) $s['plan_id']][] = self::outSheet($s);
+        }
+        return $out;
+    }
+
+    /** Add each plan's sheets (for the Word export). */
+    private static function withSheets(array $plans): array
+    {
+        $by = self::sheetsOf(array_column($plans, 'id'));
+        return array_map(fn ($p) => $p + ['sheets' => $by[$p['id']] ?? []], $plans);
+    }
+
+    /** Sheet + its plan + course, enforcing course ownership. */
+    private static function sheet(Request $req): array
+    {
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_sheets WHERE id = ?');
+        $stmt->execute([(int) $req->params['sid']]);
+        $sheet = $stmt->fetch() ?: throw new HttpException(404, 'ไม่พบเอกสาร');
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_plans WHERE id = ?');
+        $stmt->execute([$sheet['plan_id']]);
+        $plan = $stmt->fetch();
+        return [$sheet, $plan, TeacherController::course($req, (int) $plan['course_id'])];
+    }
+
+    private static function sheetHeader(Request $req): array
+    {
+        return [
+            'number' => mb_substr(trim((string) $req->input('number', '')), 0, 20),
+            'title' => mb_substr(trim((string) $req->input('title', '')), 0, 255),
+        ];
+    }
+
+    /** GET /teacher/plans/{pid}/sheets */
+    public static function sheets(Request $req): array
+    {
+        [$plan] = self::plan($req);
+        return ['sheets' => self::sheetsOf([(int) $plan['id']])[(int) $plan['id']] ?? []];
+    }
+
+    /** POST /teacher/plans/{pid}/sheets — { type } → new sheet pre-filled from the plan, numbered "<unit>.<n>". */
+    public static function createSheet(Request $req): array
+    {
+        [$plan] = self::plan($req);
+        $type = (string) $req->input('type', '');
+        LessonSheetService::assertType($type);
+        $db = Database::get();
+        $stmt = $db->prepare('SELECT COUNT(*) FROM lesson_sheets s JOIN lesson_plans p ON p.id = s.plan_id WHERE p.course_id = ? AND p.unit_no = ? AND s.type = ?');
+        $stmt->execute([$plan['course_id'], $plan['unit_no'], $type]);
+        $number = $plan['unit_no'] . '.' . ((int) $stmt->fetchColumn() + 1);
+        $db->prepare('INSERT INTO lesson_sheets (plan_id, type, number, title, content) VALUES (?, ?, ?, ?, ?)')->execute([
+            $plan['id'], $type, $number, $plan['title'] !== '' ? $plan['title'] : $plan['unit_name'],
+            json_encode(LessonSheetService::fromPlan($type, $plan), JSON_UNESCAPED_UNICODE),
+        ]);
+        return ['id' => (int) $db->lastInsertId()];
+    }
+
+    /** GET /teacher/sheets/{sid} — sheet + plan + course (+ learners for the appendix when exported alone). */
+    public static function showSheet(Request $req): array
+    {
+        [$sheet, $plan, $course] = self::sheet($req);
+        return ['sheet' => self::outSheet($sheet), 'plan' => self::out($plan), 'course' => $course];
+    }
+
+    /** PUT /teacher/sheets/{sid} — { number, title, content, ai_model? } */
+    public static function updateSheet(Request $req): array
+    {
+        [$sheet] = self::sheet($req);
+        $h = self::sheetHeader($req);
+        $content = LessonSheetService::normalize($sheet['type'], $req->input('content', []));
+        $aiModel = $req->input('ai_model') ? mb_substr((string) $req->input('ai_model'), 0, 80) : null;
+        Database::get()->prepare('UPDATE lesson_sheets SET number = ?, title = ?, content = ?, ai_model = COALESCE(?, ai_model) WHERE id = ?')
+            ->execute([$h['number'], $h['title'], json_encode($content, JSON_UNESCAPED_UNICODE), $aiModel, $sheet['id']]);
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_sheets WHERE id = ?');
+        $stmt->execute([$sheet['id']]);
+        return ['sheet' => self::outSheet($stmt->fetch())];
+    }
+
+    /** DELETE /teacher/sheets/{sid} */
+    public static function deleteSheet(Request $req): array
+    {
+        [$sheet] = self::sheet($req);
+        Database::get()->prepare('DELETE FROM lesson_sheets WHERE id = ?')->execute([$sheet['id']]);
+        return ['ok' => true];
+    }
+
+    /** POST /teacher/sheets/{sid}/draft — { source: "plan" | "ai", title } → draft content (not saved). */
+    public static function draftSheet(Request $req): array
+    {
+        [$sheet, $plan, $course] = self::sheet($req);
+        if ($req->input('source') === 'ai') {
+            return LessonSheetService::aiDraft((int) $req->user['id'], $course, $plan, $sheet['type'], self::sheetHeader($req));
+        }
+        return ['content' => LessonSheetService::fromPlan($sheet['type'], $plan), 'model' => null];
+    }
+
     // ------------------------------------------------------------------ course-level book
 
     private static function institution(): array
@@ -178,7 +298,7 @@ class LessonPlanController
             'saved' => (bool) $row,
             'updated_at' => $row['updated_at'] ?? null,
             'institution' => self::institution(),
-            'plans' => array_map([self::class, 'out'], $plans),
+            'plans' => self::withSheets(array_map([self::class, 'out'], $plans)),
             'learners' => LessonPlanService::learners($course, TeacherController::classData($course)),
             'level_higher' => LessonPlanService::isHigher($course),
         ];
@@ -213,7 +333,7 @@ class LessonPlanController
         $stmt->execute([$course['id']]);
         return [
             'course' => $course,
-            'plans' => array_map([self::class, 'out'], $stmt->fetchAll()),
+            'plans' => self::withSheets(array_map([self::class, 'out'], $stmt->fetchAll())),
             'learners' => LessonPlanService::learners($course, TeacherController::classData($course)),
             'level_higher' => LessonPlanService::isHigher($course),
         ];

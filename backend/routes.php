@@ -46,7 +46,13 @@ $router->post('/teacher/courses/{id}/plans', [App\Controllers\LessonPlanControll
 $router->get('/teacher/courses/{id}/book', [App\Controllers\LessonPlanController::class, 'book'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/book', [App\Controllers\LessonPlanController::class, 'saveBook'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/book/draft', [App\Controllers\LessonPlanController::class, 'bookDraft'], ['teacher', 'admin']);
-$router->get('/teacher/plans/{pid}',[App\Controllers\LessonPlanController::class, 'show'], ['teacher', 'admin']);
+$router->get('/teacher/plans/{pid}/sheets', [App\Controllers\LessonPlanController::class, 'sheets'], ['teacher', 'admin']);
+$router->post('/teacher/plans/{pid}/sheets', [App\Controllers\LessonPlanController::class, 'createSheet'], ['teacher', 'admin']);
+$router->get('/teacher/sheets/{sid}', [App\Controllers\LessonPlanController::class, 'showSheet'], ['teacher', 'admin']);
+$router->put('/teacher/sheets/{sid}', [App\Controllers\LessonPlanController::class, 'updateSheet'], ['teacher', 'admin']);
+$router->delete('/teacher/sheets/{sid}', [App\Controllers\LessonPlanController::class, 'deleteSheet'], ['teacher', 'admin']);
+$router->post('/teacher/sheets/{sid}/draft', [App\Controllers\LessonPlanController::class, 'draftSheet'], ['teacher', 'admin']);
+$router->get('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'show'], ['teacher', 'admin']);
 $router->put('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'update'], ['teacher', 'admin']);
 $router->delete('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'delete'], ['teacher', 'admin']);
 $router->post('/teacher/plans/{pid}/draft', [App\Controllers\LessonPlanController::class, 'draft'], ['teacher', 'admin']);

@@ -1,6 +1,6 @@
 // Word (.docx) export of unit lesson plans in the OVEC 2567 form (แผนการจัดการเรียนรู้ ข้อ 1–10)
 // + appendix with the class's learner analysis. Browser-side; the docx library is loaded only when needed.
-import type { CourseBook, PlanContent } from '~/utils/lessonPlan'
+import { SHEET_TYPES, type CourseBook, type PlanContent, type Sheet } from '~/utils/lessonPlan'
 
 const FONT = 'TH SarabunPSK'
 const PT = (n: number) => n * 2 // docx sizes are half-points
@@ -16,6 +16,7 @@ export interface PlanForExport {
   hours_theory: number
   hours_practice: number
   content: PlanContent
+  sheets?: Sheet[]
 }
 
 /**
@@ -45,7 +46,7 @@ const toNum = (s: string | number) => {
  * occupational standard (if any), unit analysis, learning-behaviour analysis (form type 2), unit hours,
  * unit plans, bibliography, appendix. Without it → just the given unit plan(s) + appendix.
  */
-export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string } }) {
+export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string }; sheetsOnly?: boolean }) {
   const d = await import('docx')
   const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
 
@@ -106,7 +107,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const higher = String(course.level ?? course.section ?? '').includes('ปวส')
 
   // ---- header table exactly like the form: logo | title / code+name / unit name | unit no / session / hours
-  const headerTable = (pl: PlanForExport) => {
+  const headerTable = (pl: PlanForExport, docTitle = 'แผนการจัดการเรียนรู้', nameLabel = 'ชื่อเรื่อง/งาน ', nameValue = pl.title || pl.unit_name) => {
     const [cL, cM, cR] = [1300, 5554, 2500]
     return new Table({
       width: { size: W, type: WidthType.DXA },
@@ -115,7 +116,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
         new TableRow({
           children: [
             cell([p([new ImageRun({ type: 'png', data: logo, transformation: { width: 70, height: 70 } })], { align: AlignmentType.CENTER })], cL, { rowSpan: 3, center: true }),
-            cell([p([run('แผนการจัดการเรียนรู้', { bold: true, size: 18 })], { align: AlignmentType.CENTER })], cM, { center: true }),
+            cell([p([run(docTitle, { bold: true, size: 18 })], { align: AlignmentType.CENTER })], cM, { center: true }),
             cell([p([run(`หน่วยที่ ${pl.unit_no}`)], { align: AlignmentType.LEFT })], cR, { center: true }),
           ],
         }),
@@ -136,7 +137,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
           ],
         }),
         new TableRow({
-          children: [cell([p([run('ชื่อเรื่อง/งาน '), run(pl.title || pl.unit_name, { bold: true })], { align: AlignmentType.LEFT })], cL + cM, { columnSpan: 2 })],
+          children: [cell([p([run(nameLabel), run(nameValue, { bold: true })], { align: AlignmentType.LEFT })], cL + cM, { columnSpan: 2 })],
         }),
       ],
     })
@@ -312,7 +313,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
 
   const toc = () => [
     new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: true, spacing: { after: 160 }, children: [run('สารบัญ', { bold: true, size: 18 })] }),
-    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-2' }),
+    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3' }),
   ]
 
   const curriculumPart = () => {
@@ -483,23 +484,90 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     ...(lines(book!.bibliography).length ? lines(book!.bibliography).map((l) => p([run(l)], { indent: 709, hanging: 709 })) : body('', 0, 3)),
   ]
 
+  // ================================================================== supporting sheets
+  const sheetBody = (pl: PlanForExport, s: Sheet) => {
+    const spec = SHEET_TYPES[s.type]
+    const c = s.content
+    const title = `${spec.th}ที่ ${s.number}`
+    const out: any[] = [headerTable(pl, title, `${spec.nameLabel} `, s.title || pl.title || pl.unit_name)]
+    if (s.type === 'assessment') {
+      out.push(p([run('แบบประเมินความสามารถในการปฏิบัติงาน/ผลลัพธ์การเรียนรู้/สมรรถนะ', { bold: true, size: 18 })], { align: AlignmentType.CENTER, before: 160, after: 80 }))
+      out.push(p([run('ชื่อ-สกุล '), dotLine()], { before: 40 }), p([run('รหัสนักศึกษา ……………………… กลุ่มเรียน ……………………… วันที่ประเมิน ………………………')], { after: 80 }))
+      out.push(heading('คำชี้แจง', 40), ...body(c.instructions, IND1))
+      const items = (c.rubric ?? []) as Record<string, string>[]
+      const sw = [700, 4854, 950, 950, 950, 950]
+      out.push(p([], { after: 80 }), new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: sw,
+        rows: [
+          new TableRow({ tableHeader: true, children: [
+            tcell('ที่', sw[0], { bold: true, center: true, rowSpan: 2, size: 16 }), tcell('รายการประเมิน', sw[1], { bold: true, center: true, rowSpan: 2, size: 16 }),
+            tcell('ระดับคะแนน', sw[2] * 4, { bold: true, center: true, columnSpan: 4, size: 16 }),
+          ] }),
+          new TableRow({ tableHeader: true, children: ['4', '3', '2', '1'].map((h, i) => tcell(h, sw[2 + i], { bold: true, center: true, size: 16 })) }),
+          ...items.map((r, i) => new TableRow({ children: [tcell(String(i + 1), sw[0], { center: true, size: 16 }), tcell(r.item, sw[1], { size: 16 }), ...[0, 1, 2, 3].map((k) => tcell('', sw[2 + k]))] })),
+          new TableRow({ children: [tcell('รวมคะแนน', sw[0] + sw[1], { bold: true, center: true, columnSpan: 2, size: 16 }), tcell(`เต็ม ${items.length * 4}`, sw[2] * 4, { center: true, columnSpan: 4, size: 16 })] }),
+        ],
+      }))
+      const rw = [2354, 1750, 1750, 1750, 1750]
+      out.push(heading('เกณฑ์การให้คะแนน (Rubric)'), new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: rw,
+        rows: [
+          new TableRow({ tableHeader: true, children: ['รายการประเมิน', '4 ดีมาก', '3 ดี', '2 พอใช้', '1 ปรับปรุง'].map((h, i) => tcell(h, rw[i], { bold: true, center: true })) }),
+          ...items.map((r) => new TableRow({ children: [tcell(r.item, rw[0], { bold: true }), tcell(r.l4, rw[1]), tcell(r.l3, rw[2]), tcell(r.l2, rw[3]), tcell(r.l1, rw[4])] })),
+        ],
+      }))
+      out.push(heading('เกณฑ์การผ่าน'), ...body(c.pass, IND1))
+      out.push(
+        p([run('ลงชื่อ ………………………………………… ผู้ประเมิน')], { align: AlignmentType.CENTER, indent: 4300, before: 360 }),
+        p([run(`(${opts.book?.author || course.teacher_name || '…………………………………………'})`)], { align: AlignmentType.CENTER, indent: 4300 }),
+      )
+      return out
+    }
+    for (const sec of spec.sections) {
+      const v = String(c[sec.key] ?? '')
+      if (sec.pageBreak) out.push(p([new PageBreak()]))
+      out.push(heading(`${sec.no}. ${sec.title}`))
+      if (sec.numbered && lines(v).length) out.push(...numbered(lines(v), `${sec.no}.`))
+      else out.push(...body(v, IND1, sec.rows && sec.rows > 3 ? 3 : 1))
+    }
+    return out
+  }
+
   // ================================================================== assemble
   const children: any[] = []
   if (book) {
     children.push(...preface(), ...toc(), ...curriculumPart(), ...occupationalPart(), ...jobPart(), ...behaviourPart(), ...unitsPart())
   }
-  opts.plans.forEach((pl, i) => {
-    if (book) {
-      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: true, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
-    } else if (i > 0) {
-      children.push(p([new PageBreak()]))
+  let first = true
+  const newPage = () => {
+    if (!first) children.push(p([new PageBreak()]))
+    first = false
+  }
+  opts.plans.forEach((pl) => {
+    if (!opts.sheetsOnly) {
+      if (book) {
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: true, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
+        first = false
+      } else {
+        newPage()
+      }
+      children.push(...planBody(pl))
     }
-    children.push(...planBody(pl))
+    for (const s of pl.sheets ?? []) {
+      newPage()
+      // in the book every sheet is listed in the table of contents under its unit
+      if (book) children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, spacing: { after: 80 }, children: [run(`${SHEET_TYPES[s.type].th}ที่ ${s.number} ${s.title}`, { bold: true })] }))
+      children.push(...sheetBody(pl, s))
+    }
   })
   if (book) children.push(...bibliographyPart())
-  const app = appendix()
-  if (book) app.splice(0, 2, partTitle('ภาคผนวก')) // page break + title → a TOC heading
-  children.push(...app)
+  if (opts.learners) {
+    const app = appendix()
+    if (book) app.splice(0, 2, partTitle('ภาคผนวก')) // page break + title → a TOC heading
+    children.push(...app)
+  }
 
   const page = { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } }
   const pageHeader = new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
@@ -515,6 +583,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
         { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 120 } } },
         // table-of-contents entries (Word's built-in "toc 1/2" styles would fall back to Angsana)
         { id: 'TOC1', name: 'toc 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 60, after: 0 } } },
+        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 80 } } },
+        { id: 'TOC3', name: 'toc 3', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 1134 }, spacing: { before: 0, after: 0 } } },
         { id: 'TOC2', name: 'toc 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 567 }, spacing: { before: 0, after: 0 } } },
       ],
     },

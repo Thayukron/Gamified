@@ -28,7 +28,15 @@ if (preg_match('#/models/([^/:]+):generateContent$#', $path, $mm)) {
     $body = json_decode(file_get_contents('php://input'), true);
     $prompt = $body['contents'][0]['parts'][0]['text'] ?? '';
     file_put_contents(__DIR__ . '/last_prompt.txt', $prompt);
-    if (str_contains($prompt, '"job_rows"')) {
+    if (preg_match('/จงเขียน “([^”]+)” เรื่อง “([^”]+)”/u', $prompt, $sh)) {
+        // supporting sheet: a superset of every type's keys (the server keeps only the type's own fields)
+        $out = ['outcome' => "[MOCK {$mm[1]}] {$sh[1]}: ผู้เรียนนำ{$sh[2]}ไปใช้ได้", 'standard' => '', 'competency' => "ประมวลความรู้เกี่ยวกับ{$sh[2]}", 'objectives' => "อธิบาย{$sh[2]}ได้\nปฏิบัติ{$sh[2]}ได้ถูกต้อง",
+            'content' => "1. ความหมายของ{$sh[2]}\nสแตกเป็นโครงสร้างข้อมูลแบบเข้าหลังออกก่อน (LIFO)\n2. การดำเนินการ push และ pop", 'exercises' => "1. สแตกทำงานแบบใด\n2. จงเขียนฟังก์ชัน push", 'references' => 'หนังสือโครงสร้างข้อมูลและอัลกอริทึม', 'appendix' => "เฉลย 1. LIFO",
+            'tools' => "คอมพิวเตอร์\nโปรแกรม Python", 'advice' => 'บันทึกงานบ่อย ๆ', 'steps' => "1. เปิดโปรแกรม\n2. เขียนคลาส Stack\n3. ทดสอบ push/pop", 'conclusion' => 'สรุปผลการทดลอง', 'evaluation' => 'ตรวจโปรแกรมตาม Rubric',
+            'details' => 'เขียนโปรแกรมตรวจวงเล็บ', 'deadline' => '7 วัน', 'guidelines' => 'ใช้สแตกเก็บวงเล็บเปิด', 'sources' => 'w3schools.com',
+            'instructions' => 'ทำเครื่องหมาย ✓ ตามระดับคะแนน', 'pass' => 'ร้อยละ 60',
+            'rubric' => [['item' => 'เขียนคลาส Stack ได้', 'l4' => 'ถูกต้องครบ', 'l3' => 'ถูกเป็นส่วนใหญ่', 'l2' => 'ต้องแนะนำ', 'l1' => 'ทำไม่ได้'], ['item' => 'ทดสอบโปรแกรม', 'l4' => 'ครบทุกกรณี', 'l3' => 'เกือบครบ', 'l2' => 'บางกรณี', 'l1' => 'ไม่ทดสอบ']]];
+    } elseif (str_contains($prompt, '"job_rows"')) {
         preg_match_all('/^(\d+)\. (.+)$/mu', $prompt, $u, PREG_SET_ORDER);
         $units = array_map(fn ($m) => ['no' => $m[1], 'name' => trim($m[2]), 'k' => 'K1,K2,K3', 's' => 'S3', 'a' => 'A2', 'ap' => 'Ap2', 'hours_theory' => '2', 'hours_practice' => '6', 'percent' => '10'], array_slice($u, 0, 8));
         $out = ['job' => "[MOCK {$mm[1]}] ออกแบบและเขียนโปรแกรมจัดการข้อมูลด้วยโครงสร้างข้อมูลที่เหมาะสม",

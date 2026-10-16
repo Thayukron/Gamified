@@ -15,3 +15,6 @@ tools/mock-gemini/*.log
 docs/ตัวอย่างไกด์การสอน-DSA.pdf
 docs/ไกด์การสอน-DSA-THSarabun.pdf
 docs/ไกด์การสอน-DSA-ฉบับจัดย่อหน้า.pdf
+
+# Word/Excel lock files of open documents
+~$*

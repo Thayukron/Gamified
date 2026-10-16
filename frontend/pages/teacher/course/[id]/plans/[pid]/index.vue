@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PLAN_SECTIONS, type PlanContent } from '~/utils/lessonPlan'
+import { PLAN_SECTIONS, SHEET_ORDER, SHEET_TYPES, type PlanContent, type Sheet, type SheetType } from '~/utils/lessonPlan'
 import { exportLessonPlansDocx } from '~/utils/lessonPlanDocx'
 
 const route = useRoute()
@@ -77,7 +77,7 @@ async function word() {
   try {
     await exportLessonPlansDocx({
       course: data.value.course,
-      plans: [{ ...header, content: content.value! }],
+      plans: [{ ...header, content: content.value!, sheets: sheets.value }],
       learners: data.value.learners,
       filename: `แผนการจัดการเรียนรู้-${data.value.course.code}-หน่วย${header.unit_no}-ครั้ง${header.session_no}.docx`,
     })
@@ -87,6 +87,19 @@ async function word() {
 }
 
 const L = computed(() => data.value?.learners)
+
+// ---- supporting sheets (ใบความรู้ ใบงาน ใบกิจกรรม ใบมอบหมายงาน แบบประเมิน)
+const sheets = computed<Sheet[]>(() => data.value?.plan.sheets ?? [])
+async function addSheet(type: SheetType) {
+  if (dirty.value) await save()
+  const r = await api<any>(`/teacher/plans/${pid}/sheets`, { method: 'POST', body: { type } })
+  await navigateTo(`/teacher/course/${id}/plans/${pid}/sheets/${r.id}`)
+}
+async function removeSheet(s: Sheet) {
+  if (!confirm(`ลบ${s.type_th}ที่ ${s.number} “${s.title}”?`)) return
+  await api(`/teacher/sheets/${s.id}`, { method: 'DELETE' })
+  data.value.plan.sheets = data.value.plan.sheets.filter((x: Sheet) => x.id !== s.id)
+}
 </script>
 
 <template>
@@ -141,6 +154,32 @@ const L = computed(() => data.value?.learners)
                 <p class="label">{{ f.label }}<span v-if="f.hint" class="ml-2 normal-case tracking-normal text-slate-500">— {{ f.hint }}</span></p>
                 <textarea v-model="(content as any)[s.key][f.key]" :rows="f.rows ?? 2" class="input leading-relaxed" />
               </div>
+            </div>
+          </section>
+
+          <!-- supporting sheets -->
+          <section class="card space-y-3 border-rune-400/30" data-testid="sheets">
+            <h2 class="font-medium text-slate-50">เอกสารประกอบแผน</h2>
+            <p class="text-xs text-slate-500">สร้างแล้วระบบเติมข้อ 1–4 จากแผนนี้ให้ · ใช้ AI ร่างเนื้อหา/ขั้นตอน/แบบฝึกหัด/Rubric ได้ · รวมอยู่ในไฟล์ Word ต่อท้ายแผนตามลำดับในแบบฟอร์ม</p>
+            <div v-if="sheets.length" class="divide-y divide-white/5 rounded-xl ring-1 ring-white/10">
+              <div v-for="s in sheets" :key="s.id" class="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
+                <NuxtLink :to="`/teacher/course/${id}/plans/${pid}/sheets/${s.id}`" class="flex-1 text-slate-100 hover:text-rune-200">
+                  {{ s.type_th }}ที่ {{ s.number }} <span class="text-slate-400">· {{ s.title }}</span>
+                </NuxtLink>
+                <span class="text-xs text-slate-400">{{ s.completeness }}%</span>
+                <span v-if="s.ai_model" class="rounded-full bg-sky-500/15 px-2 text-xs text-sky-300">AI</span>
+                <button class="text-xs text-red-300/80 hover:text-red-300" @click="removeSheet(s)">ลบ</button>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="t in SHEET_ORDER"
+                :key="t"
+                class="btn-ghost !px-3 !py-1.5 text-sm"
+                :title="SHEET_TYPES[t].desc"
+                :data-testid="`add-sheet-${t}`"
+                @click="addSheet(t)"
+              >+ {{ SHEET_TYPES[t].th }}</button>
             </div>
           </section>
         </div>
