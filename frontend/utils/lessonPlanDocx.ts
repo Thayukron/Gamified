@@ -49,7 +49,7 @@ const toNum = (s: string | number) => {
  */
 export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string }; include?: Set<string> }) {
   const d = await import('docx')
-  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
+  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
 
   const logo = await fetch('/forms/ovec-logo.png').then((r) => r.arrayBuffer())
 
@@ -85,10 +85,50 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const sub = (label: string, value = '', indent = IND1) =>
     p([run(label, { bold: !!value || undefined }), ...(value ? [run(' ' + value)] : [])], { indent, align: AlignmentType.LEFT })
   /** body lines indented; an empty field leaves dotted lines to write by hand */
+  /**
+   * Body lines, indented by structure so long AI text stays readable like the official form:
+   * "1. …" topic (hanging) · "1.1 …" sub-topic (deeper) · other lines = explanation under the last item.
+   * An empty field leaves dotted lines to write by hand.
+   */
   const body = (text: string, indent = IND1, blankLines = 1) => {
-    const ls = lines(text)
-    if (!ls.length) return Array.from({ length: blankLines }, () => p([dotLine()], { indent }))
-    return ls.map((l) => p([run(l)], { indent }))
+    if (!lines(text).length) return Array.from({ length: blankLines }, () => p([dotLine()], { indent }))
+    let depth = 0 // 0 = no numbered item yet, 1 = after "1.", 2 = after "1.1"
+    let inCode = false
+    const leftFor = () => (depth === 2 ? indent + 567 + 425 : depth === 1 ? indent + 284 : indent)
+    const out: any[] = []
+    for (const rawLine of (text || '').replace(/\r/g, '').split('\n')) {
+      // ```code``` blocks (AI often adds program examples): monospace, keep indentation, light box
+      if (/^\s*```/.test(rawLine)) {
+        inCode = !inCode
+        continue
+      }
+      if (inCode) {
+        out.push(new Paragraph({
+          // code in Consolas; Thai comments/strings as separate TH Sarabun runs (Consolas has no Thai glyphs)
+          children: (rawLine.replace(/\t/g, '    ') || ' ').split(/([฀-๿]+(?:[ ]+[฀-๿]+)*)/).filter((s) => s !== '').map((seg) =>
+            /[฀-๿]/.test(seg)
+              ? run(seg, { size: 14 })
+              : new TextRun({ text: seg, font: { ascii: 'Consolas', hAnsi: 'Consolas', cs: 'Consolas' }, size: PT(10.5), sizeComplexScript: PT(10.5) })),
+          indent: { left: leftFor() + 284 },
+          shading: { type: ShadingType.CLEAR, fill: 'F2F2F2', color: 'auto' },
+          spacing: { before: 0, after: 0, line: 240 },
+        }))
+        continue
+      }
+      const l = rawLine.trim()
+      if (!l) continue
+      if (/^\d+\.\d+(\.\d+)*\s/.test(l)) {
+        depth = 2
+        out.push(p([run(l)], { indent: indent + 567 + 425, hanging: 425 }))
+      } else if (/^\d+[.)]\s/.test(l)) {
+        depth = 1
+        out.push(p([run(l)], { indent: indent + 284, hanging: 284 }))
+      } else {
+        // explanation paragraph under the item it belongs to; Thai distributed like the official form
+        out.push(new Paragraph({ children: [run(l)], alignment: AlignmentType.THAI_DISTRIBUTE, indent: { left: leftFor() }, spacing: { after: 0, line: 240 } }))
+      }
+    }
+    return out
   }
   const numbered = (items: string[], prefix: string, indent = IND1) =>
     items.map((l, i) => p([run(`${prefix}${i + 1} ${l.replace(/^\d+(\.\d+)*[.)]?\s*/, '')}`)], { indent: indent + 567, hanging: 567 }))

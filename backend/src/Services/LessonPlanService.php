@@ -52,7 +52,7 @@ class LessonPlanService
         if (is_array($v)) {
             $v = implode("\n", array_map(fn ($x) => is_scalar($x) ? (string) $x : '', $v));
         }
-        return is_scalar($v) ? mb_substr(trim(str_replace("\r", '', (string) $v)), 0, 6000) : '';
+        return is_scalar($v) ? mb_substr(trim(str_replace("\r", '', (string) $v)), 0, 10000) : '';
     }
 
     /** Share of filled sections (for progress badges). */
@@ -182,14 +182,14 @@ class LessonPlanService
         }
         set_time_limit(300);
         $ctx = AiGuideService::context($course, $dash);
-        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, self::prompt($course, $ctx, $plan));
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, self::prompt($course, $ctx, $plan), 2, 24000);
         $content = self::normalize($res['data']);
         $content['after'] = self::EMPTY['after']; // written by the teacher after teaching
         return ['content' => $content, 'model' => $res['model']];
     }
 
     private const SYSTEM = 'คุณเป็นศึกษานิเทศก์ผู้เชี่ยวชาญการเขียนแผนการจัดการเรียนรู้ฐานสมรรถนะ หลักสูตร ปวช./ปวส. 2567 ของสำนักงานคณะกรรมการการอาชีวศึกษา '
-        . 'เขียนตามแบบฟอร์มทางการ ใช้ภาษาไทยทางการ กระชับ นำไปใช้สอนได้จริง เจาะจงกับเนื้อหาหน่วย '
+        . 'เขียนตามแบบฟอร์มทางการ ใช้ภาษาไทยทางการ เนื้อหาถูกต้องตามหลักวิชา ละเอียดครบถ้วนได้ใจความ นำไปใช้สอนได้จริง เจาะจงกับเนื้อหาหน่วย (ไม่เขียนกว้าง ๆ หรือมีแค่ชื่อหัวข้อ) '
         . 'ปรับกิจกรรมและสื่อให้เหมาะกับผลวิเคราะห์ผู้เรียนของห้อง (สถิติรวม ไม่มีข้อมูลรายบุคคล) โดยยังใช้สื่อหลายรูปแบบ '
         . 'ห้ามแต่งรหัสหรือชื่อมาตรฐานอาชีพ/หน่วยสมรรถนะที่ไม่แน่ใจว่ามีจริง ถ้าไม่ทราบให้เว้นว่าง "" '
         . 'แนะนำเฉพาะสื่อ/เว็บไซต์ที่มีอยู่จริง ตอบเป็น JSON ตามโครงสร้างที่กำหนดเท่านั้น';
@@ -215,17 +215,24 @@ class LessonPlanService
         return self::curriculumText($course) . "ข้อมูลรายวิชาและผู้เรียน:\n" . json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
             . "\n(vark_percent V=ภาพ A=ฟัง R=อ่านเขียน K=ลงมือทำ · riasec_percent R=ปฏิบัติ I=วิเคราะห์ A=สร้างสรรค์ S=ช่วยเหลือ E=ริเริ่ม C=จัดระบบ · mindset_percent)\n\n"
             . "จงเขียนแผนการจัดการเรียนรู้ระดับ {$level} หน่วยที่ {$plan['unit_no']} “{$plan['unit_name']}” เรื่อง/งาน “{$title}” สอนครั้งที่ {$plan['session_no']} ({$hours})\n"
-            . "กติกาของแบบฟอร์ม:\n"
-            . "- outcome: ผลลัพธ์นอกห้องเรียนที่เกิดจากการนำความรู้/ทักษะไปใช้ในชีวิตประจำวันหรืองานอาชีพ 1-2 ประโยค\n"
-            . "- competency: รูปแบบ “กริยา + กรรม + เงื่อนไข” · knowledge ขึ้นต้นด้วย “{$verb}” · practice = กริยาการปฏิบัติงาน + งาน + เงื่อนไข (ข้อกำหนด/มาตรฐาน) · apply = การประยุกต์ใช้\n"
-            . "- objectives: รูปแบบ “พฤติกรรม + เงื่อนไข/เนื้อหา + เกณฑ์” แต่ละด้าน 1-3 ข้อ ขึ้นบรรทัดใหม่คั่นข้อ · cognitive (บอก อธิบาย จำแนก…) · psychomotor (ทำตามขั้นตอน ทำได้ถูกต้อง…) · affective (กิจนิสัย ความรับผิดชอบ…) · application (ประยุกต์ใช้และรับผิดชอบ)\n"
-            . "- activities: MIAP · motivation=ขั้นสนใจปัญหา · information=ขั้นศึกษาข้อมูล · application=ขั้นพยายาม/ฝึกปฏิบัติ · progress=ขั้นสำเร็จผล · ระบุสิ่งที่ครูและผู้เรียนทำ และเวลาโดยประมาณ (นาที) รวมให้พอดีกับชั่วโมงของหน่วย\n"
-            . "- differentiation: การปรับกิจกรรม/สื่อตามผลวิเคราะห์ผู้เรียนห้องนี้ (สไตล์การเรียนรู้เด่น ความสนใจเด่น และการดูแลผู้เรียน Fixed Mindset) 3-5 บรรทัด\n"
-            . "- standard: occupation/sub_competency/criteria/method ให้เว้นว่างถ้าไม่ทราบมาตรฐานอาชีพที่มีจริง · performance_evidence/knowledge_evidence/career_integration เขียนได้\n"
+            . "กติกาของแบบฟอร์มและความละเอียดที่ต้องการ (เขียนให้ครบ ได้ใจความ ครูนำไปสอนได้ทันทีโดยไม่ต้องเติม):\n"
+            . "- outcome: ผลลัพธ์นอกห้องเรียน 2-3 ประโยค ระบุว่าผู้เรียนนำความรู้/ทักษะไปทำอะไรได้ในงานอาชีพหรือชีวิตจริง พร้อมตัวอย่างสถานการณ์\n"
+            . "- competency: รูปแบบ “กริยา + กรรม + เงื่อนไข” · knowledge ขึ้นต้นด้วย “{$verb}” ระบุเนื้อหาหลัก · practice = กริยาการปฏิบัติงาน + งาน + เงื่อนไข (เครื่องมือ ข้อกำหนด มาตรฐาน) · apply = การประยุกต์ใช้ในสถานการณ์จริง\n"
+            . "- objectives: รูปแบบ “พฤติกรรม + เงื่อนไข/เนื้อหา + เกณฑ์ที่วัดได้” (เช่น “ได้ถูกต้องอย่างน้อย 4 ใน 5 ข้อ”, “ภายในเวลา 30 นาที”) · cognitive 2-3 ข้อ · psychomotor 2-3 ข้อ · affective 1-2 ข้อ · application 1-2 ข้อ · 1 บรรทัด = 1 ข้อ ไม่ต้องใส่เลขข้อ\n"
+            . "- content (สำคัญที่สุด ต้องละเอียด): สาระการเรียนรู้ 4-7 หัวข้อหลัก เรียงจากพื้นฐานไปประยุกต์ แต่ละหัวข้อเขียนบรรทัด “1. ชื่อหัวข้อ” "
+            . "ตามด้วยบรรทัดคำอธิบายสาระสำคัญ 2-4 ประโยค (นิยาม หลักการ วิธีการ/ขั้นตอน สูตรหรือตัวอย่างประกอบที่ถูกต้องตามหลักวิชา) "
+            . "และหัวข้อย่อย “1.1 …” “1.2 …” พร้อมคำอธิบายสั้นเมื่อมีประเด็นย่อย · ความยาวรวมประมาณ 1,500-3,000 ตัวอักษร\n"
+            . "- activities: MIAP · motivation=ขั้นสนใจปัญหา · information=ขั้นศึกษาข้อมูล · application=ขั้นพยายาม/ฝึกปฏิบัติ · progress=ขั้นสำเร็จผล · "
+            . "แต่ละขั้นเขียนเป็นลำดับขั้นตอน 3-6 บรรทัด บรรทัดละ 1 ขั้นตอน รูปแบบ “1. ครู… ผู้เรียน… (xx นาที)” ระบุคำถามกระตุ้น ตัวอย่าง/โจทย์ที่ใช้ สื่อที่ใช้ และงานที่ผู้เรียนต้องทำจริง · รวมเวลาทุกขั้นให้เท่ากับชั่วโมงของครั้งนี้\n"
+            . "- differentiation: การปรับกิจกรรม/สื่อตามผลวิเคราะห์ผู้เรียนห้องนี้ 4-6 บรรทัด แยกตามกลุ่ม (สไตล์การเรียนรู้เด่น ความสนใจเด่น ผู้เรียน Fixed Mindset ผู้เรียนเรียนเร็ว/ต้องช่วยเหลือ) บอกวิธีทำที่ชัดเจน\n"
+            . "- media: 4-8 รายการ บรรทัดละ 1 รายการ “ชื่อสื่อ/แหล่งเรียนรู้ – ใช้ในขั้นไหน เพื่ออะไร” ใช้สื่อที่มีอยู่จริง\n"
+            . "- evidence: knowledge และ performance อย่างละ 2-4 รายการ บรรทัดละ 1 รายการ เป็นชิ้นงาน/ผลการทดสอบที่จับต้องได้\n"
+            . "- assessment: criteria = เกณฑ์ผ่านเป็นตัวเลข/ระดับคุณภาพชัดเจน · methods = วิธีประเมินที่จับคู่กับจุดประสงค์แต่ละด้าน · tools = เครื่องมือประเมินที่ระบุชื่อ (เช่น แบบทดสอบ 10 ข้อ, แบบประเมินผลงาน Rubric 4 ระดับ) · บรรทัดละ 1 รายการ\n"
+            . "- standard: occupation/sub_competency/criteria/method ให้เว้นว่างถ้าไม่ทราบมาตรฐานอาชีพที่มีจริง · performance_evidence/knowledge_evidence/career_integration เขียนได้ (career_integration ระบุอาชีพ/ลักษณะงานที่เชื่อมโยง)\n"
             . "ตอบเป็น JSON (ค่าทุกช่องเป็นข้อความ ใช้ \\n ขึ้นบรรทัดใหม่):\n"
             . '{"outcome":"","standard":{"occupation":"","sub_competency":"","criteria":"","method":"","performance_evidence":"","knowledge_evidence":"","career_integration":""},'
             . '"competency":{"knowledge":"","practice":"","apply":""},"objectives":{"cognitive":"","psychomotor":"","affective":"","application":""},'
-            . '"content":"หัวข้อสาระการเรียนรู้ เป็นข้อ ๆ","activities":{"motivation":"","information":"","application":"","progress":""},"differentiation":"",'
-            . '"media":"สื่อและแหล่งการเรียนรู้ เป็นข้อ ๆ","evidence":{"knowledge":"","performance":""},"assessment":{"criteria":"","methods":"","tools":""}}';
+            . '"content":"1. หัวข้อ\\nคำอธิบายสาระสำคัญ…\\n1.1 หัวข้อย่อย…\\n2. …","activities":{"motivation":"","information":"","application":"","progress":""},"differentiation":"",'
+            . '"media":"","evidence":{"knowledge":"","performance":""},"assessment":{"criteria":"","methods":"","tools":""}}';
     }
 }

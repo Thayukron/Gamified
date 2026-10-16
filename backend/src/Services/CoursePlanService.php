@@ -145,7 +145,7 @@ class CoursePlanService
             . ($t + $p > 0 ? 'ประมาณชั่วโมงทฤษฎี/ปฏิบัติของแต่ละหน่วยให้รวมได้ใกล้เคียงเวลาเรียนทั้งหมด (เผื่อเวลาประเมินผลลัพธ์รายวิชา 1 สัปดาห์) ' : 'hours ให้ใส่ 0 ')
             . "\nตอบ JSON: " . '{"units":[{"name":"ชื่อหน่วย","covers":"เนื้อหาจากคำอธิบายรายวิชาที่หน่วยนี้ครอบคลุม (1 ประโยค)","hours_theory":0,"hours_practice":0}]}';
         $system = 'คุณเป็นผู้เชี่ยวชาญการวิเคราะห์หลักสูตรอาชีวศึกษา (ปวช./ปวส. 2567 ของ สอศ.) แบ่งหน่วยการเรียนรู้ให้เหมาะกับการจัดการเรียนรู้ฐานสมรรถนะ ใช้ภาษาไทยทางการ ตอบเป็น JSON เท่านั้น';
-        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', $system, $prompt);
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', $system, $prompt, 2, 16000);
         $units = [];
         foreach (array_slice((array) ($res['data']['units'] ?? []), 0, 15) as $u) {
             $name = trim(preg_replace('/^หน่วยที่\s*\d+\s*[:.]?\s*/u', '', self::text($u['name'] ?? '', 100)));
@@ -178,7 +178,7 @@ class CoursePlanService
         }
         set_time_limit(300);
         $ctx = AiGuideService::context($course, $dash);
-        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, self::prompt($course, $ctx, $content));
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, self::prompt($course, $ctx, $content), 2, 24000);
         $d = is_array($res['data']) ? $res['data'] : [];
         $draft = self::normalize([
             'job_analysis' => ['job' => $d['job'] ?? '', 'rows' => $d['job_rows'] ?? []],

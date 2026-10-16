@@ -101,7 +101,7 @@ class GeminiClient
      * retry the chosen model briefly on 500/503, then fall back to other models this key can use.
      * @return array{data: array, prompt_tokens: ?int, output_tokens: ?int, model: string}
      */
-    public function generateJsonResilient(string $preferred, string $system, string $prompt, int $maxFallbacks = 2): array
+    public function generateJsonResilient(string $preferred, string $system, string $prompt, int $maxFallbacks = 2, int $maxTokens = 8192): array
     {
         $candidates = [$preferred];
         $lastError = null;
@@ -113,9 +113,13 @@ class GeminiClient
                     sleep($wait);
                 }
                 try {
-                    return $this->generateJson($model, $system, $prompt) + ['model' => $model];
+                    return $this->generateJson($model, $system, $prompt, $maxTokens) + ['model' => $model];
                 } catch (HttpException $e) {
                     $lastError = $e;
+                    // long answers occasionally come back as broken JSON — one more try usually succeeds
+                    if ($e->status === 502 && str_contains($e->getMessage(), 'อ่านไม่ได้') && $attempt === 0) {
+                        continue;
+                    }
                     $overloaded = $e->status === 503 || $e->status === 429 || str_contains($e->getMessage(), 'ไม่พบรุ่น');
                     if (!$overloaded) {
                         throw $e; // bad key, bad output, etc. — retrying won't help
@@ -137,7 +141,7 @@ class GeminiClient
      * Generate a JSON response.
      * @return array{data: array, prompt_tokens: ?int, output_tokens: ?int}
      */
-    public function generateJson(string $model, string $system, string $prompt): array
+    public function generateJson(string $model, string $system, string $prompt, int $maxTokens = 8192): array
     {
         $res = $this->request('POST', '/models/' . rawurlencode($model) . ':generateContent', [
             'systemInstruction' => ['parts' => [['text' => $system]]],
@@ -145,7 +149,7 @@ class GeminiClient
             'generationConfig' => [
                 'responseMimeType' => 'application/json',
                 'temperature' => 0.7,
-                'maxOutputTokens' => 8192,
+                'maxOutputTokens' => $maxTokens, // long Thai documents need more than the default
             ],
         ]);
 
@@ -159,6 +163,8 @@ class GeminiClient
         $text = preg_replace('/^\s*```(?:json)?\s*|\s*```\s*$/', '', $text);
         $data = json_decode($text, true);
         if (!is_array($data)) {
+            error_log('Gemini JSON parse failed: finish=' . ($candidate['finishReason'] ?? '?') . ' error=' . json_last_error_msg()
+                . ' len=' . strlen($text) . ' tail=' . substr($text, -300));
             $reason = ($candidate['finishReason'] ?? '') === 'MAX_TOKENS' ? 'คำตอบยาวเกินกำหนด' : 'รูปแบบคำตอบไม่ถูกต้อง';
             throw new HttpException(502, "Gemini ตอบกลับมาแต่อ่านไม่ได้ ($reason) — ลองกดสร้างใหม่อีกครั้ง");
         }
