@@ -97,6 +97,58 @@ export const SHEET_TYPES: Record<SheetType, { th: string; nameLabel: string; des
 }
 export const SHEET_ORDER: SheetType[] = ['knowledge', 'activity', 'job', 'assignment', 'assessment']
 
+// ---- Word export selection
+export interface ExportItem { key: string; label: string; hint?: string; checked: boolean; disabled?: boolean }
+export interface ExportGroup { title: string; items: ExportItem[] }
+/** What to put in the Word file. Keys: book parts, "plan", "sheet:<id>", "type:<sheetType>", "unit:<planId>", "appendix". */
+export interface ExportInclude { keys: Set<string> }
+
+/** Course-level parts of the book, in form order. */
+export const BOOK_PARTS = [
+  { key: 'cover', label: 'ปก' },
+  { key: 'preface', label: 'คำนำ' },
+  { key: 'toc', label: 'สารบัญ' },
+  { key: 'curriculum', label: 'หลักสูตรรายวิชา' },
+  { key: 'occupational', label: 'มาตรฐานอาชีพ (ถ้ามี)' },
+  { key: 'job', label: 'ตารางวิเคราะห์หน่วยการเรียนรู้' },
+  { key: 'behaviour', label: 'ตารางวิเคราะห์พฤติกรรมการเรียนรู้' },
+  { key: 'units', label: 'หน่วยการเรียนรู้ (ตารางชั่วโมง)' },
+] as const
+
+/** Export picker for the whole course (book parts + units + forms per unit). */
+export function courseExportGroups(plans: { id: number; unit_no: number; session_no: number; unit_name: string; title: string; sheets?: { type: SheetType }[] }[], learnersReady: boolean): ExportGroup[] {
+  const types = new Set(plans.flatMap((p) => (p.sheets ?? []).map((s) => s.type)))
+  return [
+    { title: 'ส่วนหน้า · ระดับรายวิชา', items: BOOK_PARTS.map((b) => ({ key: b.key, label: b.label, checked: true })) },
+    {
+      title: 'หน่วยการเรียน',
+      items: plans.map((p) => ({ key: `unit:${p.id}`, label: `หน่วยที่ ${p.unit_no} ${p.title || p.unit_name}`, hint: `สอนครั้งที่ ${p.session_no}`, checked: true })),
+    },
+    {
+      title: 'ฟอร์มในแต่ละหน่วย',
+      items: [
+        { key: 'plan', label: 'แผนการจัดการเรียนรู้', checked: true },
+        ...SHEET_ORDER.map((t) => ({ key: `type:${t}`, label: SHEET_TYPES[t].th, checked: types.has(t), disabled: !types.has(t), hint: types.has(t) ? undefined : 'ยังไม่มีในหน่วยใด' })),
+      ],
+    },
+    {
+      title: 'ท้ายเล่ม',
+      items: [
+        { key: 'bibliography', label: 'บรรณานุกรม', checked: true },
+        { key: 'appendix', label: 'ภาคผนวก: ผลการวิเคราะห์ผู้เรียน', checked: true, disabled: !learnersReady },
+      ],
+    },
+  ]
+}
+
+/** keys from the picker → include set ("…:none" keeps a filter active when nothing of that kind is ticked) */
+export function toInclude(keys: string[]) {
+  const set = new Set(keys)
+  if (!keys.some((k) => k.startsWith('type:'))) set.add('type:none')
+  if (!keys.some((k) => k.startsWith('unit:'))) set.add('unit:none')
+  return set
+}
+
 interface Field { key: string; label: string; hint?: string; rows?: number }
 export interface PlanSection { no: string; title: string; key: keyof PlanContent; hint: string; fields?: Field[]; rows?: number; adaptive?: boolean }
 

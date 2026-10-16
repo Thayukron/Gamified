@@ -9,7 +9,7 @@ const meta = ref<any>(null)
 const course = ref<any>(null)
 const roster = ref<any[]>([])
 const form = ref<CourseFormValue | null>(null)
-const editing = ref(false)
+const editing = ref(route.query.edit !== undefined) // ?edit=content opens the course form on its content tab
 const msg = ref<{ ok: boolean; text: string } | null>(
   route.query.created !== undefined ? { ok: true, text: `สร้างรายวิชาแล้ว · เพิ่มผู้เรียน ${route.query.created} คน` } : null,
 )
@@ -26,7 +26,7 @@ async function load() {
   const res = await api<any>(`/teacher/courses/${id}/students`)
   course.value = res.course
   roster.value = res.students
-  if (!editing.value) form.value = courseToForm(res.course)
+  if (!editing.value || !form.value) form.value = courseToForm(res.course)
 }
 const loadError = ref('')
 onMounted(async () => {
@@ -141,7 +141,7 @@ const deleteCourse = () => {
           <button v-if="!editing" class="btn-ghost !py-1.5 text-sm" @click="editing = true"><AppIcon name="quill" :size="16" /> แก้ไข</button>
         </div>
         <template v-if="editing && form">
-          <TeacherCourseForm v-model="form" :departments="meta.departments" />
+          <TeacherCourseForm v-model="form" :departments="meta.departments" :initial-step="route.query.edit === 'content' ? 'content' : 'basic'" />
           <div class="flex flex-wrap items-center justify-between gap-3">
             <button class="text-sm text-red-300/80 hover:text-red-300" :disabled="busy" @click="deleteCourse">ลบรายวิชานี้</button>
             <div class="flex gap-2">

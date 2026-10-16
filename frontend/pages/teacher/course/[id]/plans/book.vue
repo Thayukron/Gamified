@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CourseBook } from '~/utils/lessonPlan'
+import { courseExportGroups, toInclude, type CourseBook } from '~/utils/lessonPlan'
 import { exportLessonPlansDocx } from '~/utils/lessonPlanDocx'
 
 const route = useRoute()
@@ -85,16 +85,20 @@ async function aiDraft() {
   }
 }
 
+const exportOpen = ref(false)
 async function word() {
   if (dirty.value) await save()
-  if (dirty.value) return
+  if (!dirty.value) exportOpen.value = true
+}
+async function doExport(keys: string[]) {
   busy.value = 'word'
   try {
     await exportLessonPlansDocx({
       course: data.value.course, plans: data.value.plans, learners: data.value.learners,
-      book: book.value!, institution: data.value.institution,
-      filename: `แผนการจัดการเรียนรู้-${data.value.course.code}-ฉบับเต็ม.docx`,
+      book: book.value!, institution: data.value.institution, include: toInclude(keys),
+      filename: `แผนการจัดการเรียนรู้-${data.value.course.code}.docx`,
     })
+    exportOpen.value = false
   } finally {
     busy.value = ''
   }
@@ -148,7 +152,7 @@ const unitCols = [
         <span class="flex-1" />
         <span class="text-xs" :class="dirty ? 'text-rune-300' : 'text-slate-500'">{{ dirty ? '● ยังไม่ได้บันทึก' : 'บันทึกแล้ว' }}</span>
         <button class="btn-ghost !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="book-save" @click="save"><AppIcon name="check" :size="16" /> บันทึก</button>
-        <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="book-word" @click="word"><AppIcon name="download" :size="16" /> ดาวน์โหลดเล่ม Word</button>
+        <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="book-word" @click="word"><AppIcon name="download" :size="16" /> ส่งออก Word (เลือกส่วน)</button>
       </div>
       <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="book-msg">{{ msg.text }}</p>
 
@@ -182,7 +186,7 @@ const unitCols = [
 
       <!-- 2 curriculum (copy from the official curriculum) -->
       <section v-if="tab === 'curriculum'" class="card space-y-4">
-        <p class="rounded-xl bg-rune-400/10 px-3 py-2 text-sm text-rune-100">ตามคำอธิบายของแบบฟอร์ม: ข้อมูลส่วนนี้ <b>ให้คัดลอกจากหลักสูตร ปวช./ปวส. พุทธศักราช 2567 ที่ สอศ. เผยแพร่เท่านั้น</b> — AI จะไม่แก้ไขส่วนนี้</p>
+        <p class="rounded-xl bg-rune-400/10 px-3 py-2 text-sm text-rune-100">ตามคำอธิบายของแบบฟอร์ม: ข้อมูลส่วนนี้ <b>ให้คัดลอกจากหลักสูตร ปวช./ปวส. พุทธศักราช 2567 ที่ สอศ. เผยแพร่เท่านั้น</b> — AI จะไม่แก้ไขส่วนนี้ · เป็นข้อมูลชุดเดียวกับหน้าแก้ไขรายวิชา (แก้ที่ไหนก็ได้)</p>
         <div class="grid gap-3 sm:grid-cols-3">
           <div><p class="label">ทฤษฎี (ชม./สัปดาห์)</p><input v-model="book.curriculum.theory_hours" class="input" data-testid="cur-t"></div>
           <div><p class="label">ปฏิบัติ (ชม./สัปดาห์)</p><input v-model="book.curriculum.practice_hours" class="input" data-testid="cur-p"></div>
@@ -238,6 +242,7 @@ const unitCols = [
         <p class="text-sm text-slate-400">1 บรรทัด = 1 รายการ (รูปแบบ APA หรือตามที่วิทยาลัยกำหนด)</p>
         <textarea v-model="book.bibliography" rows="10" class="input leading-relaxed" />
       </section>
+      <TeacherExportDialog v-if="exportOpen" :title="`ส่งออก ${data.course.code} ${data.course.name}`" :groups="courseExportGroups(data.plans, data.learners.ready)" :busy="busy === 'word'" @close="exportOpen = false" @export="doExport" />
     </template>
   </div>
 </template>

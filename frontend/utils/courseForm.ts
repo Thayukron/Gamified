@@ -7,6 +7,21 @@ export interface CourseFormValue {
   course_type: 'theory' | 'practice' | 'mixed'
   level: string
   topicsText: string
+  // course content copied from the official curriculum — used by the lesson-plan book and the AI
+  theory_hours: string
+  practice_hours: string
+  credits: string
+  outcome: string
+  objectives: string
+  competencies: string
+  description: string
+  standards_ref: string
+}
+
+const CONTENT_KEYS = ['theory_hours', 'practice_hours', 'credits', 'outcome', 'objectives', 'competencies', 'description', 'standards_ref'] as const
+
+export function emptyCourseForm(): CourseFormValue {
+  return { code: '', name: '', section: '', department_id: null, course_type: 'mixed', level: '', topicsText: '', ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, ''])) } as CourseFormValue
 }
 
 export function courseToForm(c: any): CourseFormValue {
@@ -18,11 +33,13 @@ export function courseToForm(c: any): CourseFormValue {
     department_id: c.department_id ? Number(c.department_id) : null,
     course_type: c.course_type ?? 'mixed',
     level: c.level ?? '',
-    topicsText: topics.join(', '),
-  }
+    topicsText: topics.join('\n'),
+    ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, c[k] ?? ''])),
+  } as CourseFormValue
 }
 
 export function formToBody(f: CourseFormValue) {
   const { topicsText, ...rest } = f
   return { ...rest, topics: topicsText.split(/[,\n]/).map((t) => t.trim()).filter(Boolean) }
 }
+

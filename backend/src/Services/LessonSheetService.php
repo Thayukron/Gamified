@@ -173,7 +173,7 @@ class LessonSheetService
     {
         $pc = LessonPlanService::normalize(json_decode($plan['content'], true));
         $title = $sheet['title'] !== '' ? $sheet['title'] : ($plan['title'] ?: $plan['unit_name']);
-        $ctx = "รายวิชา {$course['code']} {$course['name']} ระดับ " . (LessonPlanService::isHigher($course) ? 'ปวส.' : 'ปวช.')
+        $ctx = LessonPlanService::curriculumText($course) . "รายวิชา {$course['code']} {$course['name']} ระดับ " . (LessonPlanService::isHigher($course) ? 'ปวส.' : 'ปวช.')
             . "\nหน่วยที่ {$plan['unit_no']} {$plan['unit_name']} · เรื่อง {$plan['title']} · สอนครั้งที่ {$plan['session_no']} (ทฤษฎี {$plan['hours_theory']} ชม. ปฏิบัติ {$plan['hours_practice']} ชม.)"
             . "\nแผนการจัดการเรียนรู้ (สรุป):\n" . json_encode([
                 'outcome' => $pc['outcome'], 'competency' => $pc['competency'], 'objectives' => $pc['objectives'],

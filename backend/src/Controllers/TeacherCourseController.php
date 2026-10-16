@@ -14,6 +14,8 @@ use App\Services\PasswordService;
 class TeacherCourseController
 {
     private const TYPES = ['theory', 'practice', 'mixed'];
+    /** course-content columns and their max length */
+    public const CONTENT = ['theory_hours' => 10, 'practice_hours' => 10, 'credits' => 10, 'standards_ref' => 2000, 'outcome' => 2000, 'objectives' => 4000, 'competencies' => 4000, 'description' => 6000];
 
     /** GET /teacher/meta — departments, class groups with counts, current term, own department. */
     public static function meta(Request $req): array
@@ -46,6 +48,10 @@ class TeacherCourseController
             'level' => mb_substr(trim((string) $req->input('level', '')), 0, 30) ?: null,
             'topics' => array_slice(array_values(array_filter(array_map(fn ($t) => mb_substr(trim((string) $t), 0, 100), (array) $req->input('topics', [])))), 0, 30),
         ];
+        // course content copied from the official curriculum (optional, used by the lesson-plan book and the AI)
+        foreach (self::CONTENT as $k => $max) {
+            $f[$k] = mb_substr(trim(str_replace("\r", '', (string) $req->input($k, ''))), 0, $max) ?: null;
+        }
         if ($f['code'] === '' || $f['name'] === '') {
             throw new HttpException(422, 'กรุณากรอกรหัสวิชาและชื่อวิชา');
         }
@@ -75,11 +81,12 @@ class TeacherCourseController
         [$sem, $year] = [(int) app_config('semester'), (int) app_config('academic_year')];
         self::assertUnique($f, $sem, $year);
         $db = Database::get();
+        $cols = array_keys(self::CONTENT);
         $db->prepare(
-            'INSERT INTO courses (code, name, section, semester, academic_year, department_id, teacher_id, course_type, level, topics)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            'INSERT INTO courses (code, name, section, semester, academic_year, department_id, teacher_id, course_type, level, topics, ' . implode(', ', $cols) . ')
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?' . str_repeat(', ?', count($cols)) . ')'
         )->execute([$f['code'], $f['name'], $f['section'], $sem, $year, $f['department_id'], $req->user['id'], $f['course_type'], $f['level'],
-            json_encode($f['topics'], JSON_UNESCAPED_UNICODE)]);
+            json_encode($f['topics'], JSON_UNESCAPED_UNICODE), ...array_map(fn ($k) => $f[$k], $cols)]);
         $id = (int) $db->lastInsertId();
         $added = self::enrollGroups($id, (array) $req->input('class_groups', []));
         return ['id' => $id, 'added' => $added];
@@ -91,10 +98,12 @@ class TeacherCourseController
         $course = TeacherController::course($req, (int) $req->params['id']);
         $f = self::fields($req);
         self::assertUnique($f, (int) $course['semester'], (int) $course['academic_year'], (int) $course['id']);
+        $cols = array_keys(self::CONTENT);
         Database::get()->prepare(
-            'UPDATE courses SET code = ?, name = ?, section = ?, department_id = ?, course_type = ?, level = ?, topics = ? WHERE id = ?'
+            'UPDATE courses SET code = ?, name = ?, section = ?, department_id = ?, course_type = ?, level = ?, topics = ?, '
+            . implode(', ', array_map(fn ($k) => "$k = ?", $cols)) . ' WHERE id = ?'
         )->execute([$f['code'], $f['name'], $f['section'], $f['department_id'], $f['course_type'], $f['level'],
-            json_encode($f['topics'], JSON_UNESCAPED_UNICODE), $course['id']]);
+            json_encode($f['topics'], JSON_UNESCAPED_UNICODE), ...array_map(fn ($k) => $f[$k], $cols), $course['id']]);
         return ['ok' => true];
     }
 

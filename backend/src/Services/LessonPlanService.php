@@ -194,13 +194,25 @@ class LessonPlanService
         . 'ห้ามแต่งรหัสหรือชื่อมาตรฐานอาชีพ/หน่วยสมรรถนะที่ไม่แน่ใจว่ามีจริง ถ้าไม่ทราบให้เว้นว่าง "" '
         . 'แนะนำเฉพาะสื่อ/เว็บไซต์ที่มีอยู่จริง ตอบเป็น JSON ตามโครงสร้างที่กำหนดเท่านั้น';
 
+    /** Course content from the official curriculum (entered on the course form) — the AI must stay within it. */
+    public static function curriculumText(array $course): string
+    {
+        $parts = [];
+        foreach (['description' => 'คำอธิบายรายวิชา', 'objectives' => 'จุดประสงค์รายวิชา', 'competencies' => 'สมรรถนะรายวิชา', 'outcome' => 'ผลลัพธ์การเรียนรู้ระดับรายวิชา'] as $k => $label) {
+            if (trim((string) ($course[$k] ?? '')) !== '') {
+                $parts[] = "{$label}:\n" . mb_substr(trim($course[$k]), 0, 2500);
+            }
+        }
+        return $parts ? "หลักสูตรรายวิชา (ใช้เป็นขอบเขตเนื้อหา ห้ามออกนอกหลักสูตร):\n" . implode("\n", $parts) . "\n\n" : '';
+    }
+
     private static function prompt(array $course, array $ctx, array $plan): string
     {
         $verb = self::isHigher($course) ? 'ประมวลความรู้เกี่ยวกับ' : 'แสดงความรู้เกี่ยวกับ';
         $level = self::isHigher($course) ? 'ปวส.' : 'ปวช.';
         $hours = "ทฤษฎี {$plan['hours_theory']} ชม. ปฏิบัติ {$plan['hours_practice']} ชม.";
         $title = $plan['title'] !== '' ? $plan['title'] : $plan['unit_name'];
-        return "ข้อมูลรายวิชาและผู้เรียน:\n" . json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
+        return self::curriculumText($course) . "ข้อมูลรายวิชาและผู้เรียน:\n" . json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
             . "\n(vark_percent V=ภาพ A=ฟัง R=อ่านเขียน K=ลงมือทำ · riasec_percent R=ปฏิบัติ I=วิเคราะห์ A=สร้างสรรค์ S=ช่วยเหลือ E=ริเริ่ม C=จัดระบบ · mindset_percent)\n\n"
             . "จงเขียนแผนการจัดการเรียนรู้ระดับ {$level} หน่วยที่ {$plan['unit_no']} “{$plan['unit_name']}” เรื่อง/งาน “{$title}” สอนครั้งที่ {$plan['session_no']} ({$hours})\n"
             . "กติกาของแบบฟอร์ม:\n"

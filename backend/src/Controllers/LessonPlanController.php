@@ -74,11 +74,12 @@ class LessonPlanController
         $course = TeacherController::course($req, (int) $req->params['id']);
         $stmt = Database::get()->prepare('SELECT * FROM lesson_plans WHERE course_id = ? ORDER BY unit_no, session_no');
         $stmt->execute([$course['id']]);
+        // list view: no content, sheets as small summaries
         $plans = array_map(function ($p) {
-            $o = self::out($p);
-            unset($o['content']);
-            return $o;
-        }, $stmt->fetchAll());
+            unset($p['content']);
+            $p['sheets'] = array_map(fn ($s) => array_diff_key($s, ['content' => 1]), $p['sheets']);
+            return $p;
+        }, self::withSheets(array_map([self::class, 'out'], $stmt->fetchAll())));
         return [
             'course' => $course,
             'plans' => $plans,
@@ -292,9 +293,14 @@ class LessonPlanController
         $plansStmt = $db->prepare('SELECT * FROM lesson_plans WHERE course_id = ? ORDER BY unit_no, session_no');
         $plansStmt->execute([$course['id']]);
         $plans = $plansStmt->fetchAll();
+        $book = $row ? \App\Services\CoursePlanService::normalize(json_decode($row['content'], true)) : \App\Services\CoursePlanService::defaults($course, $plans, (string) ($course['teacher_name'] ?? ''));
+        // the course record is the single source of the curriculum content (entered on the course form)
+        foreach (TeacherCourseController::CONTENT as $k => $_) {
+            $book['curriculum'][$k] = (string) ($course[$k] ?? '');
+        }
         return [
             'course' => $course,
-            'book' => $row ? \App\Services\CoursePlanService::normalize(json_decode($row['content'], true)) : \App\Services\CoursePlanService::defaults($course, $plans, (string) ($course['teacher_name'] ?? '')),
+            'book' => $book,
             'saved' => (bool) $row,
             'updated_at' => $row['updated_at'] ?? null,
             'institution' => self::institution(),
@@ -314,6 +320,10 @@ class LessonPlanController
             'INSERT INTO course_plans (course_id, content, ai_model, updated_by) VALUES (?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE content = VALUES(content), ai_model = COALESCE(VALUES(ai_model), ai_model), updated_by = VALUES(updated_by)'
         )->execute([$course['id'], json_encode($content, JSON_UNESCAPED_UNICODE), $aiModel, $req->user['id']]);
+        // curriculum content edited in the book goes back to the course record (single source)
+        $cols = array_keys(TeacherCourseController::CONTENT);
+        Database::get()->prepare('UPDATE courses SET ' . implode(', ', array_map(fn ($k) => "$k = ?", $cols)) . ' WHERE id = ?')
+            ->execute([...array_map(fn ($k) => $content['curriculum'][$k] !== '' ? $content['curriculum'][$k] : null, $cols), $course['id']]);
         return ['book' => $content, 'saved' => true];
     }
 

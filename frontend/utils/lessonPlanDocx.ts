@@ -9,6 +9,7 @@ const IND1 = 567 // 1 cm
 const IND2 = 1134
 
 export interface PlanForExport {
+  id?: number
   unit_no: number
   session_no: number
   unit_name: string
@@ -46,7 +47,7 @@ const toNum = (s: string | number) => {
  * occupational standard (if any), unit analysis, learning-behaviour analysis (form type 2), unit hours,
  * unit plans, bibliography, appendix. Without it → just the given unit plan(s) + appendix.
  */
-export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string }; sheetsOnly?: boolean }) {
+export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string }; include?: Set<string> }) {
   const d = await import('docx')
   const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
 
@@ -535,39 +536,57 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     return out
   }
 
-  // ================================================================== assemble
+  // ================================================================== assemble (only what was selected)
+  const inc = opts.include
+  const has = (key: string) => !inc || inc.has(key)
+  const anyOf = (prefix: string) => !!inc && [...inc].some((k) => k.startsWith(prefix))
+  const unitWanted = (pl: PlanForExport) => !anyOf('unit:') || has(`unit:${pl.id}`)
+  const sheetWanted = (s: Sheet) => (anyOf('sheet:') ? has(`sheet:${s.id}`) : anyOf('type:') ? has(`type:${s.type}`) : true)
+
   const children: any[] = []
   if (book) {
-    children.push(...preface(), ...toc(), ...curriculumPart(), ...occupationalPart(), ...jobPart(), ...behaviourPart(), ...unitsPart())
+    if (has('preface')) children.push(...preface())
+    if (has('toc')) children.push(...toc())
+    if (has('curriculum')) children.push(...curriculumPart())
+    if (has('occupational')) children.push(...occupationalPart())
+    if (has('job')) children.push(...jobPart())
+    if (has('behaviour')) children.push(...behaviourPart())
+    if (has('units')) children.push(...unitsPart())
   }
-  let first = true
+  let first = !children.length
   const newPage = () => {
     if (!first) children.push(p([new PageBreak()]))
     first = false
   }
-  opts.plans.forEach((pl) => {
-    if (!opts.sheetsOnly) {
-      if (book) {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: true, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
-        first = false
-      } else {
-        newPage()
-      }
+  opts.plans.filter(unitWanted).forEach((pl) => {
+    const withPlan = has('plan')
+    const sheets = (pl.sheets ?? []).filter(sheetWanted)
+    if (!withPlan && !sheets.length) return
+    if (book) {
+      // unit heading for the table of contents
+      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
+      first = false
+    }
+    if (withPlan) {
+      if (!book) newPage()
       children.push(...planBody(pl))
     }
-    for (const s of pl.sheets ?? []) {
+    sheets.forEach((s, i) => {
+      if (book && !withPlan && i === 0) first = true // the unit heading already starts the page
       newPage()
       // in the book every sheet is listed in the table of contents under its unit
       if (book) children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, spacing: { after: 80 }, children: [run(`${SHEET_TYPES[s.type].th}ที่ ${s.number} ${s.title}`, { bold: true })] }))
       children.push(...sheetBody(pl, s))
-    }
+    })
   })
-  if (book) children.push(...bibliographyPart())
-  if (opts.learners) {
+  if (book && has('bibliography')) children.push(...bibliographyPart())
+  if (opts.learners && has('appendix')) {
     const app = appendix()
-    if (book) app.splice(0, 2, partTitle('ภาคผนวก')) // page break + title → a TOC heading
+    if (first) app.shift() // nothing before it: no leading page break
+    if (book) app.splice(0, first ? 1 : 2, partTitle('ภาคผนวก', !first)) // a TOC heading
     children.push(...app)
   }
+  if (!children.length) children.push(p([run()]))
 
   const page = { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } }
   const pageHeader = new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
@@ -588,7 +607,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
         { id: 'TOC2', name: 'toc 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 567 }, spacing: { before: 0, after: 0 } } },
       ],
     },
-    sections: book
+    sections: book && has('cover')
       ? [
           { properties: { page }, children: cover() }, // cover: no page number
           { properties: { page }, headers: { default: pageHeader }, children },

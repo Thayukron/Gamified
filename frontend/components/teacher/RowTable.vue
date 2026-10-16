@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Editable table of fixed-shape rows (analysis tables of the lesson-plan book).
-export interface RowColumn { key: string; label: string; width?: string; multiline?: boolean; placeholder?: string }
+interface RowColumn { key: string; label: string; width?: string; multiline?: boolean; placeholder?: string }
 
 const props = defineProps<{ columns: RowColumn[]; addLabel?: string; testid?: string }>()
 const rows = defineModel<Record<string, string>[]>({ required: true })

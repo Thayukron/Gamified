@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { formToBody, type CourseFormValue } from '~/utils/courseForm'
+import { emptyCourseForm, formToBody, type CourseFormValue } from '~/utils/courseForm'
 
 const api = useApi()
 const meta = ref<any>(null)
-const form = ref<CourseFormValue>({ code: '', name: '', section: '', department_id: null, course_type: 'mixed', level: '', topicsText: '' })
+const form = ref<CourseFormValue>(emptyCourseForm())
 const groups = ref<string[]>([])
 const busy = ref(false)
 const err = ref('')
