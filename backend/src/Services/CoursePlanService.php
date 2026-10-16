@@ -110,6 +110,56 @@ class CoursePlanService
         return floor($n) == $n ? (string) (int) $n : (string) $n;
     }
 
+    // ------------------------------------------------------------------ AI: split the course into units
+
+    /**
+     * Suggest learning units from the curriculum text (works before the course exists).
+     * $c: code, name, level, course_type, theory_hours, practice_hours, description, objectives, competencies.
+     * Returns ['units' => [[name, covers, hours_theory, hours_practice]], 'model' => …] — nothing is saved.
+     */
+    public static function suggestUnits(int $userId, array $c): array
+    {
+        if (!AiGuideService::enabled()) {
+            throw new HttpException(403, 'ผู้ดูแลระบบปิดการใช้งานฟังก์ชัน AI อยู่');
+        }
+        if (trim($c['description'] ?? '') === '' && trim($c['objectives'] ?? '') === '') {
+            throw new HttpException(422, 'กรุณากรอกคำอธิบายรายวิชา (แท็บ “เนื้อหารายวิชา”) ก่อน ให้ AI แบ่งหน่วยจากหลักสูตรจริง');
+        }
+        $r = AiGuideService::resolve($userId);
+        if (!$r['key']) {
+            throw new HttpException(409, 'กรุณากรอก API Key ของ Gemini ที่หน้า “ตั้งค่า AI ของฉัน” ก่อน หรือใช้ปุ่ม “แยกจากคำอธิบาย (ไม่ใช้ AI)”');
+        }
+        set_time_limit(300);
+        $higher = str_contains((string) ($c['level'] ?? ''), 'ปวส');
+        $weeks = $higher ? 15 : 18;
+        $t = (float) ($c['theory_hours'] ?? 0);
+        $p = (float) ($c['practice_hours'] ?? 0);
+        $prompt = "รายวิชา {$c['code']} {$c['name']} ระดับ " . ($higher ? 'ปวส.' : 'ปวช.')
+            . " ประเภท " . (['theory' => 'ทฤษฎี', 'practice' => 'ปฏิบัติ', 'mixed' => 'ทฤษฎี+ปฏิบัติ'][$c['course_type'] ?? 'mixed'] ?? 'ทฤษฎี+ปฏิบัติ')
+            . ($t + $p > 0 ? "\nเวลาเรียน ทฤษฎี {$t} ชม./สัปดาห์ ปฏิบัติ {$p} ชม./สัปดาห์ จัดเรียน {$weeks} สัปดาห์ (รวม " . (($t + $p) * $weeks) . ' ชม.)' : '')
+            . "\nคำอธิบายรายวิชา:\n" . mb_substr(trim($c['description'] ?? ''), 0, 3000)
+            . "\nจุดประสงค์รายวิชา:\n" . mb_substr(trim($c['objectives'] ?? ''), 0, 2000)
+            . "\nสมรรถนะรายวิชา:\n" . mb_substr(trim($c['competencies'] ?? ''), 0, 2000)
+            . "\n\nจงวิเคราะห์และแบ่งเนื้อหาตามคำอธิบายรายวิชาเป็นหน่วยการเรียนรู้ 5-10 หน่วย เรียงจากพื้นฐานไปสู่การประยุกต์ "
+            . 'ครอบคลุมทุกเนื้อหาในคำอธิบายรายวิชา ไม่เพิ่มเนื้อหานอกหลักสูตร ชื่อหน่วยกระชับ (ไม่เกิน 60 ตัวอักษร ไม่ต้องใส่คำว่า “หน่วยที่”) '
+            . ($t + $p > 0 ? 'ประมาณชั่วโมงทฤษฎี/ปฏิบัติของแต่ละหน่วยให้รวมได้ใกล้เคียงเวลาเรียนทั้งหมด (เผื่อเวลาประเมินผลลัพธ์รายวิชา 1 สัปดาห์) ' : 'hours ให้ใส่ 0 ')
+            . "\nตอบ JSON: " . '{"units":[{"name":"ชื่อหน่วย","covers":"เนื้อหาจากคำอธิบายรายวิชาที่หน่วยนี้ครอบคลุม (1 ประโยค)","hours_theory":0,"hours_practice":0}]}';
+        $system = 'คุณเป็นผู้เชี่ยวชาญการวิเคราะห์หลักสูตรอาชีวศึกษา (ปวช./ปวส. 2567 ของ สอศ.) แบ่งหน่วยการเรียนรู้ให้เหมาะกับการจัดการเรียนรู้ฐานสมรรถนะ ใช้ภาษาไทยทางการ ตอบเป็น JSON เท่านั้น';
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', $system, $prompt);
+        $units = [];
+        foreach (array_slice((array) ($res['data']['units'] ?? []), 0, 15) as $u) {
+            $name = trim(preg_replace('/^หน่วยที่\s*\d+\s*[:.]?\s*/u', '', self::text($u['name'] ?? '', 100)));
+            if ($name !== '') {
+                $units[] = ['name' => $name, 'covers' => self::text($u['covers'] ?? '', 400),
+                    'hours_theory' => max(0, (float) ($u['hours_theory'] ?? 0)), 'hours_practice' => max(0, (float) ($u['hours_practice'] ?? 0))];
+            }
+        }
+        if (!$units) {
+            throw new HttpException(502, 'AI ไม่ได้ส่งรายการหน่วยกลับมา ลองใหม่อีกครั้ง');
+        }
+        return ['units' => $units, 'model' => $res['model']];
+    }
+
     // ------------------------------------------------------------------ AI draft
 
     /** Draft the analysis parts with Gemini; curriculum text stays exactly as the teacher entered it. */

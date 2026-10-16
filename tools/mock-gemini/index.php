@@ -28,7 +28,14 @@ if (preg_match('#/models/([^/:]+):generateContent$#', $path, $mm)) {
     $body = json_decode(file_get_contents('php://input'), true);
     $prompt = $body['contents'][0]['parts'][0]['text'] ?? '';
     file_put_contents(__DIR__ . '/last_prompt.txt', $prompt);
-    if (preg_match('/จงเขียน “([^”]+)” เรื่อง “([^”]+)”/u', $prompt, $sh)) {
+    if (str_contains($prompt, 'แบ่งเนื้อหาตามคำอธิบายรายวิชาเป็นหน่วยการเรียนรู้')) {
+        $out = ['units' => [
+            ['name' => 'หน่วยที่ 1 ความรู้เบื้องต้นเกี่ยวกับการบัญชี', 'covers' => "[MOCK {$mm[1]}] ความหมาย ความสำคัญของการบัญชี", 'hours_theory' => 2, 'hours_practice' => 4],
+            ['name' => 'สมการบัญชี', 'covers' => 'สมการบัญชีและองค์ประกอบ', 'hours_theory' => 2, 'hours_practice' => 6],
+            ['name' => 'การวิเคราะห์รายการค้า', 'covers' => 'ผลกระทบของรายการค้าต่อสมการบัญชี', 'hours_theory' => 2, 'hours_practice' => 6],
+            ['name' => 'สมุดรายวันทั่วไป', 'covers' => 'การบันทึกรายการค้าในสมุดรายวันทั่วไป', 'hours_theory' => 3, 'hours_practice' => 9],
+        ]];
+    } elseif (preg_match('/จงเขียน “([^”]+)” เรื่อง “([^”]+)”/u', $prompt, $sh)) {
         // supporting sheet: a superset of every type's keys (the server keeps only the type's own fields)
         $out = ['outcome' => "[MOCK {$mm[1]}] {$sh[1]}: ผู้เรียนนำ{$sh[2]}ไปใช้ได้", 'standard' => '', 'competency' => "ประมวลความรู้เกี่ยวกับ{$sh[2]}", 'objectives' => "อธิบาย{$sh[2]}ได้\nปฏิบัติ{$sh[2]}ได้ถูกต้อง",
             'content' => "1. ความหมายของ{$sh[2]}\nสแตกเป็นโครงสร้างข้อมูลแบบเข้าหลังออกก่อน (LIFO)\n2. การดำเนินการ push และ pop", 'exercises' => "1. สแตกทำงานแบบใด\n2. จงเขียนฟังก์ชัน push", 'references' => 'หนังสือโครงสร้างข้อมูลและอัลกอริทึม', 'appendix' => "เฉลย 1. LIFO",

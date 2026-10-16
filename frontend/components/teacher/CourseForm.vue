@@ -2,9 +2,16 @@
 // Course form shared by "create course" and "edit course": basic info + units + curriculum content.
 import type { CourseFormValue } from '~/utils/courseForm'
 
-const props = defineProps<{ departments: { id: number; code: string; name: string }[]; initialStep?: 'basic' | 'content' }>()
+type Step = 'basic' | 'content' | 'units'
+const props = defineProps<{ departments: { id: number; code: string; name: string }[]; initialStep?: Step }>()
 const form = defineModel<CourseFormValue>({ required: true })
-const step = ref<'basic' | 'content'>(props.initialStep ?? 'basic')
+const step = ref<Step>(props.initialStep ?? 'basic')
+const unitCount = computed(() => form.value.topicsText.split('\n').filter((s) => s.trim()).length)
+const STEPS = computed(() => [
+  { k: 'basic' as Step, label: '1 ข้อมูลวิชา', badge: '' },
+  { k: 'content' as Step, label: '2 เนื้อหารายวิชา', badge: `${filled.value}/3` , done: filled.value === 3 },
+  { k: 'units' as Step, label: '3 หน่วยการเรียน', badge: `${unitCount.value} หน่วย`, done: unitCount.value > 0 },
+])
 
 const TYPES = [
   { v: 'theory', th: 'ทฤษฎี', desc: 'บรรยาย อ่าน วิเคราะห์' },
@@ -16,11 +23,18 @@ const filled = computed(() => ['objectives', 'competencies', 'description'].filt
 
 <template>
   <div class="space-y-4">
-    <!-- two small tabs instead of one long form -->
-    <div class="flex gap-2">
-      <button type="button" class="rounded-full px-4 py-1.5 text-sm ring-1 transition" :class="step === 'basic' ? 'bg-rune-400/20 text-rune-200 ring-rune-400/60' : 'text-slate-300 ring-white/15'" data-testid="cf-tab-basic" @click="step = 'basic'">ข้อมูลวิชา · หน่วยการเรียน</button>
-      <button type="button" class="rounded-full px-4 py-1.5 text-sm ring-1 transition" :class="step === 'content' ? 'bg-rune-400/20 text-rune-200 ring-rune-400/60' : 'text-slate-300 ring-white/15'" data-testid="cf-tab-content" @click="step = 'content'">
-        เนื้อหารายวิชา (จากหลักสูตร) <span class="ml-1 text-xs" :class="filled === 3 ? 'text-emerald-300' : 'text-slate-400'">{{ filled }}/3</span>
+    <!-- three short steps instead of one long form: info → curriculum content → units (AI splits the content) -->
+    <div class="flex flex-wrap gap-2">
+      <button
+        v-for="s in STEPS"
+        :key="s.k"
+        type="button"
+        class="rounded-full px-4 py-1.5 text-sm ring-1 transition"
+        :class="step === s.k ? 'bg-rune-400/20 text-rune-200 ring-rune-400/60' : 'text-slate-300 ring-white/15'"
+        :data-testid="`cf-tab-${s.k}`"
+        @click="step = s.k"
+      >
+        {{ s.label }} <span v-if="s.badge" class="ml-1 text-xs" :class="s.done ? 'text-emerald-300' : 'text-slate-400'">{{ s.badge }}</span>
       </button>
     </div>
 
@@ -62,10 +76,6 @@ const filled = computed(() => ['objectives', 'competencies', 'description'].filt
           </label>
         </div>
       </div>
-      <div class="sm:col-span-2">
-        <p class="label">หน่วยการเรียนรู้ (1 บรรทัด = 1 หน่วย)</p>
-        <textarea v-model="form.topicsText" rows="4" class="input" placeholder="อาร์เรย์&#10;สแตก&#10;คิว" data-testid="f-topics" />
-      </div>
     </div>
 
     <div v-show="step === 'content'" class="space-y-4">
@@ -80,6 +90,13 @@ const filled = computed(() => ['objectives', 'competencies', 'description'].filt
           <div><p class="label">อ้างอิงมาตรฐาน</p><textarea v-model="form.standards_ref" rows="2" class="input" /></div>
         </div>
       </details>
+      <div class="flex justify-end">
+        <button type="button" class="btn-ghost !py-1.5 text-sm" data-testid="cf-next-units" @click="step = 'units'">ถัดไป: แบ่งหน่วยการเรียน →</button>
+      </div>
+    </div>
+
+    <div v-show="step === 'units'">
+      <TeacherUnitList v-model="form.topicsText" :course="form" @need-content="step = 'content'" />
     </div>
   </div>
 </template>

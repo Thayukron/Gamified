@@ -139,7 +139,7 @@ async function doExport(keys: string[]) {
             </div>
           </div>
         </div>
-        <p v-if="!units.length" class="card text-sm text-slate-400">รายวิชานี้ยังไม่มีหน่วยการเรียน — เพิ่มที่ “จัดการรายชื่อ / แก้ไขวิชา” หรือเพิ่มด้านล่าง</p>
+        <NuxtLink v-if="!units.length" :to="`/teacher/course/${id}/students?edit=units`" class="card card-hover block text-sm text-slate-300" data-testid="no-units">รายวิชานี้ยังไม่มีหน่วยการเรียน — <span class="text-rune-300">ให้ AI แบ่งหน่วยจากคำอธิบายรายวิชา →</span></NuxtLink>
       </section>
 
       <div>

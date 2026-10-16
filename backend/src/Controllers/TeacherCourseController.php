@@ -17,6 +17,16 @@ class TeacherCourseController
     /** course-content columns and their max length */
     public const CONTENT = ['theory_hours' => 10, 'practice_hours' => 10, 'credits' => 10, 'standards_ref' => 2000, 'outcome' => 2000, 'objectives' => 4000, 'competencies' => 4000, 'description' => 6000];
 
+    /** POST /teacher/units/suggest — AI splits the curriculum text into units (course need not exist yet; nothing saved). */
+    public static function suggestUnits(Request $req): array
+    {
+        $in = [];
+        foreach (['code', 'name', 'level', 'course_type', 'theory_hours', 'practice_hours', 'description', 'objectives', 'competencies'] as $k) {
+            $in[$k] = mb_substr(trim((string) $req->input($k, '')), 0, 6000);
+        }
+        return \App\Services\CoursePlanService::suggestUnits((int) $req->user['id'], $in);
+    }
+
     /** GET /teacher/meta — departments, class groups with counts, current term, own department. */
     public static function meta(Request $req): array
     {

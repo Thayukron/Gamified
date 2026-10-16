@@ -141,7 +141,7 @@ const deleteCourse = () => {
           <button v-if="!editing" class="btn-ghost !py-1.5 text-sm" @click="editing = true"><AppIcon name="quill" :size="16" /> แก้ไข</button>
         </div>
         <template v-if="editing && form">
-          <TeacherCourseForm v-model="form" :departments="meta.departments" :initial-step="route.query.edit === 'content' ? 'content' : 'basic'" />
+          <TeacherCourseForm v-model="form" :departments="meta.departments" :initial-step="(['content', 'units'].includes(route.query.edit as string) ? route.query.edit : 'basic') as any" />
           <div class="flex flex-wrap items-center justify-between gap-3">
             <button class="text-sm text-red-300/80 hover:text-red-300" :disabled="busy" @click="deleteCourse">ลบรายวิชานี้</button>
             <div class="flex gap-2">
