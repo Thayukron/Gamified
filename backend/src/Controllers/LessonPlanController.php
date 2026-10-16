@@ -1,0 +1,169 @@
+<?php
+namespace App\Controllers;
+
+use App\Core\Database;
+use App\Core\HttpException;
+use App\Core\Request;
+use App\Services\LessonPlanService;
+
+/** Unit lesson plans (OVEC 2567 form). Teachers only reach plans of courses they teach. */
+class LessonPlanController
+{
+    /** Plan row + its course, enforcing course ownership. */
+    private static function plan(Request $req): array
+    {
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_plans WHERE id = ?');
+        $stmt->execute([(int) $req->params['pid']]);
+        $plan = $stmt->fetch() ?: throw new HttpException(404, 'ไม่พบแผนการจัดการเรียนรู้');
+        $course = TeacherController::course($req, (int) $plan['course_id']);
+        return [$plan, $course];
+    }
+
+    private static function out(array $plan): array
+    {
+        $content = LessonPlanService::normalize(json_decode($plan['content'], true));
+        return [
+            'id' => (int) $plan['id'],
+            'course_id' => (int) $plan['course_id'],
+            'unit_no' => (int) $plan['unit_no'],
+            'session_no' => (int) $plan['session_no'],
+            'unit_name' => $plan['unit_name'],
+            'title' => $plan['title'],
+            'hours_theory' => (float) $plan['hours_theory'],
+            'hours_practice' => (float) $plan['hours_practice'],
+            'content' => $content,
+            'completeness' => LessonPlanService::completeness($content),
+            'ai_model' => $plan['ai_model'],
+            'updated_at' => $plan['updated_at'],
+        ];
+    }
+
+    /** Validated header fields (unit, session, names, hours). */
+    private static function header(Request $req): array
+    {
+        $h = [
+            'unit_no' => (int) $req->input('unit_no', 0),
+            'session_no' => max(1, (int) $req->input('session_no', 1)),
+            'unit_name' => mb_substr(trim((string) $req->input('unit_name', '')), 0, 200),
+            'title' => mb_substr(trim((string) $req->input('title', '')), 0, 255),
+            'hours_theory' => max(0, min(99, round((float) $req->input('hours_theory', 0), 1))),
+            'hours_practice' => max(0, min(99, round((float) $req->input('hours_practice', 0), 1))),
+        ];
+        if ($h['unit_no'] < 1 || $h['unit_no'] > 99) {
+            throw new HttpException(422, 'หน่วยที่ต้องเป็นตัวเลข 1–99');
+        }
+        if ($h['unit_name'] === '') {
+            throw new HttpException(422, 'กรุณากรอกชื่อหน่วยการเรียนรู้');
+        }
+        return $h;
+    }
+
+    private static function assertFree(int $courseId, array $h, int $exceptId = 0): void
+    {
+        $stmt = Database::get()->prepare('SELECT COUNT(*) FROM lesson_plans WHERE course_id = ? AND unit_no = ? AND session_no = ? AND id <> ?');
+        $stmt->execute([$courseId, $h['unit_no'], $h['session_no'], $exceptId]);
+        if ($stmt->fetchColumn()) {
+            throw new HttpException(409, "มีแผนหน่วยที่ {$h['unit_no']} สอนครั้งที่ {$h['session_no']} อยู่แล้ว");
+        }
+    }
+
+    /** GET /teacher/courses/{id}/plans — plans of the course + units suggested from its topics. */
+    public static function index(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_plans WHERE course_id = ? ORDER BY unit_no, session_no');
+        $stmt->execute([$course['id']]);
+        $plans = array_map(function ($p) {
+            $o = self::out($p);
+            unset($o['content']);
+            return $o;
+        }, $stmt->fetchAll());
+        return [
+            'course' => $course,
+            'plans' => $plans,
+            'topics' => json_decode($course['topics'] ?? '[]', true) ?: [],
+            'level_higher' => LessonPlanService::isHigher($course),
+        ];
+    }
+
+    /** POST /teacher/courses/{id}/plans — header fields + prefill: "guide" | "none". */
+    public static function create(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $h = self::header($req);
+        self::assertFree((int) $course['id'], $h);
+        $content = $req->input('prefill') === 'guide'
+            ? LessonPlanService::prefill($course, TeacherController::classData($course), $h)
+            : LessonPlanService::EMPTY;
+        $db = Database::get();
+        $db->prepare(
+            'INSERT INTO lesson_plans (course_id, unit_no, session_no, unit_name, title, hours_theory, hours_practice, content, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([$course['id'], $h['unit_no'], $h['session_no'], $h['unit_name'], $h['title'], $h['hours_theory'], $h['hours_practice'],
+            json_encode($content, JSON_UNESCAPED_UNICODE), $req->user['id']]);
+        return ['id' => (int) $db->lastInsertId()];
+    }
+
+    /** GET /teacher/plans/{pid} — plan + course + anonymous learner analysis (for section 6 and the appendix). */
+    public static function show(Request $req): array
+    {
+        [$plan, $course] = self::plan($req);
+        return [
+            'plan' => self::out($plan),
+            'course' => $course,
+            'learners' => LessonPlanService::learners($course, TeacherController::classData($course)),
+            'level_higher' => LessonPlanService::isHigher($course),
+        ];
+    }
+
+    /** PUT /teacher/plans/{pid} — header fields + content (+ ai_model when the content came from an AI draft). */
+    public static function update(Request $req): array
+    {
+        [$plan, $course] = self::plan($req);
+        $h = self::header($req);
+        self::assertFree((int) $course['id'], $h, (int) $plan['id']);
+        $content = LessonPlanService::normalize($req->input('content', []));
+        $aiModel = $req->input('ai_model') ? mb_substr((string) $req->input('ai_model'), 0, 80) : null;
+        Database::get()->prepare(
+            'UPDATE lesson_plans SET unit_no = ?, session_no = ?, unit_name = ?, title = ?, hours_theory = ?, hours_practice = ?, content = ?,
+                    ai_model = COALESCE(?, ai_model), ai_at = IF(? IS NULL, ai_at, NOW()) WHERE id = ?'
+        )->execute([$h['unit_no'], $h['session_no'], $h['unit_name'], $h['title'], $h['hours_theory'], $h['hours_practice'],
+            json_encode($content, JSON_UNESCAPED_UNICODE), $aiModel, $aiModel, $plan['id']]);
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_plans WHERE id = ?');
+        $stmt->execute([$plan['id']]);
+        return ['plan' => self::out($stmt->fetch())];
+    }
+
+    /** DELETE /teacher/plans/{pid} */
+    public static function delete(Request $req): array
+    {
+        [$plan] = self::plan($req);
+        Database::get()->prepare('DELETE FROM lesson_plans WHERE id = ?')->execute([$plan['id']]);
+        return ['ok' => true];
+    }
+
+    /** POST /teacher/plans/{pid}/draft — { source: "guide" | "ai", header… } → draft content (not saved). */
+    public static function draft(Request $req): array
+    {
+        [$plan, $course] = self::plan($req);
+        $h = self::header($req) + ['unit_no' => $plan['unit_no']];
+        $dash = TeacherController::classData($course);
+        if ($req->input('source') === 'ai') {
+            return LessonPlanService::aiDraft((int) $req->user['id'], $course, $dash, $h);
+        }
+        return ['content' => LessonPlanService::prefill($course, $dash, $h), 'model' => null];
+    }
+
+    /** GET /teacher/courses/{id}/plans/full — every plan with content, for exporting the whole set to Word. */
+    public static function full(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $stmt = Database::get()->prepare('SELECT * FROM lesson_plans WHERE course_id = ? ORDER BY unit_no, session_no');
+        $stmt->execute([$course['id']]);
+        return [
+            'course' => $course,
+            'plans' => array_map([self::class, 'out'], $stmt->fetchAll()),
+            'learners' => LessonPlanService::learners($course, TeacherController::classData($course)),
+            'level_higher' => LessonPlanService::isHigher($course),
+        ];
+    }
+}

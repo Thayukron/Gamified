@@ -133,9 +133,14 @@ const radarSeries = computed(() => {
           <h1 class="title-glow mt-1 text-2xl sm:text-3xl">{{ data.course.name }}</h1>
           <p class="text-sm text-slate-400">แดชบอร์ดโปรไฟล์ผู้เรียน · ภาคเรียน {{ data.term.semester }}/{{ data.term.academic_year }} · ครูผู้สอน {{ data.course.teacher_name }}</p>
         </div>
-        <NuxtLink :to="`/teacher/course/${route.params.id}/students`" class="btn-ghost !py-2 text-sm" data-testid="manage-students">
-          <AppIcon name="quill" :size="16" /> จัดการรายชื่อ / แก้ไขวิชา
-        </NuxtLink>
+        <div class="flex flex-wrap gap-2">
+          <NuxtLink :to="`/teacher/course/${route.params.id}/plans`" class="btn-primary !py-2 text-sm" data-testid="lesson-plans">
+            <AppIcon name="scroll" :size="16" /> แผนการจัดการเรียนรู้
+          </NuxtLink>
+          <NuxtLink :to="`/teacher/course/${route.params.id}/students`" class="btn-ghost !py-2 text-sm" data-testid="manage-students">
+            <AppIcon name="quill" :size="16" /> จัดการรายชื่อ / แก้ไขวิชา
+          </NuxtLink>
+        </div>
       </header>
 
       <!-- stat tiles -->

@@ -25,7 +25,8 @@ const steps = [
   { icon: 'chart', title: '2. ดูแดชบอร์ด', desc: 'สัดส่วน VARK / RIASEC / Mindset และโปรไฟล์รายคน' },
   { icon: 'orb', title: '3. ไกด์การสอน', desc: 'สื่อ วิธีสอน แผนรายหน่วย (+AI ถ้ากรอก Key)' },
   { icon: 'castle', title: '4. จัดกลุ่ม', desc: 'คละจุดแข็งหรือกลุ่มซ่อมเสริม แล้วบันทึก' },
-  { icon: 'scroll', title: '5. รายงาน ว.PA', desc: 'พิมพ์ PDF และดาวน์โหลด Excel' },
+  { icon: 'quill', title: '5. แผนการจัดการเรียนรู้', desc: 'แบบฟอร์มสถานศึกษา (MIAP) · AI ร่าง · ดาวน์โหลด Word' },
+  { icon: 'scroll', title: '6. รายงาน ว.PA', desc: 'พิมพ์ PDF และดาวน์โหลด Excel' },
 ]
 </script>
 
@@ -104,7 +105,7 @@ const steps = [
     </div>
 
     <div class="divider-rune text-xs tracking-[0.4em]"><span class="font-display">HOW TO USE</span></div>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <div v-for="u in steps" :key="u.title" class="card flex gap-3 !p-4">
         <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-rune-400/30 text-rune-300"><AppIcon :name="u.icon" /></span>
         <div>

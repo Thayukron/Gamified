@@ -28,7 +28,19 @@ if (preg_match('#/models/([^/:]+):generateContent$#', $path, $mm)) {
     $body = json_decode(file_get_contents('php://input'), true);
     $prompt = $body['contents'][0]['parts'][0]['text'] ?? '';
     file_put_contents(__DIR__ . '/last_prompt.txt', $prompt);
-    if (str_contains($prompt, 'ทั้งรายวิชา')) {
+    if (str_contains($prompt, 'จงเขียนแผนการจัดการเรียนรู้')) {
+        preg_match('/เรื่อง\/งาน “([^”]+)”/u', $prompt, $t);
+        $verb = str_contains($prompt, 'ประมวลความรู้เกี่ยวกับ') ? 'ประมวลความรู้เกี่ยวกับ' : 'แสดงความรู้เกี่ยวกับ';
+        $out = ['outcome' => "[MOCK {$mm[1]}] ผู้เรียนนำ{$t[1]}ไปใช้แก้ปัญหาการจัดการข้อมูลในงานพัฒนาโปรแกรมจริงได้",
+            'standard' => ['occupation' => '', 'sub_competency' => '', 'criteria' => '', 'method' => '', 'performance_evidence' => 'โปรแกรมที่ใช้งานได้ตามโจทย์', 'knowledge_evidence' => 'ผลการทดสอบความรู้', 'career_integration' => 'นักพัฒนาซอฟต์แวร์'],
+            'competency' => ['knowledge' => "{$verb}{$t[1]}", 'practice' => "เขียนโปรแกรม{$t[1]}ด้วยภาษา Python ตามข้อกำหนดของโจทย์", 'apply' => "ประยุกต์ใช้{$t[1]}แก้ปัญหาในงานอาชีพ"],
+            'objectives' => ['cognitive' => "อธิบายหลักการทำงานของ{$t[1]}ได้ถูกต้อง\nเปรียบเทียบ push และ pop ได้", 'psychomotor' => "เขียนโปรแกรม{$t[1]}ได้ถูกต้องตามขั้นตอน", 'affective' => 'ส่งงานตรงเวลาและทำงานร่วมกับผู้อื่นได้', 'application' => "ประยุกต์ใช้{$t[1]}ตรวจวงเล็บในนิพจน์ได้"],
+            'content' => "ความหมายของ{$t[1]}\nการดำเนินการ push/pop/peek\nการประยุกต์ใช้",
+            'activities' => ['motivation' => 'ครูสาธิตกองจาน แล้วถามว่าจานใบไหนถูกหยิบก่อน (10 นาที)', 'information' => 'ครูอธิบายด้วยภาพจำลองบน VisuAlgo (30 นาที)', 'application' => 'ผู้เรียนทำแล็บเขียนสแตกด้วย list (90 นาที)', 'progress' => 'นำเสนอผลงานและทำควิซท้ายคาบ (20 นาที)'],
+            'differentiation' => "ผู้เรียนสายลงมือทำ: ใช้แก้วซ้อนจริง\nผู้เรียน Fixed Mindset: เริ่มจากโจทย์ง่ายที่สำเร็จเร็ว",
+            'media' => "VisuAlgo\nPython Tutor\nใบงานที่ 3", 'evidence' => ['knowledge' => 'แบบทดสอบ', 'performance' => 'ไฟล์โปรแกรม'],
+            'assessment' => ['criteria' => 'ผ่านร้อยละ 60', 'methods' => "ทดสอบ\nตรวจผลงาน", 'tools' => "แบบทดสอบ\nRubric"]];
+    } elseif (str_contains($prompt, 'ทั้งรายวิชา')) {
         $out = ['overview' => "[MOCK {$mm[1]}] ห้องนี้ผู้เรียนส่วนใหญ่ถนัดลงมือทำ ควรสอนแบบสาธิตสั้นแล้วให้ลองเขียนโค้ดทันที",
             'strategies' => [['title' => 'Code-along ทีละขั้น', 'detail' => 'สาธิตการสร้าง stack ด้วย list ใน Python แล้วให้พิมพ์ตาม', 'for' => 'ผู้เรียนสายลงมือทำ'], ['title' => 'Visual trace', 'detail' => 'ใช้ Python Tutor ไล่ linked list', 'for' => 'ทั้งห้อง']],
             'tools' => [['name' => 'VisuAlgo', 'use' => 'ดูการเรียงลำดับ'], ['name' => 'Python Tutor', 'use' => 'ไล่พอยน์เตอร์']],

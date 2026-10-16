@@ -39,6 +39,14 @@ $router->get('/me/profile', [App\Controllers\AccountController::class, 'profile'
 $router->put('/me/profile', [App\Controllers\AccountController::class, 'updateProfile'], ['*']);
 $router->put('/me/password', [App\Controllers\AccountController::class, 'changePassword'], ['*']);
 $router->post('/auth/forgot', [App\Controllers\AccountController::class, 'forgot']);
+// Unit lesson plans in the OVEC 2567 form (Word export happens in the browser)
+$router->get('/teacher/courses/{id}/plans', [App\Controllers\LessonPlanController::class, 'index'], ['teacher', 'admin']);
+$router->get('/teacher/courses/{id}/plans/full', [App\Controllers\LessonPlanController::class, 'full'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/plans', [App\Controllers\LessonPlanController::class, 'create'], ['teacher', 'admin']);
+$router->get('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'show'], ['teacher', 'admin']);
+$router->put('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'update'], ['teacher', 'admin']);
+$router->delete('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'delete'], ['teacher', 'admin']);
+$router->post('/teacher/plans/{pid}/draft', [App\Controllers\LessonPlanController::class, 'draft'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/dashboard', [App\Controllers\TeacherController::class, 'dashboard'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/guide', [App\Controllers\TeacherController::class, 'guide'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/context', [App\Controllers\TeacherController::class, 'saveContext'], ['teacher', 'admin']);

@@ -7,8 +7,8 @@ namespace App\Guide;
  */
 class TeachingGuide
 {
-    private const VARK_TH = ['V' => 'การเห็นภาพ (Visual)', 'A' => 'การฟัง-พูดคุย (Aural)', 'R' => 'การอ่าน-เขียน (Read/Write)', 'K' => 'การลงมือทำ (Kinesthetic)'];
-    private const RIASEC_TH = ['R' => 'นักปฏิบัติ (Realistic)', 'I' => 'นักคิดวิเคราะห์ (Investigative)', 'A' => 'นักสร้างสรรค์ (Artistic)', 'S' => 'นักช่วยเหลือ (Social)', 'E' => 'นักริเริ่ม (Enterprising)', 'C' => 'นักจัดระบบ (Conventional)'];
+    public const VARK_TH = ['V' => 'การเห็นภาพ (Visual)', 'A' => 'การฟัง-พูดคุย (Aural)', 'R' => 'การอ่าน-เขียน (Read/Write)', 'K' => 'การลงมือทำ (Kinesthetic)'];
+    public const RIASEC_TH = ['R' => 'นักปฏิบัติ (Realistic)', 'I' => 'นักคิดวิเคราะห์ (Investigative)', 'A' => 'นักสร้างสรรค์ (Artistic)', 'S' => 'นักช่วยเหลือ (Social)', 'E' => 'นักริเริ่ม (Enterprising)', 'C' => 'นักจัดระบบ (Conventional)'];
     private const TYPE_TH = ['theory' => 'ทฤษฎี', 'practice' => 'ปฏิบัติ', 'mixed' => 'ทฤษฎี+ปฏิบัติ'];
 
     public static function build(array $course, array $dash): array

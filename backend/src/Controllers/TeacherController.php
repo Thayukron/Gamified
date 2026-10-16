@@ -219,7 +219,7 @@ class TeacherController
     }
 
     /** Roster, Core Profiles and distributions for one course. */
-    private static function classData(array $course): array
+    public static function classData(array $course): array
     {
         [$sem, $year] = self::term();
         $db = Database::get();
