@@ -28,7 +28,18 @@ if (preg_match('#/models/([^/:]+):generateContent$#', $path, $mm)) {
     $body = json_decode(file_get_contents('php://input'), true);
     $prompt = $body['contents'][0]['parts'][0]['text'] ?? '';
     file_put_contents(__DIR__ . '/last_prompt.txt', $prompt);
-    if (str_contains($prompt, 'จงเขียนแผนการจัดการเรียนรู้')) {
+    if (str_contains($prompt, '"job_rows"')) {
+        preg_match_all('/^(\d+)\. (.+)$/mu', $prompt, $u, PREG_SET_ORDER);
+        $units = array_map(fn ($m) => ['no' => $m[1], 'name' => trim($m[2]), 'k' => 'K1,K2,K3', 's' => 'S3', 'a' => 'A2', 'ap' => 'Ap2', 'hours_theory' => '2', 'hours_practice' => '6', 'percent' => '10'], array_slice($u, 0, 8));
+        $out = ['job' => "[MOCK {$mm[1]}] ออกแบบและเขียนโปรแกรมจัดการข้อมูลด้วยโครงสร้างข้อมูลที่เหมาะสม",
+            'job_rows' => [
+                ['duty' => 'งานหลัก 1 จัดเก็บข้อมูลด้วยโครงสร้างเชิงเส้น', 'task' => '1.1 สร้างอาร์เรย์', 'sub_competency' => '', 'knowledge' => 'หลักการอาร์เรย์', 'skill' => 'เขียนโปรแกรมอาร์เรย์'],
+                ['duty' => 'งานหลัก 1 จัดเก็บข้อมูลด้วยโครงสร้างเชิงเส้น', 'task' => '1.2 สร้างสแตกและคิว', 'sub_competency' => '', 'knowledge' => 'หลักการ LIFO/FIFO', 'skill' => 'เขียนโปรแกรมสแตก/คิว'],
+                ['duty' => 'งานหลัก 2 ค้นหาและเรียงลำดับข้อมูล', 'task' => '2.1 ค้นหาข้อมูล', 'sub_competency' => '', 'knowledge' => 'อัลกอริทึมการค้นหา', 'skill' => 'เขียนโปรแกรมค้นหา'],
+            ],
+            'units' => $units, 'final_eval' => ['hours_theory' => '2', 'hours_practice' => '4', 'percent' => '20'],
+            'preface' => "[MOCK] แผนการจัดการเรียนรู้รายวิชานี้จัดทำตามหลักสูตร 2567\nหวังว่าจะเป็นประโยชน์ต่อผู้เรียน"];
+    } elseif (str_contains($prompt, 'จงเขียนแผนการจัดการเรียนรู้')) {
         preg_match('/เรื่อง\/งาน “([^”]+)”/u', $prompt, $t);
         $verb = str_contains($prompt, 'ประมวลความรู้เกี่ยวกับ') ? 'ประมวลความรู้เกี่ยวกับ' : 'แสดงความรู้เกี่ยวกับ';
         $out = ['outcome' => "[MOCK {$mm[1]}] ผู้เรียนนำ{$t[1]}ไปใช้แก้ปัญหาการจัดการข้อมูลในงานพัฒนาโปรแกรมจริงได้",

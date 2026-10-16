@@ -153,6 +153,58 @@ class LessonPlanController
         return ['content' => LessonPlanService::prefill($course, $dash, $h), 'model' => null];
     }
 
+    // ------------------------------------------------------------------ course-level book
+
+    private static function institution(): array
+    {
+        $s = Database::get()->query("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'institution_%'")->fetchAll(\PDO::FETCH_KEY_PAIR);
+        return ['name' => $s['institution_name'] ?? '', 'affiliation' => $s['institution_affiliation'] ?? ''];
+    }
+
+    /** GET /teacher/courses/{id}/book — course-level parts (saved or defaults) + everything the Word book needs. */
+    public static function book(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $db = Database::get();
+        $stmt = $db->prepare('SELECT * FROM course_plans WHERE course_id = ?');
+        $stmt->execute([$course['id']]);
+        $row = $stmt->fetch();
+        $plansStmt = $db->prepare('SELECT * FROM lesson_plans WHERE course_id = ? ORDER BY unit_no, session_no');
+        $plansStmt->execute([$course['id']]);
+        $plans = $plansStmt->fetchAll();
+        return [
+            'course' => $course,
+            'book' => $row ? \App\Services\CoursePlanService::normalize(json_decode($row['content'], true)) : \App\Services\CoursePlanService::defaults($course, $plans, (string) ($course['teacher_name'] ?? '')),
+            'saved' => (bool) $row,
+            'updated_at' => $row['updated_at'] ?? null,
+            'institution' => self::institution(),
+            'plans' => array_map([self::class, 'out'], $plans),
+            'learners' => LessonPlanService::learners($course, TeacherController::classData($course)),
+            'level_higher' => LessonPlanService::isHigher($course),
+        ];
+    }
+
+    /** PUT /teacher/courses/{id}/book — { content, ai_model? } */
+    public static function saveBook(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $content = \App\Services\CoursePlanService::normalize($req->input('content', []));
+        $aiModel = $req->input('ai_model') ? mb_substr((string) $req->input('ai_model'), 0, 80) : null;
+        Database::get()->prepare(
+            'INSERT INTO course_plans (course_id, content, ai_model, updated_by) VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE content = VALUES(content), ai_model = COALESCE(VALUES(ai_model), ai_model), updated_by = VALUES(updated_by)'
+        )->execute([$course['id'], json_encode($content, JSON_UNESCAPED_UNICODE), $aiModel, $req->user['id']]);
+        return ['book' => $content, 'saved' => true];
+    }
+
+    /** POST /teacher/courses/{id}/book/draft — { content } → AI draft of the analysis parts (not saved). */
+    public static function bookDraft(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $content = \App\Services\CoursePlanService::normalize($req->input('content', []));
+        return \App\Services\CoursePlanService::aiDraft((int) $req->user['id'], $course, TeacherController::classData($course), $content);
+    }
+
     /** GET /teacher/courses/{id}/plans/full — every plan with content, for exporting the whole set to Word. */
     public static function full(Request $req): array
     {

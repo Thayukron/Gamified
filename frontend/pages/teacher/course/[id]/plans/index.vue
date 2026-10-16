@@ -76,9 +76,14 @@ async function downloadAll() {
           <h1 class="title-glow mt-1 text-2xl sm:text-3xl">แผนการจัดการเรียนรู้</h1>
           <p class="text-sm text-slate-400">{{ data.course.name }} · แบบฟอร์มแผนการจัดการเรียนรู้รายวิชา หลักสูตร 2567 (ฐานสมรรถนะ · MIAP)</p>
         </div>
-        <button v-if="data.plans.length" class="btn-primary !py-2 text-sm" :disabled="busy" data-testid="download-all" @click="downloadAll">
-          <AppIcon name="download" :size="16" /> ดาวน์โหลดทุกแผน (Word)
-        </button>
+        <div class="flex flex-wrap gap-2">
+          <NuxtLink :to="`/teacher/course/${id}/plans/book`" class="btn-primary !py-2 text-sm" data-testid="open-book">
+            <AppIcon name="book" :size="16" /> เล่มแผนทั้งรายวิชา (ปก · หลักสูตร · ตารางวิเคราะห์)
+          </NuxtLink>
+          <button v-if="data.plans.length" class="btn-ghost !py-2 text-sm" :disabled="busy" data-testid="download-all" @click="downloadAll">
+            <AppIcon name="download" :size="16" /> เฉพาะแผนรายหน่วย (Word)
+          </button>
+        </div>
       </header>
 
       <section class="card !p-0">

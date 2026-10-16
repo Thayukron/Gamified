@@ -13,6 +13,22 @@ export interface PlanContent {
   after: { results: string; problems: string; solution_result: string; next_time: string }
 }
 
+/** Course-level part of the book — mirrors backend CoursePlanService::EMPTY. */
+export interface CourseBook {
+  curriculum: {
+    program: string; field_type: string; occupation_group: string; major: string
+    theory_hours: string; practice_hours: string; credits: string
+    standards_ref: string; outcome: string; objectives: string; competencies: string; description: string
+  }
+  occupational: { agency: string; standard: string; occupation: string; level: string; rows: Record<string, string>[] }
+  job_analysis: { job: string; rows: Record<string, string>[] }
+  units: Record<string, string>[]
+  final_eval: { hours_theory: string; hours_practice: string; percent: string }
+  preface: string
+  bibliography: string
+  author: string
+}
+
 interface Field { key: string; label: string; hint?: string; rows?: number }
 export interface PlanSection { no: string; title: string; key: keyof PlanContent; hint: string; fields?: Field[]; rows?: number; adaptive?: boolean }
 

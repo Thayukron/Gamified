@@ -58,6 +58,7 @@ php backend/database/migrate.php
 | GET | /api/teacher/courses | teacher, admin |
 | GET/POST | /api/teacher/courses/{id}/plans · GET …/plans/full | teacher (เฉพาะวิชาที่สอน), admin — แผนการจัดการเรียนรู้รายหน่วย |
 | GET/PUT/DELETE | /api/teacher/plans/{pid} · POST …/{pid}/draft (source: guide \| ai) | teacher (เฉพาะวิชาที่สอน), admin |
+| GET/PUT | /api/teacher/courses/{id}/book · POST …/book/draft | teacher (เฉพาะวิชาที่สอน), admin — เล่มแผนระดับรายวิชา |
 | GET | /api/teacher/meta · /api/teacher/students?q=&group=&course= | teacher, admin |
 | POST | /api/teacher/courses | teacher, admin (สร้างวิชาของตนเอง + class_groups) |
 | PUT/DELETE | /api/teacher/courses/{id} | teacher (เฉพาะวิชาที่สอน), admin |

@@ -1,6 +1,6 @@
 // Word (.docx) export of unit lesson plans in the OVEC 2567 form (แผนการจัดการเรียนรู้ ข้อ 1–10)
 // + appendix with the class's learner analysis. Browser-side; the docx library is loaded only when needed.
-import type { PlanContent } from '~/utils/lessonPlan'
+import type { CourseBook, PlanContent } from '~/utils/lessonPlan'
 
 const FONT = 'TH SarabunPSK'
 const PT = (n: number) => n * 2 // docx sizes are half-points
@@ -35,9 +35,19 @@ async function markThaiRuns(blob: Blob): Promise<Blob> {
 const lines = (s: string) => (s || '').split('\n').map((l) => l.trim()).filter(Boolean)
 const num = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
 
-export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string }) {
+const toNum = (s: string | number) => {
+  const n = parseFloat(String(s ?? '').replace(/[^\d.]/g, ''))
+  return Number.isFinite(n) ? n : 0
+}
+
+/**
+ * opts.book present → the whole book in form order: cover, preface, table of contents, course curriculum,
+ * occupational standard (if any), unit analysis, learning-behaviour analysis (form type 2), unit hours,
+ * unit plans, bibliography, appendix. Without it → just the given unit plan(s) + appendix.
+ */
+export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string } }) {
   const d = await import('docx')
-  const { AlignmentType, BorderStyle, Document, Header, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, Table, TableCell, TableRow, TextRun, VerticalAlign, WidthType } = d
+  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
 
   const logo = await fetch('/forms/ovec-logo.png').then((r) => r.arrayBuffer())
 
@@ -249,22 +259,271 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     return out
   }
 
+  // ================================================================== course-level book parts
+  const book = opts.book
+  const sm = 14 // table text size
+  const tp = (text: string, o: { bold?: boolean; center?: boolean; size?: number } = {}) =>
+    p([run(text, { bold: o.bold, size: o.size ?? sm })], { align: o.center ? AlignmentType.CENTER : AlignmentType.LEFT })
+  const tcell = (text: string, width: number, o: { bold?: boolean; center?: boolean; rowSpan?: number; columnSpan?: number; size?: number } = {}) =>
+    cell(lines(text).length ? lines(text).map((l) => tp(l, o)) : [tp('', o)], width, { rowSpan: o.rowSpan, columnSpan: o.columnSpan, center: o.center })
+  /** part title — Heading 1 so it appears in the table of contents */
+  const partTitle = (text: string, pageBreak = true) =>
+    new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, pageBreakBefore: pageBreak, spacing: { after: 160 }, children: [run(text, { bold: true, size: 18 })] })
+  const label = (text: string, value = '') => p([run(text, { bold: true }), ...(value ? [run(' ' + value)] : [])], { before: 80 })
+  const plainNumbered = (items: string[]) => items.map((l, i) => p([run(`${i + 1}. ${l.replace(/^\d+[.)]\s*/, '')}`)], { indent: IND1 + 284, hanging: 284 }))
+  const fmt = (n: number) => (n ? (Number.isInteger(n) ? String(n) : n.toFixed(1)) : '')
+  const codeLine = () => p([run('รหัส '), run(course.code, { bold: true }), run('   ชื่อวิชา '), run(course.name, { bold: true })])
+  const hoursLine = () => p([run(`ทฤษฎี ${book!.curriculum.theory_hours || '…'} ชั่วโมง/สัปดาห์   ปฏิบัติ ${book!.curriculum.practice_hours || '…'} ชั่วโมง/สัปดาห์   จำนวน ${book!.curriculum.credits || '…'} หน่วยกิต`)])
+  /** group consecutive rows with the same key into rowSpan blocks (merged cells like the form) */
+  const spans = (rows: Record<string, string>[], key: (r: Record<string, string>) => string) => {
+    const out: number[] = rows.map(() => 0)
+    for (let i = 0; i < rows.length; ) {
+      let j = i + 1
+      while (j < rows.length && key(rows[j]) === key(rows[i]) && key(rows[i]) !== '') j++
+      out[i] = j - i
+      i = j
+    }
+    return out // span at the first row of a block, 0 for rows covered by it
+  }
+
+  const cover = () => {
+    const c = book!.curriculum
+    const big = (t: string, size: number, before = 0, bold = true) => p([run(t, { bold, size })], { align: AlignmentType.CENTER, before })
+    return [
+      p([new ImageRun({ type: 'png', data: logo, transformation: { width: 150, height: 150 } })], { align: AlignmentType.CENTER, before: 600 }),
+      big('แผนการจัดการเรียนรู้', 26, 500),
+      big(`หลักสูตร${c.program}`, 18, 400, false),
+      ...(c.major ? [big(`สาขาวิชา${c.major}`, 18, 0, false)] : []),
+      ...(c.occupation_group ? [big(`กลุ่มอาชีพ${c.occupation_group}`, 18, 0, false)] : []),
+      ...(c.field_type ? [big(`ประเภทวิชา${c.field_type}`, 18, 0, false)] : []),
+      big(`รหัสวิชา ${course.code}  วิชา ${course.name}`, 20, 900),
+      ...(book!.author ? [big(`จัดทำโดย ${book!.author}`, 18, 900, false)] : []),
+      big(`ภาคเรียนที่ ${opts.learners.term.semester} ปีการศึกษา ${opts.learners.term.academic_year}`, 18, 0, false),
+      big(opts.institution?.name || 'วิทยาลัย……………………………', 20, 600),
+    ]
+  }
+
+  const preface = () => [
+    partTitle('คำนำ'),
+    ...lines(book!.preface).map((l) => new Paragraph({ children: [run(l)], alignment: AlignmentType.THAI_DISTRIBUTE, indent: { firstLine: 1134 }, spacing: { after: 120 } })),
+    p([run(book!.author || '……………………………')], { align: AlignmentType.CENTER, indent: 5000, before: 480 }),
+    p([run('ผู้จัดทำ')], { align: AlignmentType.CENTER, indent: 5000 }),
+  ]
+
+  const toc = () => [
+    new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: true, spacing: { after: 160 }, children: [run('สารบัญ', { bold: true, size: 18 })] }),
+    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-2' }),
+  ]
+
+  const curriculumPart = () => {
+    const c = book!.curriculum
+    return [
+      partTitle('หลักสูตรรายวิชา'),
+      p([run('หลักสูตร '), run(c.program, { bold: true })]),
+      p([run('ประเภทวิชา '), run(c.field_type || '…'), run('   กลุ่มอาชีพ '), run(c.occupation_group || '…'), run('   สาขาวิชา '), run(c.major || '…')]),
+      codeLine(),
+      hoursLine(),
+      label('อ้างอิงมาตรฐาน'), ...body(c.standards_ref, IND1),
+      label('ผลลัพธ์การเรียนรู้ระดับรายวิชา'), ...body(c.outcome, IND1),
+      label('จุดประสงค์รายวิชา เพื่อให้'), ...(lines(c.objectives).length ? plainNumbered(lines(c.objectives)) : body('', IND1, 3)),
+      label('สมรรถนะรายวิชา'), ...(lines(c.competencies).length ? plainNumbered(lines(c.competencies)) : body('', IND1, 3)),
+      label('คำอธิบายรายวิชา'),
+      ...(lines(c.description).length
+        ? lines(c.description).map((l) => new Paragraph({ children: [run(l)], alignment: AlignmentType.THAI_DISTRIBUTE, indent: { firstLine: 1134 } }))
+        : body('', IND1, 3)),
+    ]
+  }
+
+  const occupationalPart = () => {
+    const o = book!.occupational
+    if (!o.agency && !o.standard && !o.rows.length) return []
+    const wd = [900, 2100, 900, 2100, 1900, 1454]
+    const spanUnit = spans(o.rows, (r) => r.unit_code + '|' + r.unit_desc)
+    return [
+      partTitle('มาตรฐานอาชีพ'),
+      p([run('หน่วยงานรับรองมาตรฐานอาชีพ '), run(o.agency || '…')]),
+      p([run('มาตรฐานอาชีพ สาขาวิชาชีพ '), run(o.standard || '…')]),
+      p([run('อาชีพ '), run(o.occupation || '…'), run('   ระดับ '), run(o.level || '…')], { after: 120 }),
+      new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: wd,
+        rows: [
+          new TableRow({ tableHeader: true, children: [
+            tcell('หน่วยสมรรถนะ', wd[0] + wd[1], { bold: true, center: true, columnSpan: 2 }),
+            tcell('สมรรถนะย่อย', wd[2] + wd[3], { bold: true, center: true, columnSpan: 2 }),
+            tcell('เกณฑ์การปฏิบัติงาน', wd[4], { bold: true, center: true, rowSpan: 2 }),
+            tcell('วิธีประเมิน', wd[5], { bold: true, center: true, rowSpan: 2 }),
+          ] }),
+          new TableRow({ tableHeader: true, children: ['รหัส', 'คำอธิบาย', 'รหัส', 'คำอธิบาย'].map((h, i) => tcell(h, wd[i], { bold: true, center: true })) }),
+          ...o.rows.map((r, i) => new TableRow({ children: [
+            ...(spanUnit[i] ? [tcell(r.unit_code, wd[0], { rowSpan: spanUnit[i] }), tcell(r.unit_desc, wd[1], { rowSpan: spanUnit[i] })] : []),
+            tcell(r.sub_code, wd[2]), tcell(r.sub_desc, wd[3]), tcell(r.criteria, wd[4]), tcell(r.method, wd[5]),
+          ] })),
+        ],
+      }),
+    ]
+  }
+
+  const jobPart = () => {
+    const j = book!.job_analysis
+    const wd = [1800, 1900, 1600, 2027, 2027]
+    const rows = j.rows.length ? j.rows : [{ duty: '', task: '', sub_competency: '', knowledge: '', skill: '' }]
+    const spanDuty = spans(rows, (r) => r.duty)
+    return [
+      partTitle('ตารางวิเคราะห์หน่วยการเรียนรู้'),
+      new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: wd,
+        rows: [
+          new TableRow({ tableHeader: true, children: [tcell(`ผลลัพธ์การเรียนรู้ระดับรายวิชา (Job) ${j.job}`, W, { bold: true, columnSpan: 5 })] }),
+          new TableRow({ tableHeader: true, children: [
+            'งานหลัก\n(Duty)', 'งานย่อย\n(Task)', 'สมรรถนะย่อย\n(มาตรฐานอาชีพ)', 'ความรู้\nในการปฏิบัติงาน', 'ทักษะ\nในการปฏิบัติงาน',
+          ].map((h, i) => tcell(h, wd[i], { bold: true, center: true })) }),
+          ...rows.map((r, i) => new TableRow({ children: [
+            ...(spanDuty[i] ? [tcell(r.duty, wd[0], { rowSpan: spanDuty[i] })] : []),
+            tcell(r.task, wd[1]), tcell(r.sub_competency || '-', wd[2], { center: !r.sub_competency }), tcell(r.knowledge, wd[3]), tcell(r.skill, wd[4]),
+          ] })),
+        ],
+      }),
+    ]
+  }
+
+  const unitTotals = () => {
+    const u = book!.units
+    const t = u.reduce((s, r) => s + toNum(r.hours_theory), 0)
+    const pr = u.reduce((s, r) => s + toNum(r.hours_practice), 0)
+    const pc = u.reduce((s, r) => s + toNum(r.percent), 0)
+    const f = book!.final_eval
+    return { t, pr, pc, ft: toNum(f.hours_theory), fp: toNum(f.hours_practice), fpc: toNum(f.percent) }
+  }
+
+  const behaviourPart = () => {
+    const u = book!.units
+    const wd = [3200, 1200, 1000, 1000, 1000, 1054, 900]
+    const T = unitTotals()
+    const span5 = wd.slice(0, 5).reduce((a, b) => a + b, 0)
+    const legend = new Table({
+      width: { size: W, type: WidthType.DXA },
+      columnWidths: [3118, 3118, 3118],
+      rows: [
+        new TableRow({ children: [tcell('ระดับความสามารถที่คาดหวัง วิเคราะห์ให้สอดคล้องจุดประสงค์รายวิชาหรือสูงกว่า', W, { bold: true, columnSpan: 3 })] }),
+        new TableRow({ children: ['พุทธิพิสัย', 'ทักษะพิสัย', 'จิตพิสัย'].map((h) => tcell(h, 3118, { bold: true, center: true })) }),
+        new TableRow({ children: [
+          tcell('K1 = ความรู้ ความจำ\nK2 = ความเข้าใจ\nK3 = การนำไปใช้\nK4 = การวิเคราะห์\nK5 = การประเมินค่า\nK6 = การสร้างสรรค์\nหมายเหตุ ใส่ได้มากกว่า 1 ระดับ', 3118, { size: 13 }),
+          tcell('S1 = เลียนแบบ\nS2 = ทำได้ตามแบบ\nS3 = ทำได้ถูกต้อง\nS4 = ทำได้อย่างต่อเนื่อง\nS5 = ทำได้อย่างเป็นธรรมชาติ\nหมายเหตุ ใส่ระดับที่คาดหวังระดับเดียว', 3118, { size: 13 }),
+          tcell('A1 = รับรู้\nA2 = ตอบสนอง\nA3 = การสร้างคุณค่า\nA4 = จัดระบบคุณค่านิยม\nA5 = การสร้างลักษณะนิสัย\nหมายเหตุ ใส่ระดับที่คาดหวังระดับเดียว', 3118, { size: 13 }),
+        ] }),
+        new TableRow({ children: [tcell('ด้านความสามารถประยุกต์ใช้และรับผิดชอบ', W, { bold: true, columnSpan: 3 })] }),
+        new TableRow({ children: [tcell(
+          'Ap1 = สามารถปฏิบัติงานตามแบบแผนที่กำหนด\n'
+          + 'Ap2 = สามารถปฏิบัติงานตามแบบแผน และปรับตัวภายใต้ความเปลี่ยนแปลงที่ไม่ซับซ้อน\n'
+          + 'Ap3 = สามารถวางแผนการปฏิบัติงานที่ได้รับมอบหมายและแก้ไขปัญหาการปฏิบัติงานที่ไม่อยู่ภายใต้การควบคุมในบางเรื่อง โดยประยุกต์ใช้ความรู้ ทักษะทางวิชาชีพ เทคโนโลยีสารสนเทศและการสื่อสาร\n'
+          + 'Ap4 = สามารถวางแผนการปฏิบัติงานที่รับผิดชอบ ปรับตัวและแก้ไขปัญหาการปฏิบัติงานที่ไม่คุ้นเคยหรือซับซ้อนและเป็นนามธรรม โดยประยุกต์ใช้ความรู้ ทักษะทางวิชาชีพ เทคโนโลยีสารสนเทศและการสื่อสาร\n'
+          + 'Ap5 = สามารถประยุกต์ใช้ความรู้ ทักษะทางวิชาชีพ เทคโนโลยีสารสนเทศและการสื่อสารในการวางแผนแก้ไขปัญหาและพัฒนานวัตกรรมตามสายอาชีพ\n'
+          + 'หมายเหตุ ใส่ระดับที่คาดหวังระดับเดียว', W, { size: 13, columnSpan: 3 })] }),
+      ],
+    })
+    return [
+      partTitle('ตารางวิเคราะห์พฤติกรรมการเรียนรู้'),
+      codeLine(), hoursLine(), p([], { after: 80 }),
+      new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: wd,
+        rows: [
+          new TableRow({ tableHeader: true, children: [
+            tcell('หน่วยการเรียนรู้', wd[0], { bold: true, center: true, rowSpan: 2 }),
+            tcell('ระดับความสามารถที่คาดหวัง', wd[1] + wd[2] + wd[3] + wd[4], { bold: true, center: true, columnSpan: 4 }),
+            tcell('จำนวนชั่วโมง\nท/ป', wd[5], { bold: true, center: true, rowSpan: 2 }),
+            tcell('ร้อยละ\nประเมินผล', wd[6], { bold: true, center: true, rowSpan: 2 }),
+          ] }),
+          new TableRow({ tableHeader: true, children: ['พุทธิพิสัย', 'ทักษะพิสัย', 'จิตพิสัย', 'ประยุกต์ใช้'].map((h, i) => tcell(h, wd[i + 1], { bold: true, center: true })) }),
+          ...u.map((r) => new TableRow({ children: [
+            tcell(`${r.no}. ${r.name}`, wd[0]), tcell(r.k, wd[1], { center: true }), tcell(r.s, wd[2], { center: true }), tcell(r.a, wd[3], { center: true }), tcell(r.ap, wd[4], { center: true }),
+            tcell(`${r.hours_theory || 0}/${r.hours_practice || 0}`, wd[5], { center: true }), tcell(r.percent, wd[6], { center: true }),
+          ] })),
+          new TableRow({ children: [tcell('รวมการจัดการเรียนรู้ตลอดภาคเรียน', span5, { bold: true, columnSpan: 5 }), tcell(`${fmt(T.t) || 0}/${fmt(T.pr) || 0}`, wd[5], { center: true }), tcell(fmt(T.pc), wd[6], { center: true })] }),
+          new TableRow({ children: [tcell('ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)', span5, { columnSpan: 5 }), tcell(`${fmt(T.ft) || 0}/${fmt(T.fp) || 0}`, wd[5], { center: true }), tcell(fmt(T.fpc), wd[6], { center: true })] }),
+          new TableRow({ children: [tcell('รวม', span5, { bold: true, center: true, columnSpan: 5 }), tcell(`${fmt(T.t + T.ft) || 0}/${fmt(T.pr + T.fp) || 0}`, wd[5], { bold: true, center: true }), tcell(fmt(T.pc + T.fpc), wd[6], { bold: true, center: true })] }),
+        ],
+      }),
+      p([], { after: 120 }),
+      legend,
+    ]
+  }
+
+  const unitsPart = () => {
+    const u = book!.units
+    const wd = [900, 5254, 1067, 1067, 1066]
+    const T = unitTotals()
+    const row = (a: string, b: string, t: number | string, pr: number | string, bold = false) =>
+      new TableRow({ children: [tcell(a, wd[0], { center: true, bold, size: 16 }), tcell(b, wd[1], { bold, size: 16 }), ...[t, pr, toNum(t) + toNum(pr)].map((v, i) => tcell(fmt(toNum(v)), wd[2 + i], { center: true, bold, size: 16 }))] })
+    return [
+      partTitle('หน่วยการเรียนรู้'),
+      codeLine(), hoursLine(), p([], { after: 80 }),
+      new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: wd,
+        rows: [
+          new TableRow({ tableHeader: true, children: [
+            tcell('หน่วยที่', wd[0], { bold: true, center: true, rowSpan: 2, size: 16 }),
+            tcell('หน่วยการเรียนรู้', wd[1], { bold: true, center: true, rowSpan: 2, size: 16 }),
+            tcell('เวลาเรียน (ชม.)', wd[2] + wd[3] + wd[4], { bold: true, center: true, columnSpan: 3, size: 16 }),
+          ] }),
+          new TableRow({ tableHeader: true, children: ['ทฤษฎี', 'ปฏิบัติ', 'รวม'].map((h, i) => tcell(h, wd[2 + i], { bold: true, center: true, size: 16 })) }),
+          ...u.map((r) => row(r.no, r.name, r.hours_theory, r.hours_practice)),
+          row('', 'ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา', T.ft, T.fp),
+          new TableRow({ children: [tcell('รวม', wd[0] + wd[1], { bold: true, center: true, columnSpan: 2, size: 16 }), ...[T.t + T.ft, T.pr + T.fp, T.t + T.ft + T.pr + T.fp].map((v, i) => tcell(fmt(v), wd[2 + i], { bold: true, center: true, size: 16 }))] }),
+        ],
+      }),
+    ]
+  }
+
+  const bibliographyPart = () => [
+    partTitle('บรรณานุกรม'),
+    ...(lines(book!.bibliography).length ? lines(book!.bibliography).map((l) => p([run(l)], { indent: 709, hanging: 709 })) : body('', 0, 3)),
+  ]
+
+  // ================================================================== assemble
   const children: any[] = []
+  if (book) {
+    children.push(...preface(), ...toc(), ...curriculumPart(), ...occupationalPart(), ...jobPart(), ...behaviourPart(), ...unitsPart())
+  }
   opts.plans.forEach((pl, i) => {
-    if (i > 0) children.push(p([new PageBreak()]))
+    if (book) {
+      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: true, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
+    } else if (i > 0) {
+      children.push(p([new PageBreak()]))
+    }
     children.push(...planBody(pl))
   })
-  children.push(...appendix())
+  if (book) children.push(...bibliographyPart())
+  const app = appendix()
+  if (book) app.splice(0, 2, partTitle('ภาคผนวก')) // page break + title → a TOC heading
+  children.push(...app)
 
+  const page = { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } }
+  const pageHeader = new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
+  const headingRun = { font: FONT, bold: true, boldComplexScript: true, color: '000000' }
   const doc = new Document({
     creator: 'ARCANA PROFILE',
     title: `แผนการจัดการเรียนรู้ ${course.code} ${course.name}`,
-    styles: { default: { document: { run: { font: FONT, size: PT(16), sizeComplexScript: PT(16), language: { value: 'th-TH', bidirectional: 'th-TH' } } } } },
-    sections: [{
-      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } } },
-      headers: { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] }) },
-      children,
-    }],
+    features: book ? { updateFields: true } : undefined, // Word fills the table of contents when the file opens
+    styles: {
+      default: { document: { run: { font: FONT, size: PT(16), sizeComplexScript: PT(16), language: { value: 'th-TH', bidirectional: 'th-TH' } } } },
+      paragraphStyles: [
+        { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(18), sizeComplexScript: PT(18) }, paragraph: { spacing: { before: 0, after: 160 } } },
+        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 120 } } },
+        // table-of-contents entries (Word's built-in "toc 1/2" styles would fall back to Angsana)
+        { id: 'TOC1', name: 'toc 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 60, after: 0 } } },
+        { id: 'TOC2', name: 'toc 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 567 }, spacing: { before: 0, after: 0 } } },
+      ],
+    },
+    sections: book
+      ? [
+          { properties: { page }, children: cover() }, // cover: no page number
+          { properties: { page }, headers: { default: pageHeader }, children },
+        ]
+      : [{ properties: { page }, headers: { default: pageHeader }, children }],
   })
   const blob = await markThaiRuns(await Packer.toBlob(doc))
   const url = URL.createObjectURL(blob)

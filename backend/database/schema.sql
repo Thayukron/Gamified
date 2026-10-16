@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS lesson_plans, password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS course_plans, lesson_plans, password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -255,4 +255,15 @@ CREATE TABLE IF NOT EXISTS lesson_plans (
     UNIQUE KEY uq_plan_session (course_id, unit_no, session_no),
     CONSTRAINT fk_plan_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
     CONSTRAINT fk_plan_user FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- เล่มแผนระดับรายวิชา (ปก คำนำ หลักสูตรรายวิชา ตารางวิเคราะห์ ฯลฯ)
+CREATE TABLE IF NOT EXISTS course_plans (
+    course_id   INT UNSIGNED PRIMARY KEY,
+    content     LONGTEXT NOT NULL COMMENT 'JSON',
+    ai_model    VARCHAR(80) NULL,
+    updated_by  INT UNSIGNED NULL,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_cplan_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+    CONSTRAINT fk_cplan_user FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
