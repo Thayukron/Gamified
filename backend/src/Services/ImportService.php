@@ -17,7 +17,7 @@ class ImportService
     private const COURSE_TYPES = ['theory' => 'theory', 'practice' => 'practice', 'mixed' => 'mixed', 'ทฤษฎี' => 'theory', 'ปฏิบัติ' => 'practice', 'ผสม' => 'mixed', 'ทฤษฎี+ปฏิบัติ' => 'mixed', 'ทฤษฎีและปฏิบัติ' => 'mixed'];
 
     private array $depts = [];     // code => id|null (null = created in this batch)
-    private array $users = [];     // username => ['id', 'role']
+    private array $users = [];     // lower-cased username => ['id', 'role']
     private array $courses = [];   // "code|section|sem|year" => id|null
     private string $rowNo = '';
     private int $sem;
@@ -30,7 +30,7 @@ class ImportService
         $db = Database::get();
         $this->depts = $db->query('SELECT code, id FROM departments')->fetchAll(PDO::FETCH_KEY_PAIR);
         foreach ($db->query('SELECT id, username, role FROM users') as $u) {
-            $this->users[$u['username']] = ['id' => (int) $u['id'], 'role' => $u['role']];
+            $this->users[self::uk($u['username'])] = ['id' => (int) $u['id'], 'role' => $u['role']];
         }
         foreach ($db->query('SELECT id, code, section, semester, academic_year FROM courses') as $c) {
             $this->courses[self::courseKey($c['code'], $c['section'], (int) $c['semester'], (int) $c['academic_year'])] = (int) $c['id'];
@@ -40,6 +40,12 @@ class ImportService
     private static function courseKey(string $code, string $section, int $sem, int $year): string
     {
         return mb_strtolower("$code|$section|$sem|$year");
+    }
+
+    // usernames are unique case-insensitively in the DB (utf8mb4_unicode_ci), so look them up the same way
+    private static function uk(string $username): string
+    {
+        return mb_strtolower($username);
     }
 
     private static function s(mixed $v): string
@@ -124,15 +130,15 @@ class ImportService
         if ($d['password'] !== '' && mb_strlen($d['password']) < 6) {
             $err[] = 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัว';
         }
-        $existing = $this->users[$username] ?? null;
+        $existing = $this->users[self::uk($username)] ?? null;
         if ($existing && $existing['role'] !== $role) {
             $err[] = "$label นี้เป็นบัญชี{$this->roleTh($existing['role'])}อยู่แล้ว";
         }
-        if (isset($seen[$username])) {
-            $err[] = "$label ซ้ำในไฟล์ (แถว {$seen[$username]})";
+        if (isset($seen[self::uk($username)])) {
+            $err[] = "$label ซ้ำในไฟล์ (แถว {$seen[self::uk($username)]})";
         }
-        $res = $this->finish($d, $err, (bool) $existing, $seen, $username, function () use ($username, $role) {
-            $this->users[$username] ??= ['id' => null, 'role' => $role];
+        $res = $this->finish($d, $err, (bool) $existing, $seen, self::uk($username), function () use ($username, $role) {
+            $this->users[self::uk($username)] ??= ['id' => null, 'role' => $role];
         });
         if ($res['status'] === 'new' && $d['password'] === '') {
             $res['messages'][] = 'รหัสผ่านเริ่มต้น = ' . ($role === 'student' ? 'รหัสนักศึกษา' : 'ชื่อผู้ใช้') . ' (ต้องตั้งใหม่เมื่อเข้าสู่ระบบครั้งแรก)';
@@ -192,7 +198,7 @@ class ImportService
             $err[] = "ไม่พบแผนก {$d['department_code']}";
         }
         if ($d['teacher_username'] !== '') {
-            $t = $this->users[$d['teacher_username']] ?? null;
+            $t = $this->users[self::uk($d['teacher_username'])] ?? null;
             if (!$t) {
                 $err[] = "ไม่พบครู {$d['teacher_username']} (เพิ่มในชีตครูก่อน)";
             } elseif ($t['role'] !== 'teacher') {
@@ -220,13 +226,13 @@ class ImportService
         if (!array_key_exists($key, $this->courses)) {
             $err[] = "ไม่พบรายวิชา {$d['course_code']} กลุ่ม {$d['section']} ภาคเรียน {$d['semester']}/{$d['academic_year']}";
         }
-        $st = $this->users[$d['student_code']] ?? null;
+        $st = $this->users[self::uk($d['student_code'])] ?? null;
         if (!$st) {
             $err[] = "ไม่พบนักศึกษา {$d['student_code']}";
         } elseif ($st['role'] !== 'student') {
             $err[] = "{$d['student_code']} ไม่ใช่บัญชีนักศึกษา";
         }
-        $pair = "$key#{$d['student_code']}";
+        $pair = $key . '#' . self::uk($d['student_code']);
         if (isset($seen[$pair])) {
             $err[] = "ลงทะเบียนซ้ำในไฟล์ (แถว {$seen[$pair]})";
         }
@@ -286,7 +292,7 @@ class ImportService
         $db = Database::get();
         $this->depts = $db->query('SELECT code, id FROM departments')->fetchAll(PDO::FETCH_KEY_PAIR);
         foreach ($db->query('SELECT id, username, role FROM users') as $u) {
-            $this->users[$u['username']] = ['id' => (int) $u['id'], 'role' => $u['role']];
+            $this->users[self::uk($u['username'])] = ['id' => (int) $u['id'], 'role' => $u['role']];
         }
         foreach ($db->query('SELECT id, code, section, semester, academic_year FROM courses') as $c) {
             $this->courses[self::courseKey($c['code'], $c['section'], (int) $c['semester'], (int) $c['academic_year'])] = (int) $c['id'];
@@ -344,7 +350,7 @@ class ImportService
         )->execute([
             $d['code'], $d['name'], $d['section'], $d['semester'], $d['academic_year'],
             $d['department_code'] !== '' ? $this->depts[$d['department_code']] : null,
-            $d['teacher_username'] !== '' ? $this->users[$d['teacher_username']]['id'] : null,
+            $d['teacher_username'] !== '' ? $this->users[self::uk($d['teacher_username'])]['id'] : null,
             $d['course_type'], $d['level'] ?: null, json_encode($d['topics'], JSON_UNESCAPED_UNICODE),
         ]);
     }
@@ -354,7 +360,7 @@ class ImportService
         $d = $row['data'];
         $courseId = $this->courses[self::courseKey($d['course_code'], $d['section'], $d['semester'], $d['academic_year'])];
         Database::get()->prepare('INSERT IGNORE INTO enrollments (course_id, student_id) VALUES (?, ?)')
-            ->execute([$courseId, $this->users[$d['student_code']]['id']]);
+            ->execute([$courseId, $this->users[self::uk($d['student_code'])]['id']]);
     }
 
     /** Strip server-only fields before returning a preview to the browser. */
