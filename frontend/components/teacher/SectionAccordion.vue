@@ -57,6 +57,7 @@ defineExpose({ openAll: () => (open.value = new Set(props.sections.map((s) => s.
       </button>
       <div v-if="open.has(s.id)" class="space-y-3 px-4 pb-4">
         <p v-if="s.hint" class="text-xs text-slate-500">{{ s.hint }}</p>
+        <slot :name="`${s.id}-top`" />
         <div v-for="f in s.fields" :key="f.path.join('.')">
           <p v-if="f.label" class="label">{{ f.label }}<span v-if="f.hint" class="ml-2 normal-case tracking-normal text-slate-500">— {{ f.hint }}</span></p>
           <textarea :value="get(f.path)" :rows="f.rows ?? 3" class="input leading-relaxed" @input="set(f.path, ($event.target as HTMLTextAreaElement).value)" />

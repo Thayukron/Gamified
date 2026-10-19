@@ -188,6 +188,75 @@ class LessonPlanService
         return ['content' => $content, 'model' => $res['model']];
     }
 
+    /**
+     * Section 2 from the real occupational standards of the Thailand Professional Qualification Institute (TPQI),
+     * found with Google Search grounding. Nothing relevant found -> found=false and every field empty
+     * (the teacher leaves 2.1 blank, as the form allows). The teacher reviews the result before saving.
+     * @return array{found: bool, standard: array, note: string, sources: array, grounded: bool, model: string}
+     */
+    public static function aiStandard(int $userId, array $course, array $plan): array
+    {
+        if (!AiGuideService::enabled()) {
+            throw new HttpException(403, 'ผู้ดูแลระบบปิดการใช้งานฟังก์ชัน AI อยู่');
+        }
+        $r = AiGuideService::resolve($userId);
+        if (!$r['key']) {
+            throw new HttpException(409, 'กรุณากรอก API Key ของ Gemini ที่หน้า “ตั้งค่า AI ของฉัน” ก่อน');
+        }
+        set_time_limit(180);
+        $c = json_decode((string) ($plan['content'] ?? ''), true)['competency'] ?? [];
+        $level = self::isHigher($course) ? 'ปวส.' : 'ปวช.';
+        $info = "รายวิชา: {$course['code']} {$course['name']} ({$level}" . (!empty($course['department_name']) ? " แผนก{$course['department_name']}" : '') . ")\n"
+            . 'หน่วยที่ ' . $plan['unit_no'] . ': ' . $plan['unit_name'] . ($plan['title'] !== '' && $plan['title'] !== $plan['unit_name'] ? " · เรื่อง {$plan['title']}" : '') . "\n"
+            . (trim((string) ($course['standards_ref'] ?? '')) !== '' ? "อ้างอิงมาตรฐานในหลักสูตรรายวิชา: " . mb_substr(trim($course['standards_ref']), 0, 800) . "\n" : '')
+            . (trim((string) ($course['description'] ?? '')) !== '' ? "คำอธิบายรายวิชา: " . mb_substr(trim($course['description']), 0, 1200) . "\n" : '')
+            . (array_filter($c) ? 'สมรรถนะประจำหน่วย: ' . implode(' / ', array_filter([$c['knowledge'] ?? '', $c['practice'] ?? '', $c['apply'] ?? ''])) . "\n" : '');
+        $prompt = $info . "\n"
+            . "งาน: ค้นหามาตรฐานอาชีพของสถาบันคุณวุฒิวิชาชีพ (องค์การมหาชน) หรือ TPQI (เว็บไซต์ tpqi.go.th และระบบ tpqi-net) ที่มีอยู่จริงและสอดคล้องกับเนื้อหาหน่วยนี้มากที่สุด "
+            . "ระบุสาขาวิชาชีพ/อาชีพ/ชั้นคุณวุฒิ และหน่วยสมรรถนะ/สมรรถนะย่อยที่ตรงกับหน่วยนี้ แล้วสรุปเกณฑ์การปฏิบัติงาน วิธีประเมิน หลักฐานการปฏิบัติงาน และหลักฐานความรู้ ตามที่มาตรฐานนั้นกำหนด\n"
+            . "กติกา:\n"
+            . "- ใช้เฉพาะข้อมูลที่พบจากผลการค้นหา ห้ามแต่งชื่อ รหัส หรือเนื้อหามาตรฐานขึ้นเอง\n"
+            . "- ถ้าไม่พบมาตรฐานอาชีพที่สอดคล้องกับหน่วยนี้จริง ให้ found = false และทุกช่องเป็น \"\"\n"
+            . "- occupation: \"มาตรฐานอาชีพ สาขาวิชาชีพ… อาชีพ… ชั้น …\" · sub_competency: \"รหัส ชื่อหน่วยสมรรถนะ/สมรรถนะย่อย\"\n"
+            . "- criteria/method/performance_evidence/knowledge_evidence: เขียนเป็นข้อ \"1. …\" ขึ้นบรรทัดใหม่ทีละข้อ ภาษาไทยทางการ\n"
+            . "- career_integration: อาชีพ/ลักษณะงานในกลุ่มอาชีพที่นำสมรรถนะนี้ไปใช้ (เขียนเฉพาะเมื่อ found = true)\n"
+            . "- note: เหตุผลสั้น ๆ 1–2 ประโยคว่ามาตรฐานนี้สอดคล้องกับหน่วยอย่างไร (หรือทำไมไม่พบ)\n"
+            . "ตอบเป็น JSON อย่างเดียว ไม่มีข้อความอื่น:\n"
+            . '{"found":true,"occupation":"","sub_competency":"","criteria":"","method":"","performance_evidence":"","knowledge_evidence":"","career_integration":"","note":""}';
+        $system = 'คุณเป็นผู้เชี่ยวชาญมาตรฐานอาชีพและคุณวุฒิวิชาชีพของประเทศไทย (สถาบันคุณวุฒิวิชาชีพ) ช่วยครูอาชีวศึกษาอ้างอิงมาตรฐานอาชีพในแผนการจัดการเรียนรู้ '
+            . 'ค้นหาข้อมูลจริงก่อนตอบเสมอ ตอบตามข้อเท็จจริงจากแหล่งที่ค้นพบเท่านั้น ถ้าไม่แน่ใจให้ตอบว่าไม่พบ';
+        $client = new GeminiClient($r['key']);
+        $model = $r['model'] ?: 'gemini-flash-latest';
+        $grounded = true;
+        try {
+            $res = $client->generateJsonResilient($model, $system, $prompt, 2, 8192, true);
+        } catch (HttpException $e) {
+            // Free-tier keys often have no Google Search quota (429/403): answer from the model's own knowledge,
+            // stricter, and tell the teacher to verify on the TPQI site.
+            if (!in_array($e->status, [429, 422, 403], true)) {
+                throw $e;
+            }
+            $grounded = false;
+            $prompt = str_replace('- ใช้เฉพาะข้อมูลที่พบจากผลการค้นหา ห้ามแต่งชื่อ รหัส หรือเนื้อหามาตรฐานขึ้นเอง',
+                '- (ค้นหาเว็บไม่ได้ในครั้งนี้) ตอบจากความรู้ที่มั่นใจว่าถูกต้องเท่านั้น ห้ามแต่งชื่อหรือเนื้อหามาตรฐาน · ถ้าไม่แน่ใจรหัสหน่วยสมรรถนะให้ใส่เฉพาะชื่อ ไม่ต้องใส่รหัส · ไม่แน่ใจว่ามีมาตรฐานนี้จริงให้ found = false', $prompt);
+            $res = $client->generateJsonResilient($model, $system, $prompt, 2, 8192);
+        }
+        $d = $res['data'];
+        $found = !empty($d['found']) && trim((string) ($d['occupation'] ?? '')) !== '';
+        $std = [];
+        foreach (self::EMPTY['standard'] as $k => $_) {
+            $std[$k] = $found ? self::text($d[$k] ?? '') : '';
+        }
+        return [
+            'found' => $found,
+            'standard' => $std,
+            'note' => mb_substr(trim((string) ($d['note'] ?? '')), 0, 500),
+            'sources' => array_slice($res['sources'] ?? [], 0, 6),
+            'grounded' => $grounded, // false = not verified against the web: the teacher must check tpqi.go.th
+            'model' => $res['model'],
+        ];
+    }
+
     private const SYSTEM = 'คุณเป็นศึกษานิเทศก์ผู้เชี่ยวชาญการเขียนแผนการจัดการเรียนรู้ฐานสมรรถนะ หลักสูตร ปวช./ปวส. 2567 ของสำนักงานคณะกรรมการการอาชีวศึกษา '
         . 'เขียนตามแบบฟอร์มทางการ ใช้ภาษาไทยทางการ เนื้อหาถูกต้องตามหลักวิชา ละเอียดครบถ้วนได้ใจความ นำไปใช้สอนได้จริง เจาะจงกับเนื้อหาหน่วย (ไม่เขียนกว้าง ๆ หรือมีแค่ชื่อหัวข้อ) '
         . 'ปรับกิจกรรมและสื่อให้เหมาะกับผลวิเคราะห์ผู้เรียนของห้อง (สถิติรวม ไม่มีข้อมูลรายบุคคล) โดยยังใช้สื่อหลายรูปแบบ '

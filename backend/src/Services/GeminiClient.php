@@ -106,9 +106,10 @@ class GeminiClient
     /**
      * generateJson with resilience against Google-side overload:
      * retry the chosen model briefly on 500/503, then fall back to other models this key can use.
-     * @return array{data: array, prompt_tokens: ?int, output_tokens: ?int, model: string}
+     * $search = ground the answer in Google Search results (sources are returned in 'sources').
+     * @return array{data: array, prompt_tokens: ?int, output_tokens: ?int, model: string, sources: array}
      */
-    public function generateJsonResilient(string $preferred, string $system, string $prompt, int $maxFallbacks = 2, int $maxTokens = 8192): array
+    public function generateJsonResilient(string $preferred, string $system, string $prompt, int $maxFallbacks = 2, int $maxTokens = 8192, bool $search = false): array
     {
         $candidates = [$preferred];
         $lastError = null;
@@ -120,7 +121,7 @@ class GeminiClient
                     sleep($wait);
                 }
                 try {
-                    return $this->generateJson($model, $system, $prompt, $maxTokens) + ['model' => $model];
+                    return $this->generateJson($model, $system, $prompt, $maxTokens, $search) + ['model' => $model];
                 } catch (HttpException $e) {
                     $lastError = $e;
                     // long answers occasionally come back as broken JSON — one more try usually succeeds
@@ -148,9 +149,9 @@ class GeminiClient
      * Generate a JSON response.
      * @return array{data: array, prompt_tokens: ?int, output_tokens: ?int}
      */
-    public function generateJson(string $model, string $system, string $prompt, int $maxTokens = 8192): array
+    public function generateJson(string $model, string $system, string $prompt, int $maxTokens = 8192, bool $search = false): array
     {
-        $res = $this->request('POST', '/models/' . rawurlencode($model) . ':generateContent', [
+        $body = [
             'systemInstruction' => ['parts' => [['text' => $system]]],
             'contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
             'generationConfig' => [
@@ -158,7 +159,14 @@ class GeminiClient
                 'temperature' => 0.7,
                 'maxOutputTokens' => $maxTokens, // long Thai documents need more than the default
             ],
-        ]);
+        ];
+        if ($search) {
+            // Google Search grounding: JSON mode can't be combined with tools, so the prompt asks for JSON text
+            $body['tools'] = [['google_search' => new \stdClass()]];
+            unset($body['generationConfig']['responseMimeType']);
+            $body['generationConfig']['temperature'] = 0.2;
+        }
+        $res = $this->request('POST', '/models/' . rawurlencode($model) . ':generateContent', $body);
 
         $candidate = $res['candidates'][0] ?? null;
         $text = implode('', array_map(fn ($p) => $p['text'] ?? '', $candidate['content']['parts'] ?? []));
@@ -168,6 +176,9 @@ class GeminiClient
         }
         // Tolerate a fenced block even though JSON mode is requested.
         $text = preg_replace('/^\s*```(?:json)?\s*|\s*```\s*$/', '', $text);
+        if ($search && ($a = strpos($text, '{')) !== false && ($b = strrpos($text, '}')) !== false) {
+            $text = substr($text, $a, $b - $a + 1); // grounded answers may wrap the JSON in prose
+        }
         $data = json_decode($text, true);
         if (!is_array($data)) {
             error_log('Gemini JSON parse failed: finish=' . ($candidate['finishReason'] ?? '?') . ' error=' . json_last_error_msg()
@@ -179,6 +190,11 @@ class GeminiClient
             'data' => $data,
             'prompt_tokens' => $res['usageMetadata']['promptTokenCount'] ?? null,
             'output_tokens' => $res['usageMetadata']['candidatesTokenCount'] ?? null,
+            // web pages the grounded answer was built from
+            'sources' => array_values(array_filter(array_map(
+                fn ($c) => isset($c['web']['uri']) ? ['title' => (string) ($c['web']['title'] ?? ''), 'url' => (string) $c['web']['uri']] : null,
+                $candidate['groundingMetadata']['groundingChunks'] ?? []
+            ))),
         ];
     }
 }

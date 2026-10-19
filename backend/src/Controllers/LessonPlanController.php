@@ -155,6 +155,18 @@ class LessonPlanController
         return ['content' => LessonPlanService::prefill($course, $dash, $h), 'model' => null];
     }
 
+    /**
+     * POST /teacher/plans/{pid}/standard — { unit_no, unit_name, title, ..., competency? }
+     * AI + Google Search: the TPQI occupational standard for section 2 (not saved — the teacher reviews it first).
+     */
+    public static function standard(Request $req): array
+    {
+        [$plan, $course] = self::plan($req);
+        $h = self::header($req);
+        $competency = (array) $req->input('competency', []);
+        return LessonPlanService::aiStandard((int) $req->user['id'], $course, $h + ['content' => json_encode(['competency' => $competency], JSON_UNESCAPED_UNICODE)]);
+    }
+
     // ------------------------------------------------------------------ supporting sheets of a plan
 
     private static function outSheet(array $s): array

@@ -58,6 +58,7 @@ $router->get('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::clas
 $router->put('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'update'], ['teacher', 'admin']);
 $router->delete('/teacher/plans/{pid}', [App\Controllers\LessonPlanController::class, 'delete'], ['teacher', 'admin']);
 $router->post('/teacher/plans/{pid}/draft', [App\Controllers\LessonPlanController::class, 'draft'], ['teacher', 'admin']);
+$router->post('/teacher/plans/{pid}/standard', [App\Controllers\LessonPlanController::class, 'standard'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/dashboard', [App\Controllers\TeacherController::class, 'dashboard'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/guide', [App\Controllers\TeacherController::class, 'guide'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/context', [App\Controllers\TeacherController::class, 'saveContext'], ['teacher', 'admin']);

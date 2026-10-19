@@ -198,12 +198,14 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     out.push(heading('2. อ้างอิงมาตรฐาน/เชื่อมโยงกลุ่มอาชีพ'))
     const s = c.standard
     out.push(p([run('2.1 มาตรฐานอาชีพ '), run(s.occupation || '-'), ...(s.sub_competency ? [run('   สมรรถนะย่อย '), run(s.sub_competency)] : [])], { first: IND1, align: AlignmentType.LEFT }))
-    ;([
+    // no occupational standard referenced -> "2.1 มาตรฐานอาชีพ -" only (the form allows leaving 2.1 empty)
+    const hasStd = [s.occupation, s.sub_competency, s.criteria, s.method, s.performance_evidence, s.knowledge_evidence].some((v) => lines(v).length)
+    ;(hasStd ? [
       ['1) เกณฑ์การปฏิบัติงาน', s.criteria],
       ['2) วิธีประเมิน', s.method],
       ['3) หลักฐานการปฏิบัติงาน (Performance Evidence)', s.performance_evidence],
       ['4) หลักฐานความรู้ (Knowledge Evidence)', s.knowledge_evidence],
-    ] as const).forEach(([label, v]) => {
+    ] as const : []).forEach(([label, v]) => {
       out.push(p([run(label)], { first: IND2, align: AlignmentType.LEFT, keepNext: !!lines(v).length }))
       if (lines(v).length) out.push(...body(v, IND2 + STEP))
     })

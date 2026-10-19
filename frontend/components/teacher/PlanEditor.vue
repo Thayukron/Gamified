@@ -51,6 +51,23 @@ async function draft(source: 'ai' | 'guide') {
   }
 }
 
+// section 2: occupational standard (TPQI) looked up by AI — fills the fields, the teacher reviews and saves
+const std = ref<{ busy: boolean; result: any; error: string }>({ busy: false, result: null, error: '' })
+const STD_SLOT = '2-top' // accordion slot above the fields of section 2
+const STD_KEYS = ['occupation', 'sub_competency', 'criteria', 'method', 'performance_evidence', 'knowledge_evidence', 'career_integration'] as const
+async function findStandard() {
+  const has = STD_KEYS.some((k) => String(content.value.standard[k] ?? '').trim())
+  if (has && !confirm('ค้นหามาตรฐานอาชีพใหม่? ถ้าพบ ข้อความในข้อ 2 จะถูกแทนที่ (ยังไม่บันทึกจนกว่าจะกด “บันทึก”)')) return
+  std.value = { busy: true, result: null, error: '' }
+  try {
+    const r = await api<any>(`/teacher/plans/${props.plan.id}/standard`, { method: 'POST', body: { ...header, competency: content.value.competency } })
+    if (r.found) content.value.standard = { ...content.value.standard, ...r.standard }
+    std.value = { busy: false, result: r, error: '' }
+  } catch (e) {
+    std.value = { busy: false, result: null, error: apiErrorMessage(e) }
+  }
+}
+
 async function save() {
   busy.value = 'save'
   msg.value = null
@@ -113,6 +130,31 @@ defineExpose({ save, isDirty: () => dirty.value })
       </div>
     </div>
 
-    <TeacherSectionAccordion v-model="content" :sections="sections" />
+    <TeacherSectionAccordion v-model="content" :sections="sections">
+      <template #[STD_SLOT]>
+        <div class="rounded-xl bg-indigo-500/5 p-3 ring-1 ring-rune-400/20" data-testid="std-box">
+          <div class="flex flex-wrap items-center gap-3">
+            <button type="button" class="btn-ghost !py-1.5 text-sm" :disabled="std.busy || !!busy" data-testid="std-find" @click="findStandard">
+              <AppIcon name="sparkle" :size="16" /> {{ std.busy ? 'AI กำลังค้นหามาตรฐานอาชีพ… (20–60 วินาที)' : 'ค้นหามาตรฐานอาชีพ (TPQI) ด้วย AI' }}
+            </button>
+            <p class="flex-1 text-xs text-slate-400">ค้นจากมาตรฐานอาชีพของสถาบันคุณวุฒิวิชาชีพที่สอดคล้องกับหน่วยนี้ · ถ้าไม่พบ ระบบจะไม่ใส่ข้อมูล (เว้นข้อ 2.1 ได้ตามแบบฟอร์ม)</p>
+          </div>
+          <p v-if="std.error" class="mt-2 text-sm text-red-300">{{ std.error }}</p>
+          <div v-else-if="std.result" class="mt-3 space-y-2 text-sm" data-testid="std-result">
+            <p v-if="std.result.found" class="text-emerald-300"><AppIcon name="check" :size="14" class="inline" /> พบมาตรฐานที่สอดคล้อง และใส่ในช่องด้านล่างแล้ว — ตรวจแล้วกด “บันทึก”</p>
+            <p v-else class="text-slate-300">ไม่พบมาตรฐานอาชีพที่สอดคล้องกับหน่วยนี้โดยตรง — ไม่ได้ใส่ข้อมูล (เว้นว่างไว้)</p>
+            <p v-if="std.result.note" class="text-xs text-slate-400">เหตุผล: {{ std.result.note }}</p>
+            <p v-if="std.result.found && !std.result.grounded" class="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-200" data-testid="std-unverified">
+              ⚠ API Key นี้ใช้การค้นหา Google ไม่ได้ (ต้องเปิดการเรียกเก็บเงินของ Google AI) ข้อมูลนี้มาจากความรู้ของ AI จึง <b>ต้องตรวจกับเว็บไซต์สถาบันคุณวุฒิวิชาชีพก่อนใช้</b> ·
+              <a href="https://tpqi-net.tpqi.go.th/" target="_blank" rel="noopener" class="underline">tpqi-net.tpqi.go.th</a>
+            </p>
+            <ul v-if="std.result.sources?.length" class="space-y-0.5 text-xs">
+              <li class="text-slate-500">แหล่งที่ค้นพบ:</li>
+              <li v-for="s in std.result.sources" :key="s.url"><a :href="s.url" target="_blank" rel="noopener" class="text-rune-300 underline">{{ s.title || s.url }}</a></li>
+            </ul>
+          </div>
+        </div>
+      </template>
+    </TeacherSectionAccordion>
   </div>
 </template>
