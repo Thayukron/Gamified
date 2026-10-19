@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const v = (name) => `rgb(var(--c-${name}) / <alpha-value>)`
+
 export default {
   theme: {
     extend: {
@@ -7,28 +9,19 @@ export default {
         // Cinzel renders Latin glyphs, Chonburi picks up Thai
         display: ['Cinzel', 'Chonburi', 'serif'],
       },
+      // Every colour is a CSS variable (assets/css/main.css): :root = ARCANA fantasy for learners,
+      // html.theme-staff = the formal light theme for teachers/admins. Same class names, two looks.
       colors: {
-        abyss: {
-          950: '#05030d',
-          900: '#0b0718',
-          800: '#140d2b',
-          700: '#1f1542',
-          600: '#2d1f5e',
-        },
-        arcane: {
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-        },
-        rune: {
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#f5c451',
-          500: '#e0a82e',
-          600: '#b7791f',
-        },
-        ember: '#ff7a45',
+        abyss: { 950: v("abyss-950"), 900: v("abyss-900"), 800: v("abyss-800"), 700: v("abyss-700"), 600: v("abyss-600") },
+        arcane: { 300: v("arcane-300"), 400: v("arcane-400"), 500: v("arcane-500"), 600: v("arcane-600") },
+        rune: { 100: v("rune-100"), 200: v("rune-200"), 300: v("rune-300"), 400: v("rune-400"), 500: v("rune-500"), 600: v("rune-600") },
+        slate: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((k) => [k, v(`slate-${k}`)])),
+        white: v("white"),
+        red: { 100: v("red-100"), 200: v("red-200"), 300: v("red-300") },
+        emerald: { 100: v("emerald-100"), 200: v("emerald-200"), 300: v("emerald-300") },
+        sky: { 100: v("sky-100"), 200: v("sky-200"), 300: v("sky-300") },
+        amber: { 100: v("amber-100"), 200: v("amber-200"), 300: v("amber-300") },
+        ember: "#ff7a45",
       },
       boxShadow: {
         glow: '0 0 24px -4px rgba(167, 139, 250, 0.55)',

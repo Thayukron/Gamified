@@ -190,7 +190,7 @@ const radarSeries = computed(() => {
               v-for="k in (['growth', 'mixed', 'fixed'] as const)"
               v-show="dist.mindset[k]"
               :key="k"
-              class="h-full border-r-2 border-[#140d2b] transition last:border-r-0 hover:brightness-125"
+              class="h-full border-r-2 border-abyss-800 transition last:border-r-0 hover:brightness-125"
               :style="{ width: `${pct(dist.mindset[k], profiled)}%`, background: k === 'growth' ? VIZ.series1 : k === 'fixed' ? VIZ.series2 : VIZ.neutral }"
               :title="`${MINDSET_T[k].th}: ${dist.mindset[k]} คน`"
               @click="filterBy('mindset', k)"
@@ -350,5 +350,5 @@ const radarSeries = computed(() => {
 .mini { @apply rounded-xl border border-white/10 bg-abyss-950/50 p-2; }
 .mini-l { @apply text-[10px] uppercase tracking-widest text-slate-400; }
 .mini-v { @apply font-display text-lg font-bold text-slate-100; }
-select.input option { background: #140d2b; }
+select.input option { background: rgb(var(--c-abyss-800)); }
 </style>

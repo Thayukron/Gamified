@@ -2,9 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ───────────── Colour tokens (see tailwind.config.js) ─────────────
+   :root            = ARCANA dark fantasy (learners, login)
+   html.theme-staff = formal light theme for teachers & admins (set by layouts/default.vue)
+   Values are "R G B" so Tailwind opacity modifiers (bg-white/5, border-rune-400/40) keep working. */
+:root {
+  --c-abyss-950: 5 3 13; --c-abyss-900: 11 7 24; --c-abyss-800: 20 13 43; --c-abyss-700: 31 21 66; --c-abyss-600: 45 31 94;
+  --c-arcane-300: 196 181 253; --c-arcane-400: 167 139 250; --c-arcane-500: 139 92 246; --c-arcane-600: 124 58 237;
+  --c-rune-100: 254 243 199; --c-rune-200: 253 230 138; --c-rune-300: 252 211 77; --c-rune-400: 245 196 81; --c-rune-500: 224 168 46; --c-rune-600: 183 121 31;
+  --c-slate-50: 248 250 252; --c-slate-100: 241 245 249; --c-slate-200: 226 232 240; --c-slate-300: 203 213 225; --c-slate-400: 148 163 184;
+  --c-slate-500: 100 116 139; --c-slate-600: 71 85 105; --c-slate-700: 51 65 85; --c-slate-800: 30 41 59; --c-slate-900: 15 23 42; --c-slate-950: 2 6 23;
+  --c-white: 255 255 255;
+  --c-red-100: 254 226 226; --c-red-200: 254 202 202; --c-red-300: 252 165 165;
+  --c-emerald-100: 209 250 229; --c-emerald-200: 167 243 208; --c-emerald-300: 110 231 183;
+  --c-sky-100: 224 242 254; --c-sky-200: 186 230 253; --c-sky-300: 125 211 252;
+  --c-amber-100: 254 243 199; --c-amber-200: 253 230 138; --c-amber-300: 252 211 77;
+}
+html.theme-staff {
+  color-scheme: light;
+  /* surfaces: page #f3f5f9, cards/inputs white */
+  --c-abyss-950: 243 245 249; --c-abyss-900: 255 255 255; --c-abyss-800: 255 255 255; --c-abyss-700: 232 237 244; --c-abyss-600: 213 221 232;
+  /* secondary (labels, outline buttons, rims) -> slate blue-grey */
+  --c-arcane-300: 61 79 110; --c-arcane-400: 125 139 163; --c-arcane-500: 42 93 184; --c-arcane-600: 28 74 154;
+  /* primary accent (was gold) -> institutional navy blue */
+  --c-rune-100: 15 42 92; --c-rune-200: 22 58 122; --c-rune-300: 28 74 154; --c-rune-400: 42 93 184; --c-rune-500: 30 74 156; --c-rune-600: 23 61 130;
+  /* text scale inverted: slate-50/100 (bright text on dark) become near-black on light */
+  --c-slate-50: 11 19 36; --c-slate-100: 20 32 51; --c-slate-200: 36 50 74; --c-slate-300: 59 74 99; --c-slate-400: 85 99 122;
+  --c-slate-500: 107 119 137; --c-slate-600: 138 149 166; --c-slate-700: 182 191 204; --c-slate-800: 216 222 231; --c-slate-900: 238 241 245; --c-slate-950: 247 249 251;
+  /* "white" is only used for faint overlays/rims on dark panels -> faint navy tints on light */
+  --c-white: 15 23 42;
+  /* light status text shades -> dark, readable on white */
+  --c-red-100: 122 26 19; --c-red-200: 145 32 24; --c-red-300: 180 35 24;
+  --c-emerald-100: 5 79 49; --c-emerald-200: 5 96 58; --c-emerald-300: 6 118 71;
+  --c-sky-100: 8 76 117; --c-sky-200: 10 90 138; --c-sky-300: 11 106 162;
+  --c-amber-100: 114 61 5; --c-amber-200: 138 75 6; --c-amber-300: 161 92 7;
+}
+
 @layer base {
   html {
     color-scheme: dark;
+  }
+  html.theme-staff {
+    color-scheme: light;
   }
   body {
     @apply bg-abyss-950 font-sans text-slate-200 antialiased;
@@ -59,6 +98,77 @@
     content: '';
     @apply h-px flex-1 bg-gradient-to-r from-transparent via-rune-400/40 to-transparent;
   }
+}
+
+/* ───────────── Formal staff theme: flat, quiet components (no glow, shimmer or display fonts) ───────────── */
+.theme-staff body,
+.theme-staff .font-sans,
+.theme-staff .font-display {
+  font-family: 'IBM Plex Sans Thai', 'Kanit', system-ui, sans-serif;
+}
+.theme-staff .font-display {
+  letter-spacing: normal !important;
+}
+.theme-staff .btn-primary {
+  background: rgb(28 74 154);
+  color: #fff;
+  animation: none;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
+}
+.theme-staff .btn-primary:hover:not(:disabled) {
+  background: rgb(22 58 122);
+  transform: none;
+  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.18);
+}
+.theme-staff .btn-ghost {
+  border-color: rgb(200 208 220);
+  background: #fff;
+}
+.theme-staff .btn-ghost:hover:not(:disabled) {
+  border-color: rgb(42 93 184 / 0.6);
+  background: rgb(42 93 184 / 0.06);
+  color: rgb(22 58 122);
+}
+.theme-staff .card {
+  background: #fff;
+  border-color: rgb(221 227 236);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
+  backdrop-filter: none;
+}
+.theme-staff .card-hover:hover {
+  transform: none;
+  border-color: rgb(42 93 184 / 0.45);
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+}
+.theme-staff .input {
+  border-color: rgb(200 208 220);
+  background: #fff;
+}
+.theme-staff .input:focus {
+  border-color: rgb(42 93 184);
+  box-shadow: 0 0 0 3px rgb(42 93 184 / 0.15);
+}
+.theme-staff .label {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.8125rem;
+  color: rgb(59 74 99);
+}
+.theme-staff .title-glow {
+  color: rgb(11 19 36);
+  text-shadow: none;
+  font-weight: 700;
+}
+.theme-staff .shadow-glow,
+.theme-staff .shadow-glow-gold {
+  box-shadow: none;
+}
+.theme-staff .divider-rune {
+  color: rgb(107 119 137);
+}
+.theme-staff select option {
+  background: #fff !important;
+  color: rgb(20 32 51);
 }
 
 @media (prefers-reduced-motion: reduce) {

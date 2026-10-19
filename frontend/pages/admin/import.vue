@@ -167,7 +167,7 @@ const colsOf = (t: ImportType) => IMPORT_SPEC[t].cols.filter((c) => c.key !== 'p
           @click="tab = t"
         >
           {{ IMPORT_SPEC[t].title }} {{ preview[t].summary.total }}
-          <span v-if="preview[t].summary.error" class="ml-1 rounded-full bg-red-500/80 px-1.5 text-xs text-white">{{ preview[t].summary.error }}</span>
+          <span v-if="preview[t].summary.error" class="ml-1 rounded-full bg-red-500/80 px-1.5 text-xs text-[#fff]">{{ preview[t].summary.error }}</span>
         </button>
         <label class="ml-auto flex items-center gap-2 text-sm text-slate-300"><input v-model="onlyErrors" type="checkbox"> แสดงเฉพาะที่ผิดพลาด</label>
       </div>

@@ -195,7 +195,7 @@ const DOMAIN_TH: Record<string, string> = { it: 'เทคโนโลยี/ค
             <div v-for="m in g.modalities" :key="m.key" class="rounded-xl border p-4" :class="m.priority === 'หลัก' ? 'border-rune-400/60 bg-rune-400/5' : m.priority === 'รอง' ? 'border-sky-400/40' : 'border-white/10'">
               <div class="flex items-center justify-between gap-2">
                 <p class="font-medium text-slate-50">{{ m.label }}</p>
-                <span class="shrink-0 rounded-full px-2 py-0.5 text-xs" :class="m.priority === 'หลัก' ? 'bg-rune-400 text-abyss-950' : m.priority === 'รอง' ? 'bg-sky-500/80 text-white' : 'bg-white/10 text-slate-300'">
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-xs" :class="m.priority === 'หลัก' ? 'bg-rune-400 text-abyss-950' : m.priority === 'รอง' ? 'bg-sky-500/80 text-[#fff]' : 'bg-white/10 text-slate-300'">
                   {{ m.priority }} · {{ Math.round(m.share) }}%
                 </span>
               </div>

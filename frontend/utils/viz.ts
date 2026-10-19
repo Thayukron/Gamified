@@ -1,12 +1,15 @@
-// Chart colour roles for the dark ARCANA surface (validated with the dataviz palette checker
-// against #120c24: blue/orange pass lightness, chroma, CVD and contrast checks).
+// Chart colour roles. Charts are shown on the teacher pages, which use the formal light theme
+// (white cards): blue vs. orange stay distinguishable for colour-blind readers and both keep
+// ≥ 3:1 contrast against white; text/grid use the staff theme's slate tones.
 export const VIZ = {
-  series1: '#3987e5', // blue — primary series / "this student"
-  series2: '#d95926', // orange — comparison series / "class average"
-  neutral: '#4a4658', // diverging midpoint
-  grid: 'rgba(196,181,253,0.14)',
-  textPrimary: '#f1f5f9',
-  textSecondary: '#94a3b8',
+  series1: '#2563c9', // blue — primary series / "this student"
+  series2: '#c4501c', // orange — comparison series / "class average"
+  neutral: '#9aa3b2', // diverging midpoint
+  grid: 'rgba(36,50,74,0.12)',
+  textPrimary: '#142033',
+  textSecondary: '#55637a',
+  surface: '#ffffff',
+  tooltipBg: '#142033',
 }
 
 export const pct = (n: number, total: number) => (total ? Math.round((n / total) * 100) : 0)
