@@ -20,12 +20,12 @@
 }
 html.theme-staff {
   color-scheme: light;
-  /* surfaces: page #f3f5f9, cards/inputs white */
-  --c-abyss-950: 243 245 249; --c-abyss-900: 255 255 255; --c-abyss-800: 255 255 255; --c-abyss-700: 232 237 244; --c-abyss-600: 213 221 232;
-  /* secondary (labels, outline buttons, rims) -> slate blue-grey */
-  --c-arcane-300: 61 79 110; --c-arcane-400: 125 139 163; --c-arcane-500: 42 93 184; --c-arcane-600: 28 74 154;
-  /* primary accent (was gold) -> institutional navy blue */
-  --c-rune-100: 15 42 92; --c-rune-200: 22 58 122; --c-rune-300: 28 74 154; --c-rune-400: 42 93 184; --c-rune-500: 30 74 156; --c-rune-600: 23 61 130;
+  /* surfaces: page #f6f7fb, cards/inputs white */
+  --c-abyss-950: 246 247 251; --c-abyss-900: 255 255 255; --c-abyss-800: 255 255 255; --c-abyss-700: 238 240 248; --c-abyss-600: 224 228 242;
+  /* secondary (labels, outline buttons, rims) -> muted indigo */
+  --c-arcane-300: 91 97 140; --c-arcane-400: 129 140 248; --c-arcane-500: 124 58 237; --c-arcane-600: 109 40 217;
+  /* primary accent (was gold) -> indigo (brand gradient indigo -> violet keeps the ARCANA purple) */
+  --c-rune-100: 49 46 129; --c-rune-200: 55 48 163; --c-rune-300: 79 70 229; --c-rune-400: 99 102 241; --c-rune-500: 79 70 229; --c-rune-600: 67 56 202;
   /* text scale inverted: slate-50/100 (bright text on dark) become near-black on light */
   --c-slate-50: 11 19 36; --c-slate-100: 20 32 51; --c-slate-200: 36 50 74; --c-slate-300: 59 74 99; --c-slate-400: 85 99 122;
   --c-slate-500: 107 119 137; --c-slate-600: 138 149 166; --c-slate-700: 182 191 204; --c-slate-800: 216 222 231; --c-slate-900: 238 241 245; --c-slate-950: 247 249 251;
@@ -100,75 +100,116 @@ html.theme-staff {
   }
 }
 
-/* ───────────── Formal staff theme: flat, quiet components (no glow, shimmer or display fonts) ───────────── */
-.theme-staff body,
-.theme-staff .font-sans,
-.theme-staff .font-display {
-  font-family: 'IBM Plex Sans Thai', 'Kanit', system-ui, sans-serif;
+/* ───────────── Staff theme (teachers/admins): modern light dashboard ─────────────
+   Prompt for headings, IBM Plex Sans Thai for text, indigo -> violet brand gradient, soft depth. */
+html.theme-staff body {
+  background-color: #f6f7fb;
+  background-image:
+    radial-gradient(1100px 480px at 12% -12%, rgba(99, 102, 241, 0.13), transparent 60%),
+    radial-gradient(900px 420px at 95% -8%, rgba(168, 85, 247, 0.11), transparent 60%);
+  background-attachment: fixed;
 }
-.theme-staff .font-display {
-  letter-spacing: normal !important;
+.theme-staff body,
+.theme-staff .font-sans {
+  font-family: "IBM Plex Sans Thai", "Kanit", system-ui, sans-serif;
+}
+.theme-staff .font-display,
+.theme-staff h1,
+.theme-staff h2 {
+  font-family: "Prompt", "IBM Plex Sans Thai", system-ui, sans-serif;
+  letter-spacing: -0.01em !important;
 }
 .theme-staff .btn-primary {
-  background: rgb(28 74 154);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: #fff;
   animation: none;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
+  box-shadow: 0 8px 18px -8px rgba(79, 70, 229, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 .theme-staff .btn-primary:hover:not(:disabled) {
-  background: rgb(22 58 122);
-  transform: none;
-  box-shadow: 0 2px 6px rgba(16, 24, 40, 0.18);
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -10px rgba(79, 70, 229, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .theme-staff .btn-ghost {
-  border-color: rgb(200 208 220);
+  border-color: #e2e8f0;
   background: #fff;
+  color: #334155;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 .theme-staff .btn-ghost:hover:not(:disabled) {
-  border-color: rgb(42 93 184 / 0.6);
-  background: rgb(42 93 184 / 0.06);
-  color: rgb(22 58 122);
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
 }
 .theme-staff .card {
   background: #fff;
-  border-color: rgb(221 227 236);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
+  border-color: rgba(226, 232, 240, 0.95);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 28px -14px rgba(16, 24, 40, 0.1);
   backdrop-filter: none;
 }
 .theme-staff .card-hover:hover {
-  transform: none;
-  border-color: rgb(42 93 184 / 0.45);
-  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+  transform: translateY(-2px);
+  border-color: #c7d2fe;
+  box-shadow: 0 18px 36px -16px rgba(79, 70, 229, 0.28);
 }
 .theme-staff .input {
-  border-color: rgb(200 208 220);
+  border-color: #e2e8f0;
   background: #fff;
 }
 .theme-staff .input:focus {
-  border-color: rgb(42 93 184);
-  box-shadow: 0 0 0 3px rgb(42 93 184 / 0.15);
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
 }
 .theme-staff .label {
   text-transform: none;
   letter-spacing: normal;
   font-size: 0.8125rem;
-  color: rgb(59 74 99);
+  color: #475569;
 }
 .theme-staff .title-glow {
-  color: rgb(11 19 36);
+  color: #0f172a;
   text-shadow: none;
-  font-weight: 700;
+  font-weight: 600;
 }
 .theme-staff .shadow-glow,
 .theme-staff .shadow-glow-gold {
   box-shadow: none;
 }
 .theme-staff .divider-rune {
-  color: rgb(107 119 137);
+  color: #64748b;
 }
 .theme-staff select option {
   background: #fff !important;
   color: rgb(20 32 51);
+}
+/* brand gradient helpers (staff pages) */
+.staff-hero {
+  @apply relative overflow-hidden rounded-3xl p-6 text-snow sm:p-8;
+  background: linear-gradient(120deg, #312e81 0%, #4f46e5 45%, #7c3aed 80%, #a855f7 100%);
+  box-shadow: 0 24px 48px -24px rgba(79, 70, 229, 0.6);
+}
+.staff-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(100deg, transparent 30%, #000 100%);
+  pointer-events: none;
+}
+.staff-hero::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: -120px;
+  width: 340px;
+  height: 340px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 65%);
+  pointer-events: none;
+}
+.staff-section {
+  @apply flex items-center gap-2 text-base font-semibold text-slate-50;
 }
 
 @media (prefers-reduced-motion: reduce) {

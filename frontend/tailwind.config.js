@@ -17,6 +17,8 @@ export default {
         rune: { 100: v("rune-100"), 200: v("rune-200"), 300: v("rune-300"), 400: v("rune-400"), 500: v("rune-500"), 600: v("rune-600") },
         slate: Object.fromEntries([50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map((k) => [k, v(`slate-${k}`)])),
         white: v("white"),
+        // always-real white (in the staff theme "white" is a faint-overlay tint, not #fff)
+        snow: "#ffffff",
         red: { 100: v("red-100"), 200: v("red-200"), 300: v("red-300") },
         emerald: { 100: v("emerald-100"), 200: v("emerald-200"), 300: v("emerald-300") },
         sky: { 100: v("sky-100"), 200: v("sky-200"), 300: v("sky-300") },

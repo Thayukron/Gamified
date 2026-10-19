@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Minimal line-icon set (24x24, stroke based) so the theme isn't tied to emoji.
-const props = defineProps<{ name: string; size?: number }>()
+const props = defineProps<{ name: string; size?: number; stroke?: number }>()
 
 const paths: Record<string, string> = {
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',
@@ -47,6 +47,27 @@ const paths: Record<string, string> = {
   gem: 'M6 3h12l4 6-10 12L2 9Z M2 9h20 M9 3 7 9l5 12 5-12-2-6',
   bag: 'M5 8h14l-1 13H6Z M9 8V6a3 3 0 0 1 6 0v2',
   forward: 'M4 5l8 7-8 7Z M12 5l8 7-8 7Z',
+  // staff / dashboard set
+  home: "M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-6h4v6",
+  plus: "M12 5v14 M5 12h14",
+  user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M4 21a8 8 0 0 1 16 0",
+  users: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M2 21a7 7 0 0 1 14 0 M16 3.5a4 4 0 0 1 0 7.5 M18 14.5a6 6 0 0 1 4 6.5",
+  file: "M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z M14 3v5h5 M9 13h6 M9 17h6",
+  clipboard: "M9 3h6v3H9Z M9 4.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5.5a1 1 0 0 0-1-1h-3 M9 13l2 2 4-4",
+  list: "M9 6h11 M9 12h11 M9 18h11 M4.5 6h.01 M4.5 12h.01 M4.5 18h.01",
+  bulb: "M9 18h6 M10 21h4 M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3Z",
+  database: "M12 3c4.4 0 8 1.3 8 3s-3.6 3-8 3-8-1.3-8-3 3.6-3 8-3Z M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6 M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6",
+  sliders: "M4 6h9 M17 6h3 M15 4v4 M4 12h3 M11 12h9 M9 10v4 M4 18h11 M19 18h1 M17 16v4",
+  menu: "M4 6h16 M4 12h16 M4 18h16",
+  x: "M6 6l12 12 M18 6 6 18",
+  layers: "M12 3l9 5-9 5-9-5Z M3 13l9 5 9-5",
+  trend: "M3 17l6-6 4 4 8-8 M15 7h6v6",
+  target: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z M12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z",
+  chevron: "M9 6l6 6-6 6",
+  grid: "M4 4h7v7H4Z M13 4h7v7h-7Z M4 13h7v7H4Z M13 13h7v7h-7Z",
+  building: "M4 21V5l8-2v18 M12 7l8 2v12 M2 21h20 M7 9h2 M7 13h2 M7 17h2 M15 12h2 M15 16h2",
+  calendar: "M4 6h16v15H4Z M4 10h16 M8 3v4 M16 3v4",
+  graduation: "M2 9l10-5 10 5-10 5Z M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5 M22 9v6",
   sparkle:'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z M19 17l.7 1.8 1.8.7-1.8.7L19 22l-.7-1.8L16.5 19.5l1.8-.7Z',
 }
 
@@ -60,7 +81,7 @@ const d = computed(() => paths[props.name] ?? paths.sparkle)
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="1.5"
+    :stroke-width="stroke ?? 1.5"
     stroke-linecap="round"
     stroke-linejoin="round"
     aria-hidden="true"
