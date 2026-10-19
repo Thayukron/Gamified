@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-10-19 — ใช้ฐานข้อมูลชุดเดียว (เลิกแยก dev / Docker)
+
+- ผู้ใช้พบว่าข้อมูลที่นำเข้าไม่อยู่ในฐานข้อมูลที่เปิดดู เพราะมี 2 ชุด (dev 3310 กับ Docker 3320) · ผู้ใช้ต้องการฐานข้อมูลเดียวตลอด
+- `backend/config.php`: เมื่อรันนอก Docker (ไม่มี DB_HOST) อ่าน `.env` ของโปรเจกต์ → ต่อ `127.0.0.1:DB_PUBLISH_PORT` (3320) ด้วย DB_USER/DB_PASSWORD/DB_NAME เดียวกับ Docker + ภาคเรียนจาก .env
+- `migrate.php`: ปฏิเสธการล้างฐานข้อมูลที่มีผู้ใช้อยู่แล้ว (ต้องใส่ `--wipe-real-data` เอง) · install.php ของ Docker ไม่กระทบ (เรียก migrate เฉพาะฐานว่าง)
+- `start-dev.ps1`: เปิด db ของ Docker แทน MariaDB XAMPP · ปิด MariaDB 3310 แล้ว (ไฟล์ข้อมูลเก่ายังเก็บไว้ที่ `C:\Users\USER\.gamified-mysql` ไม่ได้ลบ)
+- ตรวจ: API ชุดพัฒนาต่อได้ MariaDB 11.4 (= Docker) · app.key เครื่อง = ใน container (ถอดรหัส Key ครูได้) · ทดสอบ guard กับฐานเก่า (55 บัญชี) → ปฏิเสธ exit 1
+- อัปเดต README / DEPLOY / CLAUDE.md
+
+---
+
 ## 2026-10-19 — ใส่ API Key แล้วขึ้น 502: เครือข่ายบล็อก Gemini
 
 - อาการ: ครูบันทึก API Key แล้วขึ้น 502 หลังรอนาน

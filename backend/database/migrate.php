@@ -15,6 +15,18 @@ use App\Services\ScenarioEngine;
 
 $dbName = app_config('db')['name'];
 $pdo = Database::connect(app_config('db'), false);
+
+// There is only one database (the real one), so refuse to wipe it once it holds accounts.
+$q = $pdo->prepare('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ?');
+$q->execute([$dbName, 'users']);
+if ($q->fetchColumn() && !in_array('--wipe-real-data', $argv, true)) {
+    $users = (int) $pdo->query("SELECT COUNT(*) FROM `$dbName`.users")->fetchColumn();
+    if ($users > 0) {
+        fwrite(STDERR, "ยกเลิก: ฐานข้อมูล $dbName มีผู้ใช้อยู่แล้ว $users บัญชี — migrate.php จะลบข้อมูลทั้งหมด\n"
+            . "ใช้ install.php เพื่ออัปเกรดโดยไม่ลบข้อมูล · ถ้าตั้งใจล้างจริง (สำรองข้อมูลก่อน!) ให้เพิ่ม --wipe-real-data\n");
+        exit(1);
+    }
+}
 // schema.sql names the database "gamified"; follow the configured name instead
 $pdo->exec(preg_replace('/^(CREATE DATABASE IF NOT EXISTS|USE) gamified/m', '$1 `' . $dbName . '`', file_get_contents(__DIR__ . '/schema.sql')));
 echo "Schema created.\n";

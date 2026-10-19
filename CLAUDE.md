@@ -23,10 +23,10 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 ## สภาพแวดล้อม Dev (เครื่องผู้ใช้ Windows 11)
 | ส่วน | รายละเอียด |
 |---|---|
-| DB | MariaDB 10.4 จาก XAMPP แต่ใช้ **data dir แยก** `C:\Users\USER\.gamified-mysql\data` **port 3310** (MySQL ของ XAMPP เดิมเสีย: ไฟล์ multi-master.info ใน `C:\xampp\mysql\data` corrupt — ไม่ได้แก้ไฟล์ของ XAMPP) · port 3307 ถูก Docker ใช้อยู่ |
+| DB | **ชุดเดียว = MariaDB 11.4 ใน Docker `127.0.0.1:3320`** (ผู้ใช้กำหนด: ห้ามแยกฐานข้อมูล dev/จริง) · `config.php` อ่าน `.env` เมื่อรันนอก Docker · `backend/storage/app.key` = ตัวเดียวกับ container · ฐานเก่า 3310 (`C:\Users\USER\.gamified-mysql`) เลิกใช้แล้ว |
 | API | PHP 8.2 built-in server `php -S 127.0.0.1:8100 -t public public/index.php` (ใน `backend/`) |
 | Frontend | Nuxt 3.21 dev **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · **API dev ใช้ 8100 เพราะ 8000 ถูก Docker ของ btech-sice ใช้** |
-| สคริปต์ | `start-dev.ps1` เปิดทั้ง 3 ตัว · `php backend/database/migrate.php` = ล้างและสร้าง DB ใหม่ + seed |
+| สคริปต์ | `start-dev.ps1` เปิด db (Docker) + API 8100 + Nuxt 3100 · **ห้ามรัน `migrate.php`** (ล้างข้อมูลจริง; สคริปต์ปฏิเสธเมื่อมีผู้ใช้ เว้นแต่ `--wipe-real-data`) |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
 บัญชีทดสอบ: `admin/admin1234`, `teacher1/teacher1234` (วิชา DSA แผนก IT), `teacher2/teacher1234` (บัญชี), `student001..010/student1234` (ยังไม่เล่น) · student011–046 = ข้อมูลตัวอย่างที่เล่นแล้ว (DemoPlayer)
@@ -121,3 +121,4 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - 2026-10-17: **ปรับ UX แผนการสอนตามผู้ใช้ (ผู้ใช้บอกว่ายุบยับ/ใช้ยาก)** — หน้ารวมเป็นรายการหน่วย + “เริ่มทำแผน” คลิกเดียว · พื้นที่ทำงานหน่วยเดียวมีแท็บต่อฟอร์ม หัวข้อพับ (SectionAccordion) · **ส่งออก Word หน่วยเดียวรวมทุกฟอร์ม + ให้เลือกฟอร์มก่อนส่งออก** (ExportDialog; ทั้งรายวิชาเลือกส่วน/หน่วย/ชนิดฟอร์มได้) · **เนื้อหารายวิชา (จุดประสงค์/สมรรถนะ/คำอธิบาย/ชั่วโมง) อยู่ในฟอร์มรายวิชา** และใช้ร่วมกับเล่ม + AI · หลักการ UX ที่ผู้ใช้ต้องการ: แสดงน้อย ซ่อนรายละเอียดจนกดเปิด ทำงานทีละขั้น · ⚠ อย่าเขียนไฟล์ TS ผ่าน `php -r` ใน bash (เครื่องหมาย ' หาย) — ตรวจด้วย `npx esbuild <file>`
 - 2026-10-17: **AI แบ่งหน่วยการเรียนจากคำอธิบายรายวิชา** (ผู้ใช้เสนอ) — ฟอร์มรายวิชา 3 ขั้น (ข้อมูลวิชา → เนื้อหารายวิชา → หน่วยการเรียน) · `TeacherUnitList` + `POST /teacher/units/suggest` · ครูตรวจ/ติ๊กเลือก/แก้ชื่อก่อนใช้เสมอ (AI ไม่บันทึกเอง)
 - 2026-10-17: **ปรับ AI ให้เขียนละเอียด (ผู้ใช้บอกว่าข้อมูลน้อย/ไม่ได้ใจความ)** — prompt กำหนดโครงสร้าง+ความยาวขั้นต่ำต่อข้อ · maxOutputTokens 24k · JSON เสียลองใหม่ 1 ครั้ง · Word จัดย่อหน้าตาม 1./1.1/คำอธิบาย + กล่องโค้ด · ทดสอบกับ Gemini จริง (Key teacher1) ผ่านแล้ว · หลักการ: ทดสอบคุณภาพเนื้อหากับ Gemini จริงด้วย ไม่ใช่แค่ mock
+- 2026-10-19: **ฐานข้อมูลชุดเดียว (ผู้ใช้กำหนด: ไม่ให้มี DB dev/จริงแยกกัน)** — เลิกใช้ DB 3310 · ชุดพัฒนา (API 8100) ต่อ Docker DB 3320 ผ่าน `.env` · `migrate.php` ปฏิเสธเมื่อมีผู้ใช้ · ⚠ การทดสอบใด ๆ จากนี้กระทบข้อมูลจริง: สำรองก่อน (`mariadb-dump` ใน container), ใช้บัญชีทดสอบ, ห้ามสร้าง/ลบข้อมูลของผู้ใช้จริงโดยไม่ถาม

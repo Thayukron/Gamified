@@ -93,14 +93,11 @@ docker compose restart api
 
 ---
 
-## 6. ย้ายข้อมูลจากเครื่องพัฒนาเข้า Docker
+## 6. ฐานข้อมูลชุดเดียว (เครื่องพัฒนา = Docker)
+
+ตั้งแต่ 2026-10-19 ใช้ฐานข้อมูลชุดเดียว: ชุดพัฒนา (`php -S` พอร์ต 8100 ผ่าน `start-dev.ps1`) ต่อ MariaDB ใน Docker ทาง `127.0.0.1:DB_PUBLISH_PORT`
+ด้วยค่าใน `.env` (ดู `backend/config.php`) และ `backend/storage/app.key` ต้องเป็นไฟล์เดียวกับใน container (ให้ถอดรหัส API Key ของครูได้):
 
 ```bash
-# บนเครื่องพัฒนา (MariaDB พอร์ต 3310)
-mysqldump -h127.0.0.1 -P3310 -uroot --single-transaction gamified > dev.sql
-# นำเข้า container + ใช้ app.key เดิม (ให้ Key ของครูยังถอดรหัสได้)
-docker compose exec -T db sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' < dev.sql
-docker compose cp backend/storage/app.key api:/var/www/html/storage/app.key
-docker compose exec api chown www-data:www-data storage/app.key
-docker compose restart api
+docker compose cp api:/var/www/html/storage/app.key backend/storage/app.key
 ```
