@@ -19,15 +19,22 @@ class GeminiClient
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $cfg['timeout'],
+            CURLOPT_CONNECTTIMEOUT => 15, // a blocked network should fail fast, not after the full timeout
             CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: ' . $this->apiKey],
             CURLOPT_POSTFIELDS => $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE),
         ]);
         $raw = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);
+        $errno = curl_errno($ch);
+        $connected = curl_getinfo($ch, CURLINFO_CONNECT_TIME) > 0;
         curl_close($ch);
 
         if ($raw === false) {
+            // never reached Google at all: usually an organization firewall blocking *.googleapis.com
+            if (!$connected && in_array($errno, [CURLE_OPERATION_TIMEDOUT, CURLE_COULDNT_CONNECT, CURLE_COULDNT_RESOLVE_HOST], true)) {
+                throw new HttpException(502, 'เซิร์ฟเวอร์ของระบบเชื่อมต่อ Google Gemini ไม่ได้ — เครือข่ายที่เครื่องเซิร์ฟเวอร์ใช้อยู่อาจบล็อก generativelanguage.googleapis.com (พบบ่อยในเครือข่ายสถานศึกษา) ไม่ใช่ปัญหาที่ API Key · ลองให้เครื่องเซิร์ฟเวอร์ใช้เครือข่ายอื่น หรือขอผู้ดูแลเครือข่ายเปิดโดเมนนี้');
+            }
             throw new HttpException(502, "เชื่อมต่อ Gemini ไม่ได้: $err");
         }
         $json = json_decode($raw, true) ?? [];
