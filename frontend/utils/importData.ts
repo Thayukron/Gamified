@@ -18,7 +18,7 @@ export const IMPORT_SPEC: Record<ImportType, { sheet: string; title: string; col
     sheet: 'ครู',
     title: 'ครูผู้สอน',
     cols: [
-      { key: 'username', label: 'ชื่อผู้ใช้', required: true, note: 'ใช้ล็อกอิน ภาษาอังกฤษ/ตัวเลข เช่น t.somchai', aliases: ['username', 'user'] },
+      { key: 'username', label: 'ชื่อผู้ใช้', required: true, note: 'ใช้ล็อกอิน ภาษาอังกฤษ/ตัวเลข เช่น t.somchai หรือชื่อชั่วคราว teacher1, teacher2 (ครูเปลี่ยนเป็นชื่อตนเองได้ภายหลัง)', aliases: ['username', 'user'] },
       { key: 'full_name', label: 'ชื่อ-สกุล', required: true, note: 'เช่น ครูสมชาย ใจดี', aliases: ['full_name', 'ชื่อ - สกุล', 'ชื่อสกุล', 'name'] },
       { key: 'department_code', label: 'รหัสแผนก', note: 'ต้องมีในชีตแผนกวิชาหรือในระบบ', aliases: ['department_code', 'แผนก'] },
       { key: 'password', label: 'รหัสผ่าน', note: 'เว้นว่าง = ใช้ชื่อผู้ใช้เป็นรหัสผ่าน (อย่างน้อย 6 ตัว)', aliases: ['password'] },

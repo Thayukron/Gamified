@@ -39,6 +39,7 @@ $router->post('/teacher/courses/{id}/students/{sid}/reset-password', [App\Contro
 $router->get('/me/profile', [App\Controllers\AccountController::class, 'profile'], ['*']);
 $router->put('/me/profile', [App\Controllers\AccountController::class, 'updateProfile'], ['*']);
 $router->put('/me/password', [App\Controllers\AccountController::class, 'changePassword'], ['*']);
+$router->put('/me/username', [App\Controllers\AccountController::class, 'changeUsername'], ['teacher', 'admin']);
 $router->post('/auth/forgot', [App\Controllers\AccountController::class, 'forgot']);
 // Unit lesson plans in the OVEC 2567 form (Word export happens in the browser)
 $router->get('/teacher/courses/{id}/plans', [App\Controllers\LessonPlanController::class, 'index'], ['teacher', 'admin']);

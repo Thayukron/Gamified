@@ -38,6 +38,44 @@ class AccountController
         return self::profile($req);
     }
 
+    /**
+     * PUT /me/username — { username, current_password } (teachers/admins).
+     * Lets an account imported as a placeholder (teacher1, teacher2, ...) pick its own login name.
+     * A student's username is the student code from the registry, so only the admin changes it.
+     */
+    public static function changeUsername(Request $req): array
+    {
+        if ($req->user['role'] === 'student') {
+            throw new HttpException(403, 'ชื่อผู้ใช้ของนักศึกษาคือรหัสนักศึกษา แก้ไขได้โดยผู้ดูแลระบบ');
+        }
+        $db = Database::get();
+        $stmt = $db->prepare('SELECT username, password_hash FROM users WHERE id = ?');
+        $stmt->execute([$req->user['id']]);
+        $u = $stmt->fetch();
+        $password = (string) $req->input('current_password', '');
+        if (!password_verify($password, $u['password_hash'])) {
+            throw new HttpException(422, 'รหัสผ่านปัจจุบันไม่ถูกต้อง');
+        }
+        $username = trim((string) $req->input('username', ''));
+        if (!preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
+            throw new HttpException(422, 'ชื่อผู้ใช้ต้องเป็นตัวอักษรอังกฤษ ตัวเลข หรือ . _ - ยาว 3–50 ตัว (ไม่มีช่องว่าง)');
+        }
+        if ($username === $u['username']) {
+            throw new HttpException(422, 'ชื่อผู้ใช้ใหม่เหมือนชื่อเดิม');
+        }
+        if (mb_strtolower($username) === mb_strtolower($password)) {
+            throw new HttpException(422, 'ชื่อผู้ใช้ต้องไม่เหมือนรหัสผ่าน');
+        }
+        // the column collation is case-insensitive, so "Somchai" and "somchai" are the same login
+        $dup = $db->prepare('SELECT COUNT(*) FROM users WHERE (username = ? OR student_code = ?) AND id <> ?');
+        $dup->execute([$username, $username, $req->user['id']]);
+        if ($dup->fetchColumn()) {
+            throw new HttpException(409, "ชื่อผู้ใช้ {$username} มีผู้ใช้แล้ว — ลองชื่ออื่น");
+        }
+        $db->prepare('UPDATE users SET username = ? WHERE id = ?')->execute([$username, $req->user['id']]);
+        return self::profile($req) + ['message' => "เปลี่ยนชื่อผู้ใช้เป็น {$username} แล้ว — ครั้งต่อไปเข้าสู่ระบบด้วยชื่อนี้"];
+    }
+
     /** PUT /me/password — { current_password, new_password }; signs out every other device. */
     public static function changePassword(Request $req): array
     {

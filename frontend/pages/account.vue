@@ -10,6 +10,11 @@ const pw = reactive({ current: '', next: '', confirm: '' })
 const pwMsg = ref<{ ok: boolean; text: string } | null>(null)
 const busy = ref(false)
 const show = ref(false)
+const uname = reactive({ open: false, value: '', password: '' })
+const unameMsg = ref<{ ok: boolean; text: string } | null>(null)
+// set right after a forced first-login password change: invite placeholder accounts to pick their own name
+const justSetPassword = ref(false)
+const unameValid = computed(() => /^[A-Za-z0-9._-]{3,50}$/.test(uname.value))
 
 const ROLE_TH: Record<string, string> = { student: 'นักศึกษา', teacher: 'ครูผู้สอน', admin: 'ผู้ดูแลระบบ' }
 
@@ -38,6 +43,28 @@ async function saveName() {
   }
 }
 
+function openUsername() {
+  Object.assign(uname, { open: true, value: profile.value.username, password: '' })
+  unameMsg.value = null
+}
+
+async function changeUsername() {
+  unameMsg.value = null
+  busy.value = true
+  try {
+    const res = await api<any>('/me/username', { method: 'PUT', body: { username: uname.value.trim(), current_password: uname.password } })
+    profile.value = res.profile
+    if (auth.user) auth.user.username = res.profile.username
+    Object.assign(uname, { open: false, password: '' })
+    justSetPassword.value = false
+    unameMsg.value = { ok: true, text: res.message }
+  } catch (e) {
+    unameMsg.value = { ok: false, text: apiErrorMessage(e) }
+  } finally {
+    busy.value = false
+  }
+}
+
 async function changePassword() {
   pwMsg.value = null
   busy.value = true
@@ -47,7 +74,9 @@ async function changePassword() {
     if (auth.user) auth.user.must_change_password = false
     Object.assign(pw, { current: '', next: '', confirm: '' })
     pwMsg.value = { ok: true, text: res.message }
-    if (wasForced) setTimeout(() => navigateTo(homeFor(auth.user!.role)), 1500)
+    // students go straight in; staff may still want to replace a placeholder username first
+    if (wasForced && profile.value.can_edit_name) justSetPassword.value = true
+    else if (wasForced) setTimeout(() => navigateTo(homeFor(auth.user!.role)), 1500)
   } catch (e) {
     pwMsg.value = { ok: false, text: apiErrorMessage(e) }
   } finally {
@@ -73,8 +102,18 @@ async function changePassword() {
     <template v-else>
       <section class="card space-y-3">
         <h2 class="text-lg font-medium text-slate-50">ข้อมูลของฉัน</h2>
+        <div v-if="justSetPassword" class="flex flex-wrap items-center gap-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200" data-testid="uname-invite">
+          <p class="flex-1">ตั้งรหัสผ่านแล้ว · ถ้าชื่อผู้ใช้ <b>{{ profile.username }}</b> เป็นชื่อชั่วคราวที่ได้รับมา เปลี่ยนเป็นชื่อของคุณเองได้เลย</p>
+          <button class="btn-ghost !py-1.5 text-sm" @click="openUsername">เปลี่ยนชื่อผู้ใช้</button>
+          <NuxtLink :to="homeFor(profile.role)" class="text-sm text-slate-300 underline">ใช้ชื่อเดิม ไปหน้าหลัก</NuxtLink>
+        </div>
         <dl class="grid grid-cols-[8rem_1fr] gap-y-2 text-sm">
-          <dt class="text-slate-400">ชื่อผู้ใช้</dt><dd class="text-slate-100">{{ profile.username }}</dd>
+          <dt class="text-slate-400">ชื่อผู้ใช้</dt>
+          <dd class="flex flex-wrap items-center gap-2 text-slate-100">
+            <span data-testid="username">{{ profile.username }}</span>
+            <button v-if="profile.can_edit_name && !uname.open && !forced" class="text-xs text-rune-300 underline hover:text-rune-200" data-testid="uname-edit" @click="openUsername">เปลี่ยนชื่อผู้ใช้</button>
+            <span v-else-if="profile.role === 'student'" class="text-xs text-slate-500">(รหัสนักศึกษา · แก้ไขได้โดยผู้ดูแลระบบ)</span>
+          </dd>
           <dt class="text-slate-400">บทบาท</dt><dd class="text-slate-100">{{ ROLE_TH[profile.role] }}</dd>
           <dt class="text-slate-400">แผนกวิชา</dt><dd class="text-slate-100">{{ profile.department_name ?? '-' }}</dd>
           <template v-if="profile.role === 'student'">
@@ -83,6 +122,17 @@ async function changePassword() {
           <dt class="text-slate-400">ชื่อ-สกุล</dt>
           <dd v-if="!profile.can_edit_name" class="text-slate-100">{{ profile.full_name }} <span class="text-xs text-slate-500">(แก้ไขได้โดยผู้ดูแลระบบ)</span></dd>
         </dl>
+        <form v-if="uname.open" class="space-y-3 rounded-xl border border-arcane-400/30 bg-abyss-900/40 p-4" data-testid="uname-form" @submit.prevent="changeUsername">
+          <p class="text-sm text-slate-300">ชื่อผู้ใช้ใหม่ใช้เข้าสู่ระบบครั้งต่อไป · ใช้ตัวอักษรอังกฤษ ตัวเลข หรือ <code>. _ -</code> ยาว 3–50 ตัว ไม่มีช่องว่าง (เช่น <code>somchai.j</code>)</p>
+          <div><p class="label">ชื่อผู้ใช้ใหม่</p><input v-model="uname.value" class="input" autocomplete="off" maxlength="50" data-testid="uname-new"></div>
+          <div><p class="label">ยืนยันด้วยรหัสผ่านปัจจุบัน</p><input v-model="uname.password" type="password" class="input" autocomplete="current-password" data-testid="uname-pw"></div>
+          <p v-if="uname.value && !unameValid" class="text-xs text-red-300">รูปแบบไม่ถูกต้อง — ห้ามมีช่องว่างหรือภาษาไทย</p>
+          <div class="flex gap-2">
+            <button class="btn-primary !py-2 text-sm" :disabled="busy || !unameValid || !uname.password || uname.value === profile.username" data-testid="uname-save">บันทึกชื่อผู้ใช้</button>
+            <button type="button" class="btn-ghost !py-2 text-sm" @click="uname.open = false">ยกเลิก</button>
+          </div>
+        </form>
+        <p v-if="unameMsg" class="rounded-xl px-3 py-2 text-sm" :class="unameMsg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="uname-msg">{{ unameMsg.text }}</p>
         <div v-if="profile.can_edit_name" class="flex flex-wrap items-center gap-2">
           <input v-model="name" class="input !w-80" maxlength="150" data-testid="name">
           <button class="btn-ghost !py-2 text-sm" :disabled="!name.trim() || name === profile.full_name || forced" @click="saveName">บันทึกชื่อ</button>
