@@ -24,8 +24,8 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | ส่วน | รายละเอียด |
 |---|---|
 | DB | MariaDB 10.4 จาก XAMPP แต่ใช้ **data dir แยก** `C:\Users\USER\.gamified-mysql\data` **port 3310** (MySQL ของ XAMPP เดิมเสีย: ไฟล์ multi-master.info ใน `C:\xampp\mysql\data` corrupt — ไม่ได้แก้ไฟล์ของ XAMPP) · port 3307 ถูก Docker ใช้อยู่ |
-| API | PHP 8.2 built-in server `php -S 127.0.0.1:8000 -t public public/index.php` (ใน `backend/`) |
-| Frontend | Nuxt 3.21 dev **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) |
+| API | PHP 8.2 built-in server `php -S 127.0.0.1:8100 -t public public/index.php` (ใน `backend/`) |
+| Frontend | Nuxt 3.21 dev **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · **API dev ใช้ 8100 เพราะ 8000 ถูก Docker ของ btech-sice ใช้** |
 | สคริปต์ | `start-dev.ps1` เปิดทั้ง 3 ตัว · `php backend/database/migrate.php` = ล้างและสร้าง DB ใหม่ + seed |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
