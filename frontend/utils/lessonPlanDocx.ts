@@ -5,8 +5,11 @@ import { SHEET_TYPES, type CourseBook, type PlanContent, type Sheet } from '~/ut
 const FONT = 'TH SarabunPSK'
 const PT = (n: number) => n * 2 // docx sizes are half-points
 const W = 9354 // A4 width 11906 − margins 1418 (left 2.5 cm) − 1134 (right 2 cm), in DXA
+// Indent steps of the official form (Thai government-document style): only the FIRST line is indented,
+// wrapped lines return to the left margin. 2.1 / 4.1 → 1 cm, 1) → 1.5 cm, deeper → 2 cm.
 const IND1 = 567 // 1 cm
-const IND2 = 1134
+const IND2 = 851 // 1.5 cm
+const STEP = 284 // 0.5 cm
 
 export interface PlanForExport {
   id?: number
@@ -65,11 +68,12 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       underline: o.underline ? {} : undefined,
       language: { value: 'th-TH', bidirectional: 'th-TH' }, // lets Word break Thai lines by word
     })
-  const p = (children: any[], o: { indent?: number; hanging?: number; align?: any; before?: number; after?: number; keepNext?: boolean } = {}) =>
+  const p = (children: any[], o: { indent?: number; hanging?: number; first?: number; align?: any; before?: number; after?: number; keepNext?: boolean } = {}) =>
     new Paragraph({
       children,
       alignment: o.align ?? AlignmentType.LEFT,
-      indent: { left: o.indent ?? 0, hanging: o.hanging },
+      // first: first-line indent only (wrapped lines go back to the margin, like the form)
+      indent: o.first !== undefined ? { left: 0, firstLine: o.first } : { left: o.indent ?? 0, hanging: o.hanging },
       spacing: { before: o.before ?? 0, after: o.after ?? 0, line: 240 },
       keepNext: o.keepNext,
     })
@@ -83,7 +87,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     })
   const heading = (text: string, before = 120) => p([run(text, { bold: true })], { before, keepNext: true, align: AlignmentType.LEFT })
   const sub = (label: string, value = '', indent = IND1) =>
-    p([run(label, { bold: !!value || undefined }), ...(value ? [run(' ' + value)] : [])], { indent, align: AlignmentType.LEFT })
+    p([run(label, { bold: !!value || undefined }), ...(value ? [run(' ' + value)] : [])], { first: indent, align: AlignmentType.LEFT, keepNext: true })
   /** body lines indented; an empty field leaves dotted lines to write by hand */
   /**
    * Body lines, indented by structure so long AI text stays readable like the official form:
@@ -94,7 +98,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     if (!lines(text).length) return Array.from({ length: blankLines }, () => p([dotLine()], { indent }))
     let depth = 0 // 0 = no numbered item yet, 1 = after "1.", 2 = after "1.1"
     let inCode = false
-    const leftFor = () => (depth === 2 ? indent + 567 + 425 : depth === 1 ? indent + 284 : indent)
+    // first-line indent of an explanation line: one step deeper than the item it belongs to
+    const leftFor = () => (depth === 2 ? indent + 2 * STEP : depth === 1 ? indent + STEP : indent)
     const out: any[] = []
     for (const rawLine of (text || '').replace(/\r/g, '').split('\n')) {
       // ```code``` blocks (AI often adds program examples): monospace, keep indentation, light box
@@ -119,19 +124,19 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       if (!l) continue
       if (/^\d+\.\d+(\.\d+)*\s/.test(l)) {
         depth = 2
-        out.push(p([run(l)], { indent: indent + 567 + 425, hanging: 425 }))
+        out.push(p([run(l)], { first: indent + STEP, align: AlignmentType.THAI_DISTRIBUTE }))
       } else if (/^\d+[.)]\s/.test(l)) {
         depth = 1
-        out.push(p([run(l)], { indent: indent + 284, hanging: 284 }))
+        out.push(p([run(l)], { first: indent, align: AlignmentType.THAI_DISTRIBUTE }))
       } else {
         // explanation paragraph under the item it belongs to; Thai distributed like the official form
-        out.push(new Paragraph({ children: [run(l)], alignment: AlignmentType.THAI_DISTRIBUTE, indent: { left: leftFor() }, spacing: { after: 0, line: 240 } }))
+        out.push(new Paragraph({ children: [run(l)], alignment: AlignmentType.THAI_DISTRIBUTE, indent: { left: 0, firstLine: leftFor() }, spacing: { after: 0, line: 240 } }))
       }
     }
     return out
   }
   const numbered = (items: string[], prefix: string, indent = IND1) =>
-    items.map((l, i) => p([run(`${prefix}${i + 1} ${l.replace(/^\d+(\.\d+)*[.)]?\s*/, '')}`)], { indent: indent + 567, hanging: 567 }))
+    items.map((l, i) => p([run(`${prefix}${i + 1} ${l.replace(/^\d+(\.\d+)*[.)]?\s*/, '')}`)], { first: indent, align: AlignmentType.THAI_DISTRIBUTE }))
 
   const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
   const cell = (children: any[], width: number, o: { rowSpan?: number; columnSpan?: number; center?: boolean } = {}) =>
@@ -192,23 +197,23 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
 
     out.push(heading('2. อ้างอิงมาตรฐาน/เชื่อมโยงกลุ่มอาชีพ'))
     const s = c.standard
-    out.push(p([run('2.1 มาตรฐานอาชีพ '), run(s.occupation || '-'), ...(s.sub_competency ? [run('   สมรรถนะย่อย '), run(s.sub_competency)] : [])], { indent: IND1, align: AlignmentType.LEFT }))
+    out.push(p([run('2.1 มาตรฐานอาชีพ '), run(s.occupation || '-'), ...(s.sub_competency ? [run('   สมรรถนะย่อย '), run(s.sub_competency)] : [])], { first: IND1, align: AlignmentType.LEFT }))
     ;([
       ['1) เกณฑ์การปฏิบัติงาน', s.criteria],
       ['2) วิธีประเมิน', s.method],
       ['3) หลักฐานการปฏิบัติงาน (Performance Evidence)', s.performance_evidence],
       ['4) หลักฐานความรู้ (Knowledge Evidence)', s.knowledge_evidence],
     ] as const).forEach(([label, v]) => {
-      out.push(p([run(label)], { indent: IND2, align: AlignmentType.LEFT }))
-      if (lines(v).length) out.push(...body(v, IND2 + 284))
+      out.push(p([run(label)], { first: IND2, align: AlignmentType.LEFT, keepNext: !!lines(v).length }))
+      if (lines(v).length) out.push(...body(v, IND2 + STEP))
     })
-    out.push(p([run('2.2 บูรณาการกลุ่มอาชีพ')], { indent: IND1, align: AlignmentType.LEFT }), ...body(s.career_integration, IND2))
+    out.push(p([run('2.2 บูรณาการกลุ่มอาชีพ')], { first: IND1, align: AlignmentType.LEFT, keepNext: true }), ...body(s.career_integration, IND2))
 
     out.push(heading('3. สมรรถนะประจำหน่วย'))
     out.push(
-      p([run('3.1 ' + (c.competency.knowledge || (higher ? 'ประมวลความรู้เกี่ยวกับ…' : 'แสดงความรู้เกี่ยวกับ…')))], { indent: IND1, hanging: 0 }),
-      p([run('3.2 ' + (c.competency.practice || '…'))], { indent: IND1 }),
-      p([run('3.3 ' + (c.competency.apply || '…'))], { indent: IND1 }),
+      p([run('3.1 ' + (c.competency.knowledge || (higher ? 'ประมวลความรู้เกี่ยวกับ…' : 'แสดงความรู้เกี่ยวกับ…')))], { first: IND1, align: AlignmentType.THAI_DISTRIBUTE }),
+      p([run('3.2 ' + (c.competency.practice || '…'))], { first: IND1, align: AlignmentType.THAI_DISTRIBUTE }),
+      p([run('3.3 ' + (c.competency.apply || '…'))], { first: IND1, align: AlignmentType.THAI_DISTRIBUTE }),
     )
 
     out.push(heading('4. จุดประสงค์เชิงพฤติกรรม'))
@@ -245,8 +250,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       sub('10.1 ผลการจัดการเรียนรู้ที่เกิดขึ้นกับผู้เรียน'), ...body(c.after.results, IND2, 2),
       sub('10.2 ปัญหา อุปสรรคที่พบ'), ...body(c.after.problems, IND2, 2),
       sub('10.3 การแก้ไขปัญหา'),
-      p([run('1) ผลการแก้ไขปัญหาที่ส่งผลลัพธ์ที่ดีต่อผู้เรียน')], { indent: IND2, align: AlignmentType.LEFT }), ...body(c.after.solution_result, IND2 + 284, 2),
-      p([run('2) แนวทางแก้ปัญหาในครั้งต่อไป')], { indent: IND2, align: AlignmentType.LEFT }), ...body(c.after.next_time, IND2 + 284, 2),
+      p([run('1) ผลการแก้ไขปัญหาที่ส่งผลลัพธ์ที่ดีต่อผู้เรียน')], { first: IND2, align: AlignmentType.LEFT, keepNext: true }), ...body(c.after.solution_result, IND2 + STEP, 2),
+      p([run('2) แนวทางแก้ปัญหาในครั้งต่อไป')], { first: IND2, align: AlignmentType.LEFT, keepNext: true }), ...body(c.after.next_time, IND2 + STEP, 2),
     )
     return out
   }
@@ -266,7 +271,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       ),
     ]
     if (!L.ready) {
-      out.push(p([run('ยังไม่มีผู้เรียนในรายวิชานี้ทำแบบคัดกรอง')], { indent: IND1 }))
+      out.push(p([run('ยังไม่มีผู้เรียนในรายวิชานี้ทำแบบคัดกรอง')], { first: IND1 }))
       return out
     }
     const tbl = (title: string, rows: [string, string][]) => {
@@ -295,7 +300,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const diffs = opts.plans.filter((pl) => lines(pl.content.differentiation).length)
     if (diffs.length) {
       out.push(heading('5. การนำผลการวิเคราะห์ไปใช้ในแผนการจัดการเรียนรู้'))
-      diffs.forEach((pl) => out.push(p([run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })], { indent: IND1 }), ...body(pl.content.differentiation, IND2)))
+      diffs.forEach((pl) => out.push(p([run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })], { first: IND1, keepNext: true }), ...body(pl.content.differentiation, IND2)))
     }
     out.push(p([run('หมายเหตุ ผลการวิเคราะห์เป็นข้อมูลคัดกรองเบื้องต้นเพื่อประกอบการออกแบบการจัดการเรียนรู้ ไม่ใช่การวินิจฉัย ใช้ร่วมกับการสังเกตผู้เรียนในชั้นเรียน', { size: 14 })], { before: 240 }))
     return out
@@ -312,7 +317,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const partTitle = (text: string, pageBreak = true) =>
     new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, pageBreakBefore: pageBreak, spacing: { after: 160 }, children: [run(text, { bold: true, size: 18 })] })
   const label = (text: string, value = '') => p([run(text, { bold: true }), ...(value ? [run(' ' + value)] : [])], { before: 80 })
-  const plainNumbered = (items: string[]) => items.map((l, i) => p([run(`${i + 1}. ${l.replace(/^\d+[.)]\s*/, '')}`)], { indent: IND1 + 284, hanging: 284 }))
+  const plainNumbered = (items: string[]) => items.map((l, i) => p([run(`${i + 1}. ${l.replace(/^\d+[.)]\s*/, '')}`)], { first: IND1, align: AlignmentType.THAI_DISTRIBUTE }))
   const fmt = (n: number) => (n ? (Number.isInteger(n) ? String(n) : n.toFixed(1)) : '')
   const codeLine = () => p([run('รหัส '), run(course.code, { bold: true }), run('   ชื่อวิชา '), run(course.name, { bold: true })])
   const hoursLine = () => p([run(`ทฤษฎี ${book!.curriculum.theory_hours || '…'} ชั่วโมง/สัปดาห์   ปฏิบัติ ${book!.curriculum.practice_hours || '…'} ชั่วโมง/สัปดาห์   จำนวน ${book!.curriculum.credits || '…'} หน่วยกิต`)])
