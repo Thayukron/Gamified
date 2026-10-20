@@ -50,13 +50,13 @@ class TeacherController
                       WHERE e2.course_id = c.id AND pr.status = 'pending') AS reset_requests
                FROM courses c
           LEFT JOIN departments d ON d.id = c.department_id
-          LEFT JOIN enrollments e ON e.course_id = c.id
-          LEFT JOIN assessment_results r ON r.user_id = e.student_id AND r.semester = ? AND r.academic_year = ?
+          LEFT JOIN (enrollments e JOIN users su ON su.id = e.student_id AND su.is_active = 1) ON e.course_id = c.id
+          LEFT JOIN assessment_results r ON r.user_id = e.student_id
               WHERE $where
            GROUP BY c.id
            ORDER BY c.academic_year DESC, c.semester DESC, c.code, c.section"
         );
-        $stmt->execute($req->user['role'] === 'admin' ? [$sem, $year] : [$sem, $year, $req->user['id']]);
+        $stmt->execute($req->user['role'] === 'admin' ? [] : [$req->user['id']]);
         return ['courses' => $stmt->fetchAll(), 'term' => ['semester' => $sem, 'academic_year' => $year]];
     }
 
@@ -234,7 +234,7 @@ class TeacherController
         $stmt->execute([$course['id']]);
         $roster = $stmt->fetchAll();
 
-        $profiles = ProfileService::coreProfiles(array_map(fn ($s) => (int) $s['id'], $roster), $sem, $year);
+        $profiles = ProfileService::coreProfiles(array_map(fn ($s) => (int) $s['id'], $roster));
 
         $students = [];
         $dist = [

@@ -2,7 +2,7 @@
 import { useAuthStore } from '~/stores/auth'
 import { pct } from '~/utils/viz'
 
-interface Course { id: number; code: string; name: string; section: string; department_name: string; enrolled: number; profiled: number; reset_requests: number }
+interface Course { id: number; code: string; name: string; section: string; semester: number; academic_year: number; department_name: string; enrolled: number; profiled: number; reset_requests: number }
 
 const auth = useAuthStore()
 const api = useApi()
@@ -28,10 +28,24 @@ const steps = [
   { icon: "file", tone: "violet", title: "แผนการจัดการเรียนรู้", desc: "แบบฟอร์มสถานศึกษา (MIAP) · AI ร่าง · ดาวน์โหลด Word" },
   { icon: "clipboard", tone: "rose", title: "รายงาน ว.PA", desc: "พิมพ์ PDF และดาวน์โหลด Excel" },
 ]
+// term filter: the current term by default, so last term's courses don't clutter the list
+const termKey = (c: { semester: number; academic_year: number }) => `${c.semester}/${c.academic_year}`
+const termFilter = ref('current')
+const terms = computed(() => [...new Set(courses.value.map(termKey))].sort((a, b) => {
+  const [sa, ya] = a.split('/').map(Number)
+  const [sb, yb] = b.split('/').map(Number)
+  return yb * 10 + sb - (ya * 10 + sa)
+}))
+const shown = computed(() => {
+  if (termFilter.value === 'all') return courses.value
+  const k = termFilter.value === 'current' ? (term.value ? termKey(term.value) : '') : termFilter.value
+  return courses.value.filter((c) => termKey(c) === k)
+})
+const otherTerms = computed(() => terms.value.filter((t) => !term.value || t !== termKey(term.value)))
 const totals = computed(() => {
-  const enrolled = courses.value.reduce((n, c) => n + c.enrolled, 0)
-  const profiled = courses.value.reduce((n, c) => n + c.profiled, 0)
-  return { courses: courses.value.length, enrolled, profiled, pct: pct(profiled, enrolled) }
+  const enrolled = shown.value.reduce((n, c) => n + c.enrolled, 0)
+  const profiled = shown.value.reduce((n, c) => n + c.profiled, 0)
+  return { courses: shown.value.length, enrolled, profiled, pct: pct(profiled, enrolled) }
 })
 const TONES = ["indigo", "violet", "sky", "emerald", "amber", "rose"] as const
 </script>
@@ -68,10 +82,21 @@ const TONES = ["indigo", "violet", "sky", "emerald", "amber", "rose"] as const
 
     <section class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="staff-section">รายวิชาของฉัน <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">{{ courses.length }}</span></h2>
+        <h2 class="staff-section">รายวิชาของฉัน <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">{{ shown.length }}</span></h2>
         <NuxtLink to="/teacher/course/new" class="text-sm font-medium text-rune-300 hover:underline" data-testid="new-course">+ สร้างรายวิชาใหม่</NuxtLink>
       </div>
+      <div v-if="courses.length" class="flex flex-wrap gap-2" data-testid="term-filter">
+        <button
+          v-for="t in [{ k: 'current', th: `ภาคเรียนปัจจุบัน${term ? ' ' + termKey(term) : ''}` }, ...otherTerms.map((x) => ({ k: x, th: 'ภาคเรียน ' + x })), { k: 'all', th: 'ทั้งหมด' }]"
+          :key="t.k"
+          type="button"
+          class="rounded-full px-3 py-1 text-sm ring-1 transition"
+          :class="termFilter === t.k ? 'bg-rune-400/15 font-medium text-rune-200 ring-rune-400/50' : 'text-slate-400 ring-white/15 hover:text-slate-200'"
+          @click="termFilter = t.k"
+        >{{ t.th }}</button>
+      </div>
       <p v-if="loading" class="text-slate-500">กำลังโหลดรายวิชา...</p>
+      <p v-else-if="courses.length && !shown.length" class="text-sm text-slate-500">ยังไม่มีรายวิชาในภาคเรียนนี้ — สร้างรายวิชาใหม่ หรือดูภาคเรียนอื่นด้านบน</p>
       <NuxtLink v-else-if="!courses.length" to="/teacher/course/new" class="card card-hover flex items-center gap-4 border-dashed">
         <StaffIcon name="plus" tone="indigo" />
         <div>
@@ -80,11 +105,11 @@ const TONES = ["indigo", "violet", "sky", "emerald", "amber", "rose"] as const
         </div>
       </NuxtLink>
       <div class="grid gap-4 md:grid-cols-2">
-        <NuxtLink v-for="(c, i) in courses" :key="c.id" :to="`/teacher/course/${c.id}`" class="card card-hover group overflow-hidden">
+        <NuxtLink v-for="(c, i) in shown" :key="c.id" :to="`/teacher/course/${c.id}`" class="card card-hover group overflow-hidden">
           <div class="flex items-start gap-4">
             <StaffIcon name="graduation" :tone="TONES[i % TONES.length]" />
             <div class="min-w-0 flex-1">
-              <p class="text-xs font-medium text-slate-500">{{ c.code }} · กลุ่ม {{ c.section }}</p>
+              <p class="text-xs font-medium text-slate-500">{{ c.code }} · กลุ่ม {{ c.section }} · ภาคเรียน {{ termKey(c) }}</p>
               <h3 class="mt-0.5 truncate font-display text-lg font-semibold text-slate-50">{{ c.name }}</h3>
               <p class="text-sm text-slate-400">แผนก{{ c.department_name }}</p>
             </div>

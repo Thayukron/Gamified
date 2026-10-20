@@ -43,6 +43,17 @@ const filled = computed(() => ['objectives', 'competencies', 'description'].filt
       <div><p class="label">ชื่อวิชา *</p><input v-model="form.name" class="input" placeholder="เช่น โครงสร้างข้อมูลและอัลกอริทึม" data-testid="f-name"></div>
       <div><p class="label">กลุ่มเรียน</p><input v-model="form.section" class="input" placeholder="เช่น ปวส.1/1" data-testid="f-section"></div>
       <div>
+        <p class="label">ภาคเรียน / ปีการศึกษา</p>
+        <div class="grid grid-cols-2 gap-2">
+          <select v-model.number="form.semester" class="input" data-testid="f-semester">
+            <option :value="1">ภาคเรียนที่ 1</option>
+            <option :value="2">ภาคเรียนที่ 2</option>
+            <option :value="3">ภาคฤดูร้อน</option>
+          </select>
+          <input v-model.number="form.academic_year" type="number" min="2500" max="2700" class="input text-center" placeholder="2569" data-testid="f-year">
+        </div>
+      </div>
+      <div>
         <p class="label">แผนกวิชา</p>
         <select v-model="form.department_id" class="input">
           <option :value="null">— ไม่ระบุ —</option>

@@ -93,6 +93,37 @@ const removeStudent = (s: any) => {
   })
 }
 
+// take several students (or a whole group) out of this course only, e.g. dropped out — accounts stay
+const selected = ref<Set<number>>(new Set())
+function toggleSel(id: number) {
+  const n = new Set(selected.value)
+  n.has(id) ? n.delete(id) : n.add(id)
+  selected.value = n
+}
+const allShownSelected = computed(() => shownRoster.value.length > 0 && shownRoster.value.every((s) => selected.value.has(s.id)))
+function toggleAllShown() {
+  selected.value = allShownSelected.value ? new Set() : new Set(shownRoster.value.map((s) => s.id))
+}
+const removeSelected = () => {
+  if (!confirm(`นำผู้เรียนที่เลือก ${selected.value.size} คน ออกจากรายวิชานี้?
+(บัญชีและผลการเล่นเกมยังอยู่ — ถ้าออกกลางคัน/สำเร็จการศึกษา แจ้งผู้ดูแลระบบให้เปลี่ยนสถานะบัญชี)`)) return
+  run(async () => {
+    const r = await api<any>(`/teacher/courses/${id}/students/remove`, { method: 'POST', body: { student_ids: [...selected.value] } })
+    selected.value = new Set()
+    msg.value = { ok: true, text: `นำออกจากรายวิชาแล้ว ${r.removed} คน` }
+    await load()
+  })
+}
+const removeGroup = (g: string) => {
+  if (!confirm(`นำผู้เรียนกลุ่ม ${g} ทั้งหมด (${groupsInCourse.value[g]} คน) ออกจากรายวิชานี้?`)) return
+  run(async () => {
+    const r = await api<any>(`/teacher/courses/${id}/students/remove`, { method: 'POST', body: { class_group: g } })
+    selected.value = new Set()
+    msg.value = { ok: true, text: `นำกลุ่ม ${g} ออกจากรายวิชาแล้ว ${r.removed} คน` }
+    await load()
+  })
+}
+
 const resetStudent = (s: any) => {
   if (!confirm(`รีเซ็ตรหัสผ่านของ ${s.full_name}?\nรหัสผ่านชั่วคราว = ${s.student_code} และผู้เรียนต้องตั้งรหัสใหม่เมื่อเข้าสู่ระบบ`)) return
   run(async () => {
@@ -313,14 +344,24 @@ const deleteCourse = () => {
         <p v-if="pendingResets" class="rounded-xl bg-rune-400/10 px-3 py-2 text-sm text-rune-200">
           <AppIcon name="lock" :size="14" /> ผู้เรียน {{ pendingResets }} คนแจ้งลืมรหัสผ่าน (อยู่บนสุดของรายชื่อ) — กด “รีเซ็ตรหัสผ่าน” แล้วบอกผู้เรียนว่ารหัสชั่วคราวคือรหัสนักศึกษา
         </p>
+        <div v-if="roster.length" class="flex flex-wrap items-center gap-2 text-sm" data-testid="roster-tools">
+          <span class="text-slate-400">กลุ่มในวิชา:</span>
+          <span v-for="(n, g) in groupsInCourse" :key="g" class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 ring-1 ring-white/15">
+            <span class="text-slate-200">{{ g }}</span><span class="text-slate-500">{{ n }} คน</span>
+            <button v-if="g !== '-'" class="text-xs text-red-300/80 hover:text-red-300" :disabled="busy" :title="`นำกลุ่ม ${g} ออกจากรายวิชา`" :data-testid="`remove-group-${g}`" @click="removeGroup(String(g))">นำออกทั้งกลุ่ม</button>
+          </span>
+          <span class="flex-1" />
+          <button v-if="selected.size" class="btn-ghost !border-red-400/40 !py-1.5 text-sm !text-red-300" :disabled="busy" data-testid="remove-selected" @click="removeSelected">นำที่เลือกออก ({{ selected.size }} คน)</button>
+        </div>
         <p v-if="!roster.length" class="text-sm text-slate-500">ยังไม่มีผู้เรียน — เพิ่มจากด้านบน</p>
         <div v-else class="max-h-[60vh] overflow-auto rounded-xl ring-1 ring-white/10">
           <table class="w-full text-sm">
             <thead class="sticky top-0 bg-abyss-900 text-left text-slate-400">
-              <tr><th class="px-3 py-2">ที่</th><th class="px-3 py-2">รหัส</th><th class="px-3 py-2">ชื่อ-สกุล</th><th class="px-3 py-2">กลุ่มเรียน</th><th class="px-3 py-2">แผนก</th><th /></tr>
+              <tr><th class="w-10 px-3 py-2"><input type="checkbox" :checked="allShownSelected" title="เลือกทั้งหมดที่แสดง" data-testid="sel-all" @change="toggleAllShown"></th><th class="px-3 py-2">ที่</th><th class="px-3 py-2">รหัส</th><th class="px-3 py-2">ชื่อ-สกุล</th><th class="px-3 py-2">กลุ่มเรียน</th><th class="px-3 py-2">แผนก</th><th /></tr>
             </thead>
             <tbody>
-              <tr v-for="(s, i) in shownRoster" :key="s.id" class="border-t border-white/5">
+              <tr v-for="(s, i) in shownRoster" :key="s.id" class="border-t border-white/5" :class="selected.has(s.id) && 'bg-rune-400/5'">
+                <td class="px-3 py-2"><input type="checkbox" :checked="selected.has(s.id)" :data-testid="`sel-${s.student_code}`" @change="toggleSel(s.id)"></td>
                 <td class="px-3 py-2 text-slate-500">{{ i + 1 }}</td>
                 <td class="px-3 py-2 text-slate-300">{{ s.student_code }}</td>
                 <td class="px-3 py-2 text-slate-100">

@@ -140,6 +140,12 @@ class AdminController
         if (!$active) {
             $db->prepare('DELETE FROM auth_tokens WHERE user_id = ?')->execute([$u['id']]);
         }
+        if ($u['role'] === 'student') {
+            // keep the student status in step: re-enabled = studying, disabled here = account closed
+            // (unless already marked graduated/dropped)
+            $db->prepare("UPDATE users SET student_status = IF(? = 1, 'studying', IF(COALESCE(student_status, 'studying') = 'studying', 'inactive', student_status)) WHERE id = ?")
+                ->execute([$active ? 1 : 0, $u['id']]);
+        }
         return ['ok' => true];
     }
 

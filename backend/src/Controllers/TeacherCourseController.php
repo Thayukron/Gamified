@@ -58,7 +58,15 @@ class TeacherCourseController
             'course_type' => (string) $req->input('course_type', 'mixed'),
             'level' => mb_substr(trim((string) $req->input('level', '')), 0, 30) ?: null,
             'topics' => array_slice(array_values(array_filter(array_map(fn ($t) => mb_substr(trim((string) $t), 0, 100), (array) $req->input('topics', [])))), 0, 30),
+            'semester' => (int) ($req->input('semester') ?: app_config('semester')),
+            'academic_year' => (int) ($req->input('academic_year') ?: app_config('academic_year')),
         ];
+        if ($f['semester'] < 1 || $f['semester'] > 3) {
+            throw new HttpException(422, 'ภาคเรียนต้องเป็น 1, 2 หรือ 3 (ภาคฤดูร้อน)');
+        }
+        if ($f['academic_year'] < 2500 || $f['academic_year'] > 2700) {
+            throw new HttpException(422, 'ปีการศึกษาต้องเป็นปี พ.ศ. เช่น 2569');
+        }
         // course content copied from the official curriculum (optional, used by the lesson-plan book and the AI)
         foreach (self::CONTENT as $k => $max) {
             $f[$k] = mb_substr(trim(str_replace("\r", '', (string) $req->input($k, ''))), 0, $max) ?: null;
@@ -89,7 +97,7 @@ class TeacherCourseController
     public static function create(Request $req): array
     {
         $f = self::fields($req);
-        [$sem, $year] = [(int) app_config('semester'), (int) app_config('academic_year')];
+        [$sem, $year] = [$f['semester'], $f['academic_year']];
         self::assertUnique($f, $sem, $year);
         $db = Database::get();
         $cols = array_keys(self::CONTENT);
@@ -108,12 +116,12 @@ class TeacherCourseController
     {
         $course = TeacherController::course($req, (int) $req->params['id']);
         $f = self::fields($req);
-        self::assertUnique($f, (int) $course['semester'], (int) $course['academic_year'], (int) $course['id']);
+        self::assertUnique($f, $f['semester'], $f['academic_year'], (int) $course['id']);
         $cols = array_keys(self::CONTENT);
         Database::get()->prepare(
-            'UPDATE courses SET code = ?, name = ?, section = ?, department_id = ?, course_type = ?, level = ?, topics = ?, '
+            'UPDATE courses SET code = ?, name = ?, section = ?, semester = ?, academic_year = ?, department_id = ?, course_type = ?, level = ?, topics = ?, '
             . implode(', ', array_map(fn ($k) => "$k = ?", $cols)) . ' WHERE id = ?'
-        )->execute([$f['code'], $f['name'], $f['section'], $f['department_id'], $f['course_type'], $f['level'],
+        )->execute([$f['code'], $f['name'], $f['section'], $f['semester'], $f['academic_year'], $f['department_id'], $f['course_type'], $f['level'],
             json_encode($f['topics'], JSON_UNESCAPED_UNICODE), ...array_map(fn ($k) => $f[$k], $cols), $course['id']]);
         return ['ok' => true];
     }
@@ -134,7 +142,7 @@ class TeacherCourseController
             "SELECT u.id, u.student_code, u.full_name, u.class_group, d.name AS department_name, u.must_change_password,
                     EXISTS(SELECT 1 FROM password_reset_requests r WHERE r.user_id = u.id AND r.status = 'pending') AS reset_requested
                FROM enrollments e JOIN users u ON u.id = e.student_id LEFT JOIN departments d ON d.id = u.department_id
-              WHERE e.course_id = ? ORDER BY reset_requested DESC, u.class_group, u.student_code"
+              WHERE e.course_id = ? AND u.is_active = 1 ORDER BY reset_requested DESC, u.class_group, u.student_code"
         );
         $stmt->execute([$course['id']]);
         $students = array_map(fn ($s) => ['reset_requested' => (bool) $s['reset_requested'], 'must_change_password' => (bool) $s['must_change_password']] + $s, $stmt->fetchAll());
@@ -225,6 +233,31 @@ class TeacherCourseController
     {
         $course = TeacherController::course($req, (int) $req->params['id']);
         return RosterImportService::commit($course, (array) $req->input('rows', []));
+    }
+
+    /**
+     * POST /teacher/courses/{id}/students/remove — { student_ids?: int[], class_group?: string }
+     * Takes students out of THIS course only (e.g. dropped out); their accounts and game results stay.
+     */
+    public static function removeMany(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        $db = Database::get();
+        $removed = 0;
+        $group = trim((string) $req->input('class_group', ''));
+        if ($group !== '') {
+            $stmt = $db->prepare('DELETE e FROM enrollments e JOIN users u ON u.id = e.student_id WHERE e.course_id = ? AND u.class_group = ?');
+            $stmt->execute([$course['id'], $group]);
+            $removed += $stmt->rowCount();
+        }
+        $ids = array_values(array_unique(array_filter(array_map('intval', (array) $req->input('student_ids', [])))));
+        if ($ids) {
+            $in = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $db->prepare("DELETE FROM enrollments WHERE course_id = ? AND student_id IN ($in)");
+            $stmt->execute([$course['id'], ...$ids]);
+            $removed += $stmt->rowCount();
+        }
+        return ['removed' => $removed];
     }
 
     /** DELETE /teacher/courses/{id}/students/{sid} — remove one student from the course (their results are kept). */

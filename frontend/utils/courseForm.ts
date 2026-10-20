@@ -3,6 +3,8 @@ export interface CourseFormValue {
   code: string
   name: string
   section: string
+  semester: number
+  academic_year: number
   department_id: number | null
   course_type: 'theory' | 'practice' | 'mixed'
   level: string
@@ -20,8 +22,9 @@ export interface CourseFormValue {
 
 const CONTENT_KEYS = ['theory_hours', 'practice_hours', 'credits', 'outcome', 'objectives', 'competencies', 'description', 'standards_ref'] as const
 
-export function emptyCourseForm(): CourseFormValue {
-  return { code: '', name: '', section: '', department_id: null, course_type: 'mixed', level: '', topicsText: '', ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, ''])) } as CourseFormValue
+/** term = the current term from the server (/teacher/meta) — new courses start in it */
+export function emptyCourseForm(term?: { semester: number; academic_year: number }): CourseFormValue {
+  return { code: '', name: '', section: '', semester: term?.semester ?? 1, academic_year: term?.academic_year ?? 2569, department_id: null, course_type: 'mixed', level: '', topicsText: '', ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, ''])) } as CourseFormValue
 }
 
 export function courseToForm(c: any): CourseFormValue {
@@ -30,6 +33,8 @@ export function courseToForm(c: any): CourseFormValue {
     code: c.code ?? '',
     name: c.name ?? '',
     section: c.section ?? '',
+    semester: Number(c.semester) || 1,
+    academic_year: Number(c.academic_year) || 2569,
     department_id: c.department_id ? Number(c.department_id) : null,
     course_type: c.course_type ?? 'mixed',
     level: c.level ?? '',

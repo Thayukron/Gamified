@@ -27,6 +27,7 @@ CREATE TABLE users (
     department_id  INT UNSIGNED NULL,
     student_code   VARCHAR(30)  NULL,
     class_group    VARCHAR(30)  NULL COMMENT 'กลุ่มเรียน/ห้อง เช่น ปวส.1/1',
+    student_status ENUM('studying','graduated','dropped','inactive') NULL COMMENT 'นักศึกษา: กำลังศึกษา/สำเร็จการศึกษา/ออกกลางคัน/ปิดบัญชี',
     is_active      TINYINT(1)   NOT NULL DEFAULT 1,
     must_change_password TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'บังคับตั้งรหัสผ่านใหม่เมื่อเข้าสู่ระบบ',
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

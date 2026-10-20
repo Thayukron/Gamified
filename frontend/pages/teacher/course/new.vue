@@ -10,6 +10,7 @@ const err = ref('')
 
 onMounted(async () => {
   meta.value = await api('/teacher/meta')
+  form.value = emptyCourseForm(meta.value.term)
   form.value.department_id = meta.value.my_department_id
 })
 
@@ -43,7 +44,7 @@ async function save() {
       <h1 class="title-glow mt-1 text-2xl sm:text-3xl">สร้างรายวิชาของฉัน</h1>
       <p class="mt-1 text-sm text-slate-400">
         ผู้เรียนเล่นเกมครั้งเดียวต่อภาคเรียน — ทุกวิชาใช้ผลเดียวกัน ครูเพียงสร้างวิชาแล้วเลือกกลุ่มที่เรียนกับตน
-        <template v-if="meta"> · ภาคเรียน {{ meta.term.semester }}/{{ meta.term.academic_year }}</template>
+        <template v-if="meta"> · ภาคเรียนปัจจุบัน {{ meta.term.semester }}/{{ meta.term.academic_year }}</template>
       </p>
     </div>
 

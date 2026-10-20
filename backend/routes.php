@@ -31,6 +31,7 @@ $router->put('/teacher/courses/{id}', [App\Controllers\TeacherCourseController::
 $router->delete('/teacher/courses/{id}', [App\Controllers\TeacherCourseController::class, 'delete'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'roster'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'add'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/students/remove', [App\Controllers\TeacherCourseController::class, 'removeMany'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/import/preview', [App\Controllers\TeacherCourseController::class, 'importPreview'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/import/commit', [App\Controllers\TeacherCourseController::class, 'importCommit'], ['teacher', 'admin']);
 $router->delete('/teacher/courses/{id}/students/{sid}', [App\Controllers\TeacherCourseController::class, 'remove'], ['teacher', 'admin']);
@@ -81,6 +82,12 @@ $router->post('/teacher/courses/{id}/groups/preview', [App\Controllers\TeacherCo
 $router->get('/teacher/courses/{id}/groups', [App\Controllers\TeacherController::class, 'groupsSaved'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/groups', [App\Controllers\TeacherController::class, 'groupsSave'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/report', [App\Controllers\TeacherController::class, 'report'], ['teacher', 'admin']);
+$router->get('/admin/term', [App\Controllers\SettingsController::class, 'term'], ['admin']);
+$router->put('/admin/term', [App\Controllers\SettingsController::class, 'saveTerm'], ['admin']);
+$router->get('/admin/class-groups', [App\Controllers\StudentAdminController::class, 'groups'], ['admin']);
+$router->get('/admin/class-groups/members', [App\Controllers\StudentAdminController::class, 'members'], ['admin']);
+$router->post('/admin/class-groups/rename', [App\Controllers\StudentAdminController::class, 'rename'], ['admin']);
+$router->post('/admin/students/status', [App\Controllers\StudentAdminController::class, 'setStatus'], ['admin']);
 $router->get('/admin/institution', [App\Controllers\SettingsController::class, 'institution'], ['admin']);
 $router->put('/admin/institution', [App\Controllers\SettingsController::class, 'saveInstitution'], ['admin']);
 

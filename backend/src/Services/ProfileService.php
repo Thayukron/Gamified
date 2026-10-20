@@ -4,11 +4,15 @@ namespace App\Services;
 use App\Core\Database;
 
 /**
- * Core Profile = sum of every universal-quest result a student completed in a term.
+ * Core Profile = sum of the LATEST result of every universal quest a student completed (any term),
+ * so profiles carry over to a new term; replaying a quest in a later term replaces its old result.
  * Shared by the student profile page and the teacher dashboard.
  */
 class ProfileService
 {
+    /** SQL condition: keep only the most recent term's result of each (student, quest). */
+    public const LATEST = '(r.academic_year * 10 + r.semester) = (SELECT MAX(r2.academic_year * 10 + r2.semester) FROM assessment_results r2 WHERE r2.user_id = r.user_id AND r2.scenario_id = r.scenario_id)';
+
     public static function totalUniversal(): int
     {
         return (int) Database::get()->query(
@@ -21,7 +25,7 @@ class ProfileService
      * @param int[] $userIds
      * @return array<int, array> keyed by user id; students with no result are omitted
      */
-    public static function coreProfiles(array $userIds, int $semester, int $year): array
+    public static function coreProfiles(array $userIds): array
     {
         if (!$userIds) {
             return [];
@@ -29,10 +33,10 @@ class ProfileService
         $in = implode(',', array_fill(0, count($userIds), '?'));
         $stmt = Database::get()->prepare(
             "SELECT r.* FROM assessment_results r JOIN scenarios s ON s.id = r.scenario_id
-              WHERE r.user_id IN ($in) AND r.semester = ? AND r.academic_year = ? AND s.is_universal = 1
+              WHERE r.user_id IN ($in) AND s.is_universal = 1 AND " . self::LATEST . "
            ORDER BY r.user_id, r.completed_at, r.id"
         );
-        $stmt->execute([...$userIds, $semester, $year]);
+        $stmt->execute($userIds);
 
         $byUser = [];
         foreach ($stmt->fetchAll() as $row) {

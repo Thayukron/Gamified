@@ -4,6 +4,7 @@ namespace App\Controllers;
 use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
+use App\Services\ProfileService;
 use App\Services\Progression;
 use App\Services\ScenarioEngine;
 
@@ -269,10 +270,10 @@ class StudentGameController
         $db = Database::get();
         $stmt = $db->prepare(
             'SELECT r.* FROM assessment_results r JOIN scenarios s ON s.id = r.scenario_id
-              WHERE r.user_id = ? AND r.semester = ? AND r.academic_year = ? AND s.is_universal = 1
+              WHERE r.user_id = ? AND s.is_universal = 1 AND ' . ProfileService::LATEST . '
            ORDER BY r.completed_at, r.id'
         );
-        $stmt->execute([$req->user['id'], $sem, $year]);
+        $stmt->execute([$req->user['id']]);
         $rows = $stmt->fetchAll();
         $total = (int) $db->query(
             "SELECT COUNT(*) FROM scenarios WHERE is_universal = 1 AND is_active = 1 AND status = 'published'"

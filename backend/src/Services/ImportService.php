@@ -318,7 +318,7 @@ class ImportService
             $db->prepare('INSERT INTO users (username, password_hash, full_name, role, department_id, student_code, class_group, must_change_password) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
                 ->execute([$d['username'], password_hash($pw, PASSWORD_DEFAULT), $d['full_name'], $role, $deptId, $role === 'student' ? $d['username'] : null, $group, $row['password'] === '' ? 1 : 0]);
         } else {
-            $sql = 'UPDATE users SET full_name = ?, department_id = COALESCE(?, department_id), class_group = COALESCE(?, class_group), is_active = 1';
+            $sql = 'UPDATE users SET full_name = ?, department_id = COALESCE(?, department_id), class_group = COALESCE(?, class_group), is_active = 1, student_status = IF(role = "student", "studying", student_status)';
             $args = [$d['full_name'], $deptId, $group];
             if ($row['password'] !== '') {
                 $sql .= ', password_hash = ?';

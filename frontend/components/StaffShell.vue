@@ -19,6 +19,7 @@ const main = computed<Item[]>(() =>
     ? [
         { to: '/admin', label: 'ภาพรวมระบบ', icon: 'grid', exact: true },
         { to: '/admin/import', label: 'นำเข้าข้อมูล', icon: 'upload' },
+        { to: '/admin/students', label: 'นักศึกษาและกลุ่มเรียน', icon: 'users' },
         { to: '/admin/data', label: 'ข้อมูลในระบบ', icon: 'database' },
         { to: '/admin/ai', label: 'ตั้งค่า AI ของระบบ', icon: 'sparkle' },
       ]
