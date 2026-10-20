@@ -2,6 +2,7 @@
 namespace App\Services;
 
 use App\Core\HttpException;
+use App\Guide\Knowledge;
 use App\Guide\TeachingGuide;
 
 /**
@@ -123,7 +124,10 @@ class LessonPlanService
             'affective' => 'มีความรับผิดชอบ ตรงต่อเวลา และทำงานร่วมกับผู้อื่นได้',
             'application' => "ประยุกต์ใช้{$topic}ในสถานการณ์ใหม่ได้อย่างเหมาะสม",
         ];
-        $c['content'] = $topic;
+        // content outline and media follow the unit topic (knowledge base), not just the class's learning styles
+        $domain = Knowledge::DOMAIN_BY_DEPARTMENT[$course['department_code'] ?? ''] ?? 'general';
+        $key = $domain === 'it' ? Knowledge::topicKey($plan['title'], $plan['unit_name']) : null;
+        $c['content'] = implode("\n", $key ? Knowledge::TOPIC_DETAIL[$key]['content'] : str_replace('{topic}', $topic, Knowledge::CONTENT_TEMPLATE));
         $c['evidence'] = ['knowledge' => 'ผลการทดสอบ / แบบฝึกหัด / การตอบคำถาม', 'performance' => 'ผลงานจากใบงาน / การสังเกตการปฏิบัติงาน'];
         $c['assessment'] = [
             'criteria' => 'ผ่านเกณฑ์ร้อยละ 60 ขึ้นไป',
@@ -132,6 +136,8 @@ class LessonPlanService
         ];
 
         $guide = TeachingGuide::build($course, $dash);
+        $order = array_column($guide['modalities'] ?? [], 'key') ?: ['V', 'R', 'K'];
+        $c['media'] = implode("\n", self::topicMedia($topic, $key, $domain, $order));
         if (!($guide['ready'] ?? false)) {
             $c['activities'] = [
                 'motivation' => "ครูนำเข้าสู่บทเรียนด้วยสถานการณ์/ปัญหาจริงที่เกี่ยวกับ{$topic} และตั้งคำถามกระตุ้นความสนใจ",
@@ -154,18 +160,38 @@ class LessonPlanService
         $method = $guide['methods'][0] ?? null;
 
         $c['activities'] = [
-            'motivation' => "ครูนำเข้าสู่บทเรียนด้วยสถานการณ์/ปัญหาจริงที่เกี่ยวกับ{$topic}" . ($primary['media'][0] ?? '' ? " โดยใช้{$primary['media'][0]}" : '') . ' และตั้งคำถามกระตุ้นความสนใจ',
+            'motivation' => "ครูนำเข้าสู่บทเรียนด้วยสถานการณ์/ปัญหาจริงที่เกี่ยวกับ{$topic}" . ($key ? ' โดยใช้ ' . Knowledge::TOPIC_DETAIL[$key]['media'][0] : '') . ' และตั้งคำถามกระตุ้นความสนใจ',
             'information' => "ครูอธิบายเนื้อหา{$topic} โดยสลับสื่อหลายรูปแบบ เน้น{$primary['label']} ซึ่งเป็นช่องทางที่ผู้เรียนห้องนี้ถนัด",
             'application' => implode("\n", array_map(fn ($a) => $a['text'], $acts)) . ($method ? "\nจัดกิจกรรมแบบ{$method['method']} ตามความสนใจเด่นของห้อง" : ''),
             'progress' => $unit['check'] ?? 'ผู้เรียนสรุปความรู้และทำแบบทดสอบท้ายหน่วย',
         ];
-        $c['media'] = implode("\n", array_unique(array_merge(...array_map(fn ($m) => array_slice($m['media'], 0, 1), array_slice($guide['modalities'], 0, 3)))));
         $diff = array_map(fn ($a) => "ผู้เรียนสาย{$a['label']}: {$a['text']}", $acts);
         if ($guide['mindset']['fixed_pct'] > 0) {
             $diff[] = "ผู้เรียน Fixed Mindset ({$guide['mindset']['fixed_pct']}%): " . $guide['mindset']['fixed'][0];
         }
         $c['differentiation'] = implode("\n", $diff);
         return $c;
+    }
+
+    /**
+     * Media for one unit: the knowledge-base list for a known topic, otherwise templates named after the topic
+     * in the class's modality order — always with the unit's knowledge sheet and worksheet.
+     */
+    private static function topicMedia(string $topic, ?string $key, string $domain, array $order): array
+    {
+        if ($key) {
+            $media = Knowledge::TOPIC_DETAIL[$key]['media'];
+        } else {
+            $media = [];
+            foreach (array_slice($order, 0, 3) as $k) {
+                $t = Knowledge::MEDIA_TEMPLATE[$k];
+                $media[] = str_replace('{topic}', $topic, is_array($t) ? $t[$domain] : $t);
+            }
+        }
+        foreach (["ใบความรู้ เรื่อง {$topic}", "ใบงาน/ใบกิจกรรม เรื่อง {$topic}"] as $sheet) {
+            $media[] = $sheet;
+        }
+        return array_values(array_unique($media));
     }
 
     // ------------------------------------------------------------------ AI draft (teacher's own Gemini key)
