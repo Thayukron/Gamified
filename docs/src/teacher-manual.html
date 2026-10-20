@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>คู่มือการใช้งานสำหรับครูผู้สอน — ARCANA PROFILE</title>
+<!-- Teacher manual (A4). Rendered to docs/คู่มือการใช้งานสำหรับครู-ARCANA-PROFILE.pdf with Edge (page.pdf).
+     Screenshots: manual-img/*.png (orange numbered rings = what to press; numbers match the steps). -->
+<style>
+  @font-face { font-family: 'TH SarabunPSK'; src: url('../../frontend/public/fonts/THSarabun.ttf'); font-weight: 400; }
+  @font-face { font-family: 'TH SarabunPSK'; src: url('../../frontend/public/fonts/THSarabun-Bold.ttf'); font-weight: 700; }
+  @page { size: A4; margin: 14mm 15mm 14mm; }
+  :root { --ink: #1b1f2e; --accent: #4f46e5; --violet: #7c3aed; --mark: #f97316; --line: #dfe3ee; --soft: #f4f5fb; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: 'TH SarabunPSK', sans-serif; font-size: 16pt; line-height: 1.12; color: var(--ink); }
+  p { margin: 0 0 3pt; }
+  b { font-weight: 700; }
+  ol, ul { margin: 2pt 0 4pt; padding-left: 20pt; }
+  li { margin: 0 0 1pt; }
+
+  /* cover */
+  .cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; break-after: page; }
+  .logo { width: 30mm; height: 30mm; border-radius: 8mm; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; margin-bottom: 8mm; }
+  .cover .brand { font-size: 34pt; font-weight: 700; color: var(--accent); letter-spacing: 1pt; line-height: 1; }
+  .cover h1 { font-size: 30pt; margin: 6mm 0 2mm; line-height: 1.05; }
+  .cover .sub { font-size: 18pt; color: #4b5068; }
+  .cover .org { margin-top: 30mm; font-size: 18pt; line-height: 1.2; }
+  .cover .ver { margin-top: 4mm; font-size: 14pt; color: #6b7088; }
+
+  /* headings */
+  h2 { font-size: 22pt; margin: 0 0 3pt; display: flex; align-items: center; gap: 8pt; line-height: 1.05; color: var(--ink); }
+  h2 .no { flex: none; width: 24pt; height: 24pt; border-radius: 7pt; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; font-size: 16pt; display: flex; align-items: center; justify-content: center; }
+  h3 { font-size: 18pt; margin: 6pt 0 2pt; color: var(--accent); line-height: 1.05; }
+  .lead { color: #4b5068; margin-bottom: 4pt; }
+  .page { break-before: page; }
+
+  .shot { margin: 3pt 0 4pt; border: .8pt solid var(--line); border-radius: 6pt; overflow: hidden; break-inside: avoid; }
+  .shot img { display: block; width: 100%; }
+  .shot.half { width: 142mm; margin-left: auto; margin-right: auto; }
+  .steps { list-style: none; padding: 0; counter-reset: s; }
+  .steps li { position: relative; padding-left: 22pt; margin-bottom: 2pt; }
+  .steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: 2pt; width: 15pt; height: 15pt; border-radius: 50%; background: var(--mark); color: #fff; font-size: 12pt; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .tip { border-left: 3pt solid var(--accent); background: var(--soft); padding: 2pt 8pt; border-radius: 0 5pt 5pt 0; margin: 4pt 0; break-inside: avoid; }
+  .warn { border-left-color: var(--mark); background: #fff6ee; }
+  .kbd { display: inline-block; border: .8pt solid #c9cde0; border-radius: 4pt; padding: 0 4pt; background: #fff; font-weight: 700; line-height: 1.1; }
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5pt; margin: 4pt 0 6pt; }
+  .flow div { border: .8pt solid var(--line); border-radius: 6pt; padding: 3pt 7pt; background: var(--soft); }
+  .flow b { color: var(--accent); }
+  .toc { columns: 2; column-gap: 12mm; margin-top: 3pt; }
+  .toc div { break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 3pt 0; }
+  td, th { border: .8pt solid var(--line); padding: 2pt 6pt; vertical-align: top; text-align: left; }
+  th { background: var(--soft); }
+</style>
+</head>
+<body>
+
+<!-- ───────────── cover ───────────── -->
+<section class="cover">
+  <div class="logo">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+  </div>
+  <div class="brand">ARCANA PROFILE</div>
+  <h1>คู่มือการใช้งานสำหรับครูผู้สอน</h1>
+  <div class="sub">ระบบวิเคราะห์ผู้เรียนเพื่อการจัดการเรียนรู้</div>
+  <div class="org">วิทยาลัยการอาชีพศรีสะเกษ<br>สำนักงานคณะกรรมการการอาชีวศึกษา</div>
+  <div class="ver">ฉบับเดือนตุลาคม 2569</div>
+</section>
+
+<!-- ───────────── overview ───────────── -->
+<section>
+  <h2>ระบบนี้ช่วยครูอย่างไร</h2>
+  <p>ผู้เรียน<b>เล่นเกมผจญภัยสั้น ๆ ครั้งเดียว</b> ระบบวิเคราะห์ว่าแต่ละคน<b>เรียนรู้ได้ดีผ่านช่องทางใด</b> (VARK) <b>สนใจงานแบบไหน</b> (RIASEC) และมี<b>กรอบความคิด</b>แบบใด (Mindset) จากนั้นครูนำผลไปใช้กับทุกรายวิชาที่สอน</p>
+  <div class="flow">
+    <div><b>1. สร้างรายวิชา</b><br>และเลือกกลุ่มเรียน</div>
+    <div><b>2. ดูแดชบอร์ด</b><br>ลักษณะผู้เรียนทั้งห้อง</div>
+    <div><b>3. ไกด์การสอน</b><br>สื่อ วิธีสอน (+AI)</div>
+    <div><b>4. จัดกลุ่มผู้เรียน</b><br>คละจุดแข็ง/ซ่อมเสริม</div>
+    <div><b>5. แผนการจัดการเรียนรู้</b><br>แบบฟอร์มสถานศึกษา → Word</div>
+    <div><b>6. รายงาน ว.PA</b><br>PDF และ Excel</div>
+  </div>
+
+  <h3>สารบัญ</h3>
+  <div class="toc">
+    <div>1. เข้าสู่ระบบและบัญชีของฉัน</div>
+    <div>2. หน้าแรกของครู</div>
+    <div>3. สร้างรายวิชา</div>
+    <div>4. เพิ่ม/นำออกผู้เรียน</div>
+    <div>5. แดชบอร์ดผู้เรียน</div>
+    <div>6. ไกด์การสอนและ AI</div>
+    <div>7. จัดกลุ่มผู้เรียน</div>
+    <div>8. แผนการจัดการเรียนรู้</div>
+    <div>9. รายงาน ว.PA</div>
+    <div>10. คำถามที่พบบ่อย</div>
+  </div>
+  <div class="tip">ในภาพประกอบ <b style="color:var(--mark)">กรอบสีส้มพร้อมหมายเลข</b> คือจุดที่ต้องกด — หมายเลขตรงกับขั้นตอนในคู่มือ</div>
+
+  <h2 style="margin-top:8pt"><span class="no">1</span>เข้าสู่ระบบ</h2>
+  <div class="shot half"><img src="manual-img/01-login.png"></div>
+  <ol class="steps">
+    <li>กรอก <b>ชื่อผู้ใช้</b> ที่ได้รับจากผู้ดูแลระบบ</li>
+    <li>กรอก <b>รหัสผ่าน</b> — เข้าครั้งแรก รหัสผ่านคือชื่อผู้ใช้</li>
+    <li>กด <b>เข้าสู่ระบบ</b> — ครั้งแรกระบบจะให้ <b>ตั้งรหัสผ่านใหม่</b> ก่อนใช้งาน</li>
+  </ol>
+</section>
+
+<section class="page">
+  <h3>บัญชีของฉัน: เปลี่ยนชื่อผู้ใช้ / รหัสผ่าน</h3>
+  <p>กดชื่อของคุณที่ <b>มุมซ้ายล่าง</b> ของเมนู</p>
+  <div class="shot half"><img src="manual-img/20-account.png"></div>
+  <ol class="steps">
+    <li><b>เปลี่ยนชื่อผู้ใช้</b> — ถ้าได้รับชื่อชั่วคราว (เช่น teacher3) เปลี่ยนเป็นชื่อของคุณเองได้ (ภาษาอังกฤษ/ตัวเลข ไม่มีช่องว่าง) แล้วยืนยันด้วยรหัสผ่าน</li>
+    <li><b>เปลี่ยนรหัสผ่าน</b> — กรอกรหัสปัจจุบัน รหัสใหม่ (อย่างน้อย 6 ตัว) และยืนยัน</li>
+  </ol>
+  <div class="tip warn"><b>ลืมรหัสผ่าน?</b> กด “ลืมรหัสผ่าน?” ที่หน้าเข้าสู่ระบบ แล้วแจ้งผู้ดูแลระบบ — จะได้รหัสชั่วคราวและต้องตั้งใหม่</div>
+
+  <h2 style="margin-top:6pt"><span class="no">2</span>หน้าแรกของครู</h2>
+  <div class="shot half"><img src="manual-img/02-home.png"></div>
+  <ol class="steps">
+    <li><b>เมนูด้านซ้าย</b> — เมื่อเปิดรายวิชาใด จะมีเมนู “รายวิชานี้” (แดชบอร์ด ไกด์ จัดกลุ่ม แผน รายงาน รายชื่อ) ให้กดไปได้ทันที</li>
+    <li><b>สร้างรายวิชา</b> ใหม่</li>
+    <li><b>การ์ดรายวิชา</b> — กดเพื่อเข้าแดชบอร์ด · แถบแสดงจำนวนผู้เรียนที่เล่นเกมแล้ว · ปุ่มด้านบนรายการใช้กรอง <b>ภาคเรียน</b></li>
+  </ol>
+</section>
+
+<!-- ───────────── course ───────────── -->
+<section class="page">
+  <h2><span class="no">3</span>สร้างรายวิชา</h2>
+  <p class="lead">ฟอร์มมี 3 แท็บ กรอกครั้งเดียวใช้ได้ทั้งแดชบอร์ด ไกด์ แผนการสอน และให้ AI อ้างอิงหลักสูตร</p>
+  <div class="shot half"><img src="manual-img/03-course-basic.png"></div>
+  <ol class="steps">
+    <li><b>ข้อมูลวิชา</b> — รหัสวิชา ชื่อวิชา กลุ่มเรียน แผนก ประเภท (ทฤษฎี/ปฏิบัติ/ผสม) ระดับชั้น ชั่วโมง</li>
+    <li><b>ภาคเรียน/ปีการศึกษา</b> — ค่าเริ่มต้นคือภาคเรียนปัจจุบัน</li>
+    <li>ไปแท็บ <b>2 เนื้อหารายวิชา</b></li>
+  </ol>
+  <div class="shot half"><img src="manual-img/04-course-content.png"></div>
+  <ol class="steps">
+    <li>คัดลอก <b>จุดประสงค์ · สมรรถนะ · คำอธิบายรายวิชา</b> จากหลักสูตร สอศ. มาวาง (1 บรรทัด = 1 ข้อ)</li>
+  </ol>
+</section>
+
+<section class="page">
+  <h3>แท็บ 3 หน่วยการเรียน และเลือกกลุ่มเรียน</h3>
+  <div class="shot half"><img src="manual-img/05-course-units.png"></div>
+  <ol class="steps">
+    <li><b>AI วิเคราะห์หน่วย</b> — AI แบ่งหน่วยการเรียนจากคำอธิบายรายวิชาพร้อมชั่วโมง (ต้องตั้งค่า AI ก่อน ดูข้อ 6)</li>
+    <li><b>แยกจากคำอธิบาย (ไม่ใช้ AI)</b> — หรือพิมพ์ชื่อหน่วยเองแล้วกด Enter · ตรวจ ติ๊กเลือก แก้ชื่อได้ก่อนใช้</li>
+  </ol>
+  <div class="shot half"><img src="manual-img/06-course-groups.png"></div>
+  <ol class="steps">
+    <li><b>เลือกกลุ่มเรียน</b> ที่เรียนกับคุณ (เลือกได้หลายกลุ่ม) แล้วกด <span class="kbd">สร้างรายวิชา</span> — ผู้เรียนทั้งกลุ่มเข้ามาในวิชาทันที</li>
+  </ol>
+  <div class="tip">ผู้เรียนเล่นเกมครั้งเดียว ผลใช้ได้กับ <b>ทุกรายวิชา</b> ครูไม่ต้องให้เล่นซ้ำในแต่ละวิชา</div>
+</section>
+
+<!-- ───────────── roster ───────────── -->
+<section class="page">
+  <h2><span class="no">4</span>เพิ่ม / นำออกผู้เรียน</h2>
+  <p class="lead">เมนู <b>รายชื่อ / แก้ไขวิชา</b> ของรายวิชา</p>
+  <div class="shot half"><img src="manual-img/07-roster-add.png"></div>
+  <ol class="steps">
+    <li><b>ทั้งกลุ่มเรียน</b> — กด “+ เพิ่มทั้งกลุ่ม” (หรือค้นหารายคน / วางรหัสนักศึกษาที่คัดลอกจาก Excel)</li>
+    <li><b>นำเข้าจากไฟล์ Excel/CSV</b> — ใช้เมื่อนักศึกษายังไม่มีในระบบ</li>
+  </ol>
+  <div class="shot half"><img src="manual-img/08-roster-import.png"></div>
+  <ol class="steps">
+    <li>ดาวน์โหลด <b>แม่แบบรายชื่อ.xlsx</b> (3 คอลัมน์: รหัสนักศึกษา · ชื่อ-สกุล · กลุ่มเรียน) แล้วกรอก</li>
+    <li>ลากไฟล์มาวาง → ตรวจตาราง (สร้างบัญชีใหม่ / เพิ่มเข้าวิชา / ผิดพลาด) → กด <span class="kbd">นำเข้า</span></li>
+  </ol>
+  <div class="tip">นักศึกษาใหม่ได้รหัสผ่านเริ่มต้น = <b>รหัสนักศึกษา</b> · ผู้ที่มีบัญชีอยู่แล้วจะถูกเพิ่มเข้าวิชาเท่านั้น ข้อมูลเดิมไม่ถูกแก้</div>
+</section>
+
+<section class="page">
+  <h3>รายชื่อผู้เรียน: นำออก / รีเซ็ตรหัสผ่าน</h3>
+  <div class="shot half"><img src="manual-img/09-roster-list.png"></div>
+  <ol class="steps">
+    <li>ติ๊กเลือกผู้เรียน (ช่องหัวตาราง = เลือกทั้งหมด) แล้วกด <b>นำที่เลือกออก</b></li>
+    <li><b>นำออกทั้งกลุ่ม</b> — นำกลุ่มเรียนนั้นออกจากรายวิชานี้</li>
+  </ol>
+  <ul>
+    <li>นำออก = ออกจาก <b>วิชานี้</b> เท่านั้น บัญชีและผลการเล่นเกมยังอยู่ (ผู้เรียนออกกลางคัน/สำเร็จการศึกษา ให้แจ้งผู้ดูแลระบบเปลี่ยนสถานะ)</li>
+    <li><b>รีเซ็ตรหัสผ่าน</b> (ท้ายแถว) — เมื่อผู้เรียนลืมรหัส · รหัสชั่วคราว = รหัสนักศึกษา</li>
+  </ul>
+
+  <!-- ───────────── dashboard ───────────── -->
+  <h2 style="margin-top:6pt"><span class="no">5</span>แดชบอร์ดผู้เรียน</h2>
+  <div class="shot half"><img src="manual-img/10-dashboard.png"></div>
+  <ol class="steps">
+    <li><b>ข้อสังเกตสำคัญของห้อง</b> — สรุปจุดเด่นของผู้เรียนเป็นภาษาง่าย ๆ</li>
+    <li>ปุ่มไปยัง <b>ไกด์การสอน · จัดกลุ่ม · รายงาน ว.PA</b></li>
+  </ol>
+</section>
+
+<section class="page">
+  <div class="shot half"><img src="manual-img/11-dashboard-charts.png"></div>
+  <table>
+    <tr><th style="width:28%">กราฟ</th><th>อ่านอย่างไร</th></tr>
+    <tr><td>สไตล์การเรียนรู้ (VARK)</td><td>V เห็นภาพ · A ฟัง · R อ่าน-เขียน · K ลงมือทำ — <b>กดแท่งกราฟเพื่อดูรายชื่อ</b></td></tr>
+    <tr><td>กรอบความคิด (Mindset)</td><td>Growth = มองความผิดพลาดเป็นบทเรียน · Fixed = ควรเสริมแรงเชิงบวก งานที่สำเร็จได้เร็ว</td></tr>
+    <tr><td>ความสนใจอาชีพ (RIASEC)</td><td>บุคลิกด้านงานของห้อง ใช้เลือกวิธีสอนและบทบาทในงานกลุ่ม</td></tr>
+    <tr><td>ตารางรายชื่อ</td><td>กรองตามสถานะ/VARK/RIASEC/Mindset · กดชื่อเพื่อดูโปรไฟล์รายคน</td></tr>
+  </table>
+  <div class="tip">ผลของผู้เรียนใช้ <b>ผลล่าสุด</b> ข้ามภาคเรียนได้ — ขึ้นภาคเรียนใหม่ข้อมูลไม่หาย</div>
+
+  <!-- ───────────── guide ───────────── -->
+  <h2 style="margin-top:6pt"><span class="no">6</span>ไกด์การสอนและ AI</h2>
+  <div class="shot half"><img src="manual-img/12-guide.png"></div>
+  <ol class="steps">
+    <li><b>วิเคราะห์ด้วย AI</b> (Gemini) — ไกด์เชิงลึกเฉพาะรายวิชา กลยุทธ์ สื่อ ใช้เวลา 20–60 วินาที ผลถูกเก็บไว้ ไม่ต้องกดซ้ำ</li>
+    <li><b>พิมพ์ / บันทึก PDF</b> — ไกด์แบบไม่ใช้ AI ใช้ได้ทันทีโดยไม่ต้องตั้งค่า</li>
+  </ol>
+</section>
+
+<section class="page">
+  <h3>ตั้งค่า AI ของฉัน (ทำครั้งเดียว · ฟรี)</h3>
+  <div class="shot half"><img src="manual-img/19-ai-settings.png"></div>
+  <ol class="steps">
+    <li>เข้า <b>aistudio.google.com/apikey</b> → ล็อกอินบัญชี Google → <b>Create API key</b> → คัดลอก แล้ววางในช่องนี้ → กด <span class="kbd">ตรวจสอบและบันทึก</span></li>
+  </ol>
+  <div class="tip">Key เป็นของครูแต่ละคน ถูกเข้ารหัสก่อนเก็บ · ระบบส่งให้ AI <b>เฉพาะสถิติรวมของห้อง</b> ไม่ส่งชื่อหรือรหัสนักเรียน · ถ้า AI แจ้ง “Google ไม่ว่าง/เกินโควตา” ให้รอ 1–2 นาทีแล้วกดใหม่</div>
+
+  <!-- ───────────── groups ───────────── -->
+  <h2 style="margin-top:6pt"><span class="no">7</span>จัดกลุ่มผู้เรียน</h2>
+  <div class="shot half"><img src="manual-img/13-groups.png"></div>
+  <ul>
+    <li>เลือก <b>จุดประสงค์</b>: “คละจุดแข็ง · งานกลุ่ม” หรือ “สไตล์เดียวกัน · ซ่อมเสริม” และ <b>จำนวนคนต่อกลุ่ม</b></li>
+    <li>กด <span class="kbd">สุ่มจัดใหม่</span> จนพอใจ · ย้ายสมาชิกด้วยเมนู “ย้ายไป…” · กด <span class="kbd">บันทึก</span> · พิมพ์เป็น PDF ได้</li>
+  </ul>
+</section>
+
+<!-- ───────────── lesson plans ───────────── -->
+<section class="page">
+  <h2><span class="no">8</span>แผนการจัดการเรียนรู้ (แบบฟอร์ม สอศ. 2567)</h2>
+  <div class="shot half"><img src="manual-img/14-plans.png"></div>
+  <ol class="steps">
+    <li><b>เริ่มทำแผน</b> ของแต่ละหน่วย (หน่วยมาจากแท็บ 3 ของรายวิชา) · “+ สอนครั้งถัดไป” เพิ่มแผนครั้งต่อไป</li>
+    <li><b>ส่งออกทั้งรายวิชา</b> — เล่มแผนฉบับเต็มเป็นไฟล์ Word</li>
+    <li><b>ปก · คำนำ · ตารางวิเคราะห์</b> — ส่วนหน้าเล่มระดับรายวิชา</li>
+  </ol>
+  <div class="shot half"><img src="manual-img/15-plan-editor.png"></div>
+  <ol class="steps">
+    <li><b>ให้ AI ร่างแผน</b> — AI เขียนทุกข้อตามแบบฟอร์ม ปรับตามผู้เรียนห้องนี้ (30–60 วินาที)</li>
+    <li><b>เติมจากไกด์</b> — ร่างอัตโนมัติโดยไม่ใช้ AI</li>
+    <li>กดหัวข้อเพื่อเปิดอ่าน/แก้ไขทีละข้อ · แท็บด้านบนคือเอกสารประกอบ (ใบความรู้ ใบงาน ใบกิจกรรม แบบประเมิน)</li>
+    <li>กด <span class="kbd">บันทึก</span> ทุกครั้งหลังแก้ไข</li>
+  </ol>
+</section>
+
+<section class="page">
+  <h3>ข้อ 2 อ้างอิงมาตรฐานอาชีพ และการส่งออก Word</h3>
+  <div class="shot half"><img src="manual-img/16-plan-standard.png"></div>
+  <ol class="steps">
+    <li><b>ค้นหามาตรฐานอาชีพ (TPQI) ด้วย AI</b> — ถ้าพบจะใส่ข้อมูลให้ ถ้าไม่พบจะเว้นว่าง (แบบฟอร์มอนุญาต) · <b>ตรวจกับเว็บ tpqi-net.tpqi.go.th ก่อนใช้เสมอ</b></li>
+  </ol>
+  <div class="shot half"><img src="manual-img/17-plan-export.png"></div>
+  <ol class="steps">
+    <li>กด <b>ส่งออก Word (เลือกฟอร์ม)</b> → ติ๊กเลือกสิ่งที่ต้องการ → <span class="kbd">ดาวน์โหลด Word</span> ได้ไฟล์เดียวเรียงตามแบบฟอร์ม (TH SarabunPSK จัดย่อหน้าแบบเอกสารราชการ)</li>
+  </ol>
+  <div class="tip warn">ข้อความที่ AI ร่างเป็น <b>ร่างตั้งต้น</b> — ครูควรอ่านทวนและปรับให้เหมาะกับบริบทจริงก่อนนำไปใช้/ส่งเล่ม</div>
+</section>
+
+<!-- ───────────── report + FAQ ───────────── -->
+<section class="page">
+  <h2><span class="no">9</span>รายงาน ว.PA</h2>
+  <div class="shot half"><img src="manual-img/18-report.png"></div>
+  <ol class="steps">
+    <li><b>พิมพ์ / บันทึก PDF</b> — รายงานผลการวิเคราะห์ผู้เรียนและแนวทางการจัดการเรียนรู้ (ปก ข้อมูลห้อง ผลรายบุคคล แนวทาง)</li>
+    <li><b>ดาวน์โหลด Excel</b> — ข้อมูลดิบสำหรับวิเคราะห์ต่อ</li>
+  </ol>
+
+  <h2 style="margin-top:8pt"><span class="no">10</span>คำถามที่พบบ่อย</h2>
+  <table>
+    <tr><th style="width:36%">คำถาม</th><th>คำตอบ</th></tr>
+    <tr><td>ผู้เรียนยังไม่ขึ้นในแดชบอร์ด</td><td>ผู้เรียนต้องเข้าระบบและเล่นเกมให้จบอย่างน้อย 1 เควสต์ · ยิ่งเล่นครบ ผลยิ่งแม่นยำ</td></tr>
+    <tr><td>ผู้เรียนลืมรหัสผ่าน</td><td>หน้า “รายชื่อ / แก้ไขวิชา” → รีเซ็ตรหัสผ่าน → รหัสชั่วคราว = รหัสนักศึกษา</td></tr>
+    <tr><td>ขึ้นภาคเรียนใหม่</td><td>ผู้ดูแลระบบเปลี่ยนภาคเรียนปัจจุบัน → ครูสร้างรายวิชาของภาคใหม่ · รายวิชาเก่าดูได้จากปุ่มกรองภาคเรียน</td></tr>
+    <tr><td>ปุ่ม AI ขึ้นข้อผิดพลาด</td><td>ตรวจว่าตั้งค่า API Key แล้ว · ถ้า “Google ไม่ว่าง/เกินโควตา” รอ 1–2 นาทีแล้วกดใหม่ · ใช้ “เติมจากไกด์” แทนได้เสมอ</td></tr>
+    <tr><td>ข้อมูลผู้เรียนปลอดภัยไหม</td><td>ครูเห็นเฉพาะผู้เรียนในรายวิชาของตนเอง · AI ได้รับเฉพาะสถิติรวม ไม่มีชื่อ/รหัสนักเรียน</td></tr>
+    <tr><td>ใช้บนมือถือได้ไหม</td><td>ได้ — กดปุ่ม ☰ มุมขวาบนเพื่อเปิดเมนู</td></tr>
+  </table>
+  <div class="tip">ติดปัญหาการใช้งาน ติดต่อ <b>ผู้ดูแลระบบ ARCANA PROFILE</b> ของวิทยาลัย</div>
+</section>
+
+</body>
+</html>
