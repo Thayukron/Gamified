@@ -14,7 +14,7 @@ cp .env.example .env     # ตั้งรหัสผ่านฐานข้�
 docker compose up -d --build
 ```
 เปิด http://localhost:8090 → `admin` / `admin1234` (ระบบบังคับเปลี่ยนรหัสครั้งแรก) · อัปเดต: `git pull && docker compose up -d --build`
-รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [DEPLOY.md](DEPLOY.md)
+รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [DEPLOY.md](DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [Manual.md](Manual.md)
 
 ## เริ่มต้นใช้งาน (Development)
 
