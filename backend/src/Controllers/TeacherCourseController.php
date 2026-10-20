@@ -5,6 +5,7 @@ use App\Core\Database;
 use App\Core\HttpException;
 use App\Core\Request;
 use App\Services\PasswordService;
+use App\Services\RosterImportService;
 
 /**
  * Teachers create their own courses (current term) and pick the students who study with them.
@@ -210,6 +211,20 @@ class TeacherCourseController
             $added += $stmt->rowCount();
         }
         return ['added' => $added, 'not_found' => $notFound];
+    }
+
+    /** POST /teacher/courses/{id}/import/preview — { rows: [{student_code, full_name, class_group, _row}] } */
+    public static function importPreview(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        return RosterImportService::preview($course, (array) $req->input('rows', []));
+    }
+
+    /** POST /teacher/courses/{id}/import/commit — same body; creates missing students and enrolls them. */
+    public static function importCommit(Request $req): array
+    {
+        $course = TeacherController::course($req, (int) $req->params['id']);
+        return RosterImportService::commit($course, (array) $req->input('rows', []));
     }
 
     /** DELETE /teacher/courses/{id}/students/{sid} — remove one student from the course (their results are kept). */

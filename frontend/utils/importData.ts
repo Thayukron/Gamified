@@ -1,6 +1,7 @@
 // Import template + parsing of xlsx/csv uploads (browser-side; exceljs is lazy-loaded).
 
-export type ImportType = 'departments' | 'teachers' | 'students' | 'courses' | 'enrollments'
+// roster = a teacher's own course list (student code, name, group); the others are admin imports
+export type ImportType = 'departments' | 'teachers' | 'students' | 'courses' | 'enrollments' | 'roster'
 
 interface Col { key: string; label: string; required?: boolean; note: string; aliases?: string[] }
 
@@ -66,8 +67,20 @@ export const IMPORT_SPEC: Record<ImportType, { sheet: string; title: string; col
     ],
     example: [['30204-2003', 'ปวส.1/1', '1', '2569', '6901001'], ['30204-2003', 'ปวส.1/1', '1', '2569', '6901002']],
   },
+  roster: {
+    sheet: 'รายชื่อนักศึกษา',
+    title: 'รายชื่อนักศึกษาในรายวิชา',
+    cols: [
+      { key: 'student_code', label: 'รหัสนักศึกษา', required: true, note: 'ใช้ล็อกอิน เช่น 6901001', aliases: ['student_code', 'รหัสประจำตัว', 'รหัส', 'student_id', 'username'] },
+      { key: 'full_name', label: 'ชื่อ-สกุล', required: true, note: 'เช่น นายกิตติ ใจดี (ใช้เมื่อยังไม่มีบัญชี)', aliases: ['full_name', 'ชื่อ - สกุล', 'ชื่อสกุล', 'name'] },
+      { key: 'class_group', label: 'กลุ่มเรียน', note: 'เช่น ปวส.1/1 (ไม่บังคับ)', aliases: ['class_group', 'กลุ่ม', 'ห้อง', 'ชั้น/ห้อง'] },
+    ],
+    example: [['6901001', 'นายกิตติ ใจดี', 'ปวส.1/1'], ['6901002', 'นางสาวขวัญใจ รักเรียน', 'ปวส.1/1']],
+  },
 }
 export const IMPORT_ORDER: ImportType[] = ['departments', 'teachers', 'students', 'courses', 'enrollments']
+/** What the admin imports now: courses/enrollments are created by teachers on their course pages. */
+export const ADMIN_TYPES: ImportType[] = ['teachers', 'students', 'departments']
 
 const norm = (s: string) => s.toString().replace(/\s|\*|\(.*?\)/g, '').toLowerCase()
 
@@ -110,9 +123,13 @@ function toRows(type: ImportType, table: string[][]) {
   const examples = new Set(spec.example.map((e) => e.join('|')))
   const rows: Record<string, string>[] = []
   const rowNos: number[] = []
+  // our template has a hint row under the header; files from other systems (CSV exports) don't
+  const fromTemplate = spec.cols.map((_, ci) => String(body[0]?.[ci] ?? '').trim()).join('|') === notes
   body.forEach((r, i) => {
     const cells = spec.cols.map((_, ci) => String(r[ci] ?? '').trim()).join('|')
-    if (!r.some((c) => String(c ?? '').trim() !== '') || cells === notes || examples.has(cells)) return
+    // example rows are skipped only where the template puts them (right under the hint row),
+    // so real data that happens to equal an example (e.g. department IT) is still imported
+    if (!r.some((c) => String(c ?? '').trim() !== '') || cells === notes || (fromTemplate && i <= spec.example.length && examples.has(cells))) return
     rows.push(Object.fromEntries(Object.entries(map).map(([ci, k]) => [k, String(r[Number(ci)] ?? '').trim()])))
     rowNos.push(i + 2)
   })
@@ -155,8 +172,8 @@ export interface ParsedFile {
   sheets: { name: string; type: ImportType | null; rows: number }[]
 }
 
-/** Parse an uploaded .xlsx or .csv. For CSV the type must be given (or is guessed from the header). */
-export async function parseImportFile(file: File, csvType?: ImportType): Promise<ParsedFile> {
+/** Parse an uploaded .xlsx or .csv. With `type`, every sheet (and CSV) is read as that type (one-type templates). */
+export async function parseImportFile(file: File, type?: ImportType): Promise<ParsedFile> {
   const out: ParsedFile = { payload: {}, sheets: [] }
   const add = (name: string, table: string[][], forced?: ImportType) => {
     const type = forced ?? detectType(name, table[0] ?? [])
@@ -171,7 +188,7 @@ export async function parseImportFile(file: File, csvType?: ImportType): Promise
   }
   if (/\.csv$/i.test(file.name)) {
     const text = (await file.text()).replace(/^﻿/, '')
-    add(file.name, parseCsv(text), csvType)
+    add(file.name, parseCsv(text), type)
     return out
   }
   const { default: ExcelJS } = await import('exceljs')
@@ -185,31 +202,35 @@ export async function parseImportFile(file: File, csvType?: ImportType): Promise
       row.eachCell({ includeEmpty: true }, (c: any, col: number) => (vals[col - 1] = cellText(c.value)))
       table[rowNumber - 1] = Array.from(vals, (v) => v ?? '') // keep real row numbers
     })
-    add(ws.name, Array.from(table, (r) => r ?? []))
+    // a sheet named after ANOTHER type (e.g. an old all-in-one template) is skipped, not misread
+    const named = (Object.keys(IMPORT_SPEC) as ImportType[]).find((t) => norm(IMPORT_SPEC[t].sheet) === norm(ws.name))
+    if (type && named && named !== type) {
+      out.sheets.push({ name: ws.name, type: null, rows: 0 })
+      return
+    }
+    add(ws.name, Array.from(table, (r) => r ?? []), type)
   })
   return out
 }
 
-/** Download the multi-sheet Excel template with instructions and examples. */
-export async function downloadImportTemplate() {
+/** Download a one-type Excel template (instruction sheet + data sheet with a hint row and yellow example rows). */
+export async function downloadImportTemplate(type: ImportType, extraHelp: string[] = []) {
   const { default: ExcelJS } = await import('exceljs')
   const wb = new ExcelJS.Workbook()
   const font = { name: 'TH SarabunPSK', size: 16 }
 
   const help = wb.addWorksheet('คำอธิบาย')
   ;[
-    'แม่แบบนำเข้าข้อมูล — ARCANA PROFILE',
-    '1. กรอกข้อมูลในแต่ละชีต (ลบแถวตัวอย่างสีเหลืองออกก่อน) ใช้เฉพาะชีตที่ต้องการก็ได้',
-    '2. ลำดับการนำเข้า: แผนกวิชา → ครู → นักศึกษา → รายวิชา → การลงทะเบียน (ระบบจัดลำดับให้เอง)',
-    '   ชีตรายวิชา/การลงทะเบียนไม่บังคับ — ครูสร้างรายวิชาและเลือกกลุ่มเรียนเองได้ (กรอก "กลุ่มเรียน" ของนักศึกษาไว้ ครูจะเพิ่มทั้งกลุ่มได้ในคลิกเดียว)',
-    '3. ห้ามเปลี่ยนชื่อหัวคอลัมน์ · คอลัมน์ที่มี * ต้องกรอก',
-    '4. ข้อมูลที่มีอยู่แล้วจะถูกอัปเดต (นำเข้าไฟล์เดิมซ้ำได้โดยไม่เกิดข้อมูลซ้ำ)',
-    '5. รหัสผ่านที่เว้นว่าง: ครู = ชื่อผู้ใช้, นักศึกษา = รหัสนักศึกษา (แนะนำให้แจ้งผู้ใช้เปลี่ยนภายหลัง)',
-    '6. ส่งออกจากระบบทะเบียนเป็น CSV ได้เช่นกัน — ตั้งชื่อหัวคอลัมน์ตามแม่แบบ',
+    `แม่แบบนำเข้า${IMPORT_SPEC[type].title} — ARCANA PROFILE`,
+    `1. กรอกข้อมูลในชีต “${IMPORT_SPEC[type].sheet}” (ลบแถวตัวอย่างสีเหลืองออก หรือปล่อยไว้ก็ได้ ระบบข้ามให้)`,
+    '2. ห้ามเปลี่ยนชื่อหัวคอลัมน์ · คอลัมน์ที่มี * ต้องกรอก',
+    '3. นำเข้าไฟล์เดิมซ้ำได้ ข้อมูลไม่ซ้ำซ้อน (ระบบตรวจสอบและแสดงผลก่อนบันทึกทุกครั้ง)',
+    '4. ส่งออกจากระบบทะเบียนเป็น CSV ได้เช่นกัน — ตั้งชื่อหัวคอลัมน์ตามแม่แบบ',
+    ...extraHelp,
   ].forEach((t, i) => (help.addRow([t]).font = { ...font, bold: i === 0, size: i === 0 ? 18 : 16 }))
   help.getColumn(1).width = 110
 
-  for (const t of IMPORT_ORDER) {
+  for (const t of [type]) {
     const spec = IMPORT_SPEC[t]
     const ws = wb.addWorksheet(spec.sheet)
     ws.addRow(spec.cols.map((c) => (c.required ? `${c.label}*` : c.label)))
@@ -234,7 +255,7 @@ export async function downloadImportTemplate() {
   const url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
   const a = document.createElement('a')
   a.href = url
-  a.download = 'แม่แบบนำเข้าข้อมูล-ARCANA.xlsx'
+  a.download = `แม่แบบนำเข้า-${IMPORT_SPEC[type].title}.xlsx`
   a.click()
   setTimeout(() => URL.revokeObjectURL(url), 5000)
 }

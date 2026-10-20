@@ -31,6 +31,8 @@ $router->put('/teacher/courses/{id}', [App\Controllers\TeacherCourseController::
 $router->delete('/teacher/courses/{id}', [App\Controllers\TeacherCourseController::class, 'delete'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'roster'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/students', [App\Controllers\TeacherCourseController::class, 'add'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/import/preview', [App\Controllers\TeacherCourseController::class, 'importPreview'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/import/commit', [App\Controllers\TeacherCourseController::class, 'importCommit'], ['teacher', 'admin']);
 $router->delete('/teacher/courses/{id}/students/{sid}', [App\Controllers\TeacherCourseController::class, 'remove'], ['teacher', 'admin']);
 $router->get('/teacher/students', [App\Controllers\TeacherCourseController::class, 'search'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/students/{sid}/reset-password', [App\Controllers\TeacherCourseController::class, 'resetPassword'], ['teacher', 'admin']);

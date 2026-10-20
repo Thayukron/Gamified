@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { courseToForm, formToBody, type CourseFormValue } from '~/utils/courseForm'
+import { downloadImportTemplate, parseImportFile } from '~/utils/importData'
 
 const route = useRoute()
 const api = useApi()
@@ -14,7 +15,7 @@ const msg = ref<{ ok: boolean; text: string } | null>(
   route.query.created !== undefined ? { ok: true, text: `สร้างรายวิชาแล้ว · เพิ่มผู้เรียน ${route.query.created} คน` } : null,
 )
 const busy = ref(false)
-const TABS = [{ k: 'group', th: 'ทั้งกลุ่มเรียน' }, { k: 'search', th: 'ค้นหารายคน' }, { k: 'paste', th: 'วางรหัสนักศึกษา' }] as const
+const TABS = [{ k: 'group', th: 'ทั้งกลุ่มเรียน' }, { k: 'search', th: 'ค้นหารายคน' }, { k: 'paste', th: 'วางรหัสนักศึกษา' }, { k: 'file', th: 'นำเข้าจากไฟล์ Excel/CSV' }] as const
 const tab = ref<(typeof TABS)[number]['k']>('group')
 const q = ref('')
 const qGroup = ref('')
@@ -107,6 +108,45 @@ const saveCourse = () => run(async () => {
   msg.value = { ok: true, text: 'บันทึกข้อมูลรายวิชาแล้ว' }
   await load()
 })
+// import the course list from a file: new students get accounts, existing ones are only enrolled
+const fileRows = ref<Record<string, string>[] | null>(null)
+const fileName = ref('')
+const filePreview = ref<any>(null)
+const fileInput = ref<HTMLInputElement>()
+const IMPORT_STATUS: Record<string, { th: string; cls: string }> = {
+  new: { th: 'สร้างบัญชี + เพิ่มเข้าวิชา', cls: 'bg-emerald-500/15 text-emerald-300' },
+  enroll: { th: 'เพิ่มเข้าวิชา', cls: 'bg-sky-500/15 text-sky-300' },
+  enrolled: { th: 'อยู่ในวิชาแล้ว', cls: 'bg-white/10 text-slate-400' },
+  error: { th: 'ผิดพลาด', cls: 'bg-red-500/15 text-red-300' },
+}
+const rosterTemplate = () => run(() => downloadImportTemplate('roster', [
+  '5. นักศึกษาที่ยังไม่มีบัญชี ระบบสร้างให้ (แผนกตามรายวิชา · รหัสผ่านเริ่มต้น = รหัสนักศึกษา) แล้วเพิ่มเข้ารายวิชา',
+  '6. นักศึกษาที่มีบัญชีอยู่แล้ว ระบบเพิ่มเข้ารายวิชาอย่างเดียว ไม่แก้ไขข้อมูลเดิม',
+]))
+const pickRoster = (file?: File | null) => file && run(async () => {
+  filePreview.value = null
+  fileName.value = file.name
+  try {
+    fileRows.value = (await parseImportFile(file, 'roster')).payload.roster ?? []
+    if (!fileRows.value.length) throw new Error('ไม่พบรายชื่อในไฟล์ — ตรวจหัวคอลัมน์ให้มี “รหัสนักศึกษา” และ “ชื่อ-สกุล”')
+    filePreview.value = await api<any>(`/teacher/courses/${id}/import/preview`, { method: 'POST', body: { rows: fileRows.value } })
+  } finally {
+    if (fileInput.value) fileInput.value.value = ''
+  }
+})
+const commitRoster = () => {
+  const s = filePreview.value.summary
+  if (!confirm(`ยืนยัน: สร้างบัญชีใหม่ ${s.new} คน และเพิ่มเข้ารายวิชารวม ${s.new + s.enroll} คน?`)) return
+  run(async () => {
+    const r = await api<any>(`/teacher/courses/${id}/import/commit`, { method: 'POST', body: { rows: fileRows.value } })
+    msg.value = { ok: true, text: `นำเข้าแล้ว · สร้างบัญชีใหม่ ${r.created} คน · เพิ่มเข้ารายวิชา ${r.enrolled} คน${r.error ? ` · ข้าม ${r.error} แถวที่ผิดพลาด` : ''}` }
+    filePreview.value = null
+    fileRows.value = null
+    fileName.value = ''
+    await load()
+  })
+}
+
 const deleteCourse = () => {
   if (!confirm(`ลบรายวิชา ${course.value.code} ${course.value.name} (${course.value.section})?\nรายชื่อ การจัดกลุ่ม และผล AI ของวิชานี้จะถูกลบ — ผลการเล่นเกมของผู้เรียนยังอยู่`)) return
   run(async () => {
@@ -212,6 +252,50 @@ const deleteCourse = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div v-else-if="tab === 'file'" class="space-y-3" data-testid="roster-import">
+          <div class="flex flex-wrap items-center gap-3">
+            <p class="flex-1 text-sm text-slate-400">ไฟล์มี 3 คอลัมน์: <b class="text-slate-200">รหัสนักศึกษา* · ชื่อ-สกุล* · กลุ่มเรียน</b> — ผู้ที่ยังไม่มีบัญชีระบบสร้างให้ (รหัสผ่านเริ่มต้น = รหัสนักศึกษา) ผู้ที่มีบัญชีแล้วเพิ่มเข้าวิชาอย่างเดียว</p>
+            <button class="btn-ghost !py-2 text-sm" :disabled="busy" data-testid="roster-template" @click="rosterTemplate"><AppIcon name="download" :size="16" /> แม่แบบรายชื่อ.xlsx</button>
+          </div>
+          <label class="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-white/15 px-4 py-6 text-center transition hover:border-rune-400/60" @dragover.prevent @drop.prevent="pickRoster($event.dataTransfer?.files?.[0])">
+            <AppIcon name="upload" :size="26" class="text-rune-300" />
+            <span class="text-slate-200">{{ busy ? 'กำลังอ่านและตรวจสอบ...' : fileName || 'ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์ (.xlsx / .csv)' }}</span>
+            <input ref="fileInput" type="file" accept=".xlsx,.csv" class="hidden" data-testid="roster-file" @change="pickRoster(($event.target as HTMLInputElement).files?.[0])">
+          </label>
+          <template v-if="filePreview">
+            <div class="flex flex-wrap items-center gap-3">
+              <p class="flex-1 text-sm text-slate-300">
+                {{ filePreview.summary.total }} แถว ·
+                <span class="text-emerald-300">สร้างบัญชีใหม่ {{ filePreview.summary.new }}</span> ·
+                <span class="text-sky-300">เพิ่มเข้าวิชา {{ filePreview.summary.enroll }}</span> ·
+                <span class="text-slate-400">อยู่แล้ว {{ filePreview.summary.enrolled }}</span> ·
+                <span :class="filePreview.summary.error ? 'text-red-300' : 'text-slate-400'">ผิดพลาด {{ filePreview.summary.error }}</span>
+              </p>
+              <button class="btn-ghost !py-2 text-sm" :disabled="busy" @click="filePreview = null; fileName = ''">ยกเลิก</button>
+              <button class="btn-primary !py-2 text-sm" :disabled="busy || !(filePreview.summary.new + filePreview.summary.enroll)" data-testid="roster-commit" @click="commitRoster">
+                <AppIcon name="check" :size="16" /> นำเข้า {{ filePreview.summary.new + filePreview.summary.enroll }} คน
+              </button>
+            </div>
+            <div class="max-h-80 overflow-auto rounded-xl ring-1 ring-white/10">
+              <table class="w-full text-sm">
+                <thead class="sticky top-0 bg-abyss-900 text-left text-slate-400">
+                  <tr><th class="px-3 py-2">แถว</th><th class="px-3 py-2">สถานะ</th><th class="px-3 py-2">รหัส</th><th class="px-3 py-2">ชื่อ-สกุล</th><th class="px-3 py-2">กลุ่มเรียน</th><th class="px-3 py-2">หมายเหตุ</th></tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in filePreview.rows" :key="r.row" class="border-t border-white/5 align-top" :class="r.status === 'error' && 'bg-red-500/5'">
+                    <td class="px-3 py-2 text-slate-500">{{ r.row }}</td>
+                    <td class="px-3 py-2"><span class="whitespace-nowrap rounded-full px-2 py-0.5 text-xs" :class="IMPORT_STATUS[r.status].cls">{{ IMPORT_STATUS[r.status].th }}</span></td>
+                    <td class="px-3 py-2 text-slate-300">{{ r.data.student_code }}</td>
+                    <td class="px-3 py-2 text-slate-100">{{ r.data.full_name }}</td>
+                    <td class="px-3 py-2 text-slate-300">{{ r.data.class_group || '-' }}</td>
+                    <td class="px-3 py-2 text-xs" :class="r.status === 'error' ? 'text-red-300' : 'text-slate-400'">{{ r.messages.join(' · ') }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </template>
         </div>
 
         <div v-else class="space-y-2">
