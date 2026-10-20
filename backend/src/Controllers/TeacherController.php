@@ -221,7 +221,8 @@ class TeacherController
     /** Roster, Core Profiles and distributions for one course. */
     public static function classData(array $course): array
     {
-        [$sem, $year] = self::term();
+        // the course's own term (a course can belong to another term than the current one)
+        [$sem, $year] = [(int) $course['semester'], (int) $course['academic_year']];
         $db = Database::get();
 
         $stmt = $db->prepare(
