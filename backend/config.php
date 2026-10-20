@@ -14,7 +14,7 @@ $config = [
     'semester' => 1,
     'gemini' => [
         'base_url' => 'https://generativelanguage.googleapis.com/v1beta',
-        'timeout' => 90,
+        'timeout' => 85, // under Cloudflare Tunnel's 100 s limit so the teacher gets our message, not a 524
     ],
 ];
 

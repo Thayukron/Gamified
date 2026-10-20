@@ -11,14 +11,14 @@ class GeminiClient
 {
     public function __construct(private string $apiKey) {}
 
-    private function request(string $method, string $path, ?array $body = null): array
+    private function request(string $method, string $path, ?array $body = null, ?int $timeout = null): array
     {
         $cfg = app_config('gemini');
         $ch = curl_init(rtrim($cfg['base_url'], '/') . $path);
         curl_setopt_array($ch, [
             CURLOPT_CUSTOMREQUEST => $method,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => $cfg['timeout'],
+            CURLOPT_TIMEOUT => $timeout ?? $cfg['timeout'],
             CURLOPT_CONNECTTIMEOUT => 15, // a blocked network should fail fast, not after the full timeout
             CURLOPT_HTTPHEADER => ['Content-Type: application/json', 'x-goog-api-key: ' . $this->apiKey],
             CURLOPT_POSTFIELDS => $body === null ? null : json_encode($body, JSON_UNESCAPED_UNICODE),
@@ -34,6 +34,10 @@ class GeminiClient
             // never reached Google at all: usually an organization firewall blocking *.googleapis.com
             if (!$connected && in_array($errno, [CURLE_OPERATION_TIMEDOUT, CURLE_COULDNT_CONNECT, CURLE_COULDNT_RESOLVE_HOST], true)) {
                 throw new HttpException(502, 'เซิร์ฟเวอร์ของระบบเชื่อมต่อ Google Gemini ไม่ได้ — เครือข่ายที่เครื่องเซิร์ฟเวอร์ใช้อยู่อาจบล็อก generativelanguage.googleapis.com (พบบ่อยในเครือข่ายสถานศึกษา) ไม่ใช่ปัญหาที่ API Key · ลองให้เครื่องเซิร์ฟเวอร์ใช้เครือข่ายอื่น หรือขอผู้ดูแลเครือข่ายเปิดโดเมนนี้');
+            }
+            // reached Google but the model never answered (happens to the newest models under load)
+            if ($connected && $errno === CURLE_OPERATION_TIMEDOUT) {
+                throw new HttpException(504, 'Gemini รุ่นนี้ไม่ตอบสนองภายในเวลาที่กำหนด (เซิร์ฟเวอร์ของ Google ไม่ว่าง) — ระบบจะใช้รุ่นสำรองให้อัตโนมัติ กรุณากดใหม่อีกครั้ง');
             }
             throw new HttpException(502, "เชื่อมต่อ Gemini ไม่ได้: $err");
         }
@@ -114,8 +118,27 @@ class GeminiClient
         $candidates = [$preferred];
         $lastError = null;
         $fallbacksLoaded = false;
-        for ($i = 0; $i < count($candidates) && $i <= $maxFallbacks; $i++) {
+        $slow = self::slowModels();
+        if (isset($slow[$preferred])) {
+            // the chosen model hung recently: start with models that answer, keep the slow ones last
+            $fallbacksLoaded = true;
+            $all = [$preferred, ...array_values(array_diff(self::rank($this->listModels()), [$preferred]))];
+            $candidates = [...array_values(array_filter($all, fn ($m) => !isset($slow[$m]))), ...array_values(array_filter($all, fn ($m) => isset($slow[$m])))];
+        }
+        for ($i = 0; $i < count($candidates) && $i <= $maxFallbacks + 2; $i++) {
             $model = $candidates[$i];
+            // a long answer gives no sign of life until it is complete, so check first that the model answers
+            // at all (~1–2 s, a few tokens) instead of waiting the full timeout on a hung model
+            if (!$this->alive($model)) {
+                self::markSlow($model);
+                $lastError = new HttpException(504, 'Gemini รุ่นล่าสุดไม่ตอบสนองในขณะนี้ (เซิร์ฟเวอร์ของ Google ไม่ว่าง) — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)');
+                if (!$fallbacksLoaded) {
+                    $fallbacksLoaded = true;
+                    $slow = self::slowModels();
+                    $candidates = [$preferred, ...array_values(array_filter(array_diff(self::rank($this->listModels()), [$preferred]), fn ($m) => !isset($slow[$m])))];
+                }
+                continue;
+            }
             foreach ([0, 2, 5] as $attempt => $wait) {
                 if ($wait) {
                     sleep($wait);
@@ -125,8 +148,16 @@ class GeminiClient
                 } catch (HttpException $e) {
                     $lastError = $e;
                     // long answers occasionally come back as broken JSON — one more try usually succeeds
-                    if ($e->status === 502 && str_contains($e->getMessage(), 'อ่านไม่ได้') && $attempt === 0) {
+                    $broken = $e->status === 502 && str_contains($e->getMessage(), 'อ่านไม่ได้');
+                    if ($broken && $attempt === 0) {
                         continue;
+                    }
+                    if ($e->status === 504) {
+                        self::markSlow($model); // hung: don't wait on it again for a while
+                        break;
+                    }
+                    if ($broken) {
+                        break; // broken twice on this model: let another model try
                     }
                     $overloaded = $e->status === 503 || $e->status === 429 || str_contains($e->getMessage(), 'ไม่พบรุ่น');
                     if (!$overloaded) {
@@ -143,6 +174,47 @@ class GeminiClient
             }
         }
         throw $lastError;
+    }
+
+    /** Tiny request with a short timeout: false when the model is hung (errors other than a timeout count as alive). */
+    private function alive(string $model): bool
+    {
+        try {
+            $this->request('POST', '/models/' . rawurlencode($model) . ':generateContent', [
+                'contents' => [['role' => 'user', 'parts' => [['text' => 'ok']]]],
+                'generationConfig' => ['maxOutputTokens' => 1],
+            ], 12);
+            return true;
+        } catch (HttpException $e) {
+            return $e->status !== 504;
+        }
+    }
+
+    /** Models that timed out recently (shared by every teacher): model => unix time until which to avoid it. */
+    private const SLOW_KEY = 'gemini_slow_models'; // not 'ai_*': those are the admin's AI settings
+    private const SLOW_MINUTES = 15;
+
+    private static function slowModels(): array
+    {
+        try {
+            $stmt = \App\Core\Database::get()->prepare('SELECT setting_value FROM settings WHERE setting_key = ?');
+            $stmt->execute([self::SLOW_KEY]);
+            $all = json_decode((string) $stmt->fetchColumn(), true) ?: [];
+        } catch (\Throwable) {
+            return [];
+        }
+        return array_filter($all, fn ($until) => $until > time());
+    }
+
+    private static function markSlow(string $model): void
+    {
+        try {
+            $all = self::slowModels() + [$model => time() + self::SLOW_MINUTES * 60];
+            \App\Core\Database::get()->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)')
+                ->execute([self::SLOW_KEY, json_encode($all)]);
+        } catch (\Throwable) {
+            // best effort only
+        }
     }
 
     /**
