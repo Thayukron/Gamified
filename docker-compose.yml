@@ -6,7 +6,8 @@ services:
   db:
     image: mariadb:11.4
     restart: unless-stopped
-    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    # max-connections: each Apache worker (up to 150) keeps one persistent connection
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci, --max-connections=300]
     environment:
       MARIADB_DATABASE: ${DB_NAME:-gamified}
       MARIADB_USER: ${DB_USER:-arcana}
