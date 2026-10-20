@@ -7,6 +7,7 @@ const props = defineProps<{ course: CourseFormValue }>()
 const emit = defineEmits<{ needContent: [] }>()
 const text = defineModel<string>({ required: true }) // one unit per line (CourseFormValue.topicsText)
 const api = useApi()
+const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 
 const units = computed<string[]>({
   get: () => text.value.split('\n').map((s) => s.trim()).filter(Boolean),
@@ -48,7 +49,7 @@ async function suggestAI() {
   err.value = ''
   try {
     const c = props.course
-    const r = await api<any>('/teacher/units/suggest', {
+    const r = await aiApi<any>('/teacher/units/suggest', {
       method: 'POST',
       body: { code: c.code, name: c.name, level: c.level, course_type: c.course_type, theory_hours: c.theory_hours, practice_hours: c.practice_hours, description: c.description, objectives: c.objectives, competencies: c.competencies },
     })

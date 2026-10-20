@@ -5,7 +5,7 @@ CREATE DATABASE IF NOT EXISTS gamified CHARACTER SET utf8mb4 COLLATE utf8mb4_uni
 USE gamified;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS lesson_sheets, course_plans, lesson_plans, password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
+DROP TABLE IF EXISTS background_jobs, lesson_sheets, course_plans, lesson_plans, password_reset_requests, course_groupings, user_ai_settings, player_progress, auth_tokens, ai_insights_cache, game_sessions, assessment_results,
     archetype_master, scenarios, enrollments, courses, users, departments, settings;
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -290,4 +290,18 @@ CREATE TABLE IF NOT EXISTS lesson_sheets (
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_sheet_plan (plan_id, type),
     CONSTRAINT fk_sheet_plan FOREIGN KEY (plan_id) REFERENCES lesson_plans(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Results of long AI requests run in the background (polled by the browser; deleted after 2 days)
+CREATE TABLE IF NOT EXISTS background_jobs (
+    id           CHAR(32) PRIMARY KEY,
+    user_id      INT UNSIGNED NOT NULL,
+    path         VARCHAR(255) NOT NULL,
+    status       ENUM('running','done','error') NOT NULL DEFAULT 'running',
+    http_status  SMALLINT NULL,
+    result       MEDIUMTEXT NULL,
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_jobs_user (user_id),
+    INDEX idx_jobs_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

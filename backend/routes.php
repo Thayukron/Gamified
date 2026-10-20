@@ -101,3 +101,15 @@ $router->put('/admin/users/{id}', [App\Controllers\AdminController::class, 'upda
 $router->get('/admin/reset-requests', [App\Controllers\AdminController::class, 'resetRequests'], ['admin']);
 $router->post('/admin/reset-requests/{id}/dismiss', [App\Controllers\AdminController::class, 'dismissRequest'], ['admin']);
 $router->delete('/admin/courses/{id}', [App\Controllers\AdminController::class, 'deleteCourse'], ['admin']);
+
+// Long AI calls can run as background jobs (client sends "X-Async-Job: 1", then polls /jobs/{id}) —
+// Cloudflare Tunnel cuts requests at 100 s, Gemini sometimes needs longer
+$router->background(
+    '/teacher/courses/{id}/ai',
+    '/teacher/plans/{pid}/draft',
+    '/teacher/plans/{pid}/standard',
+    '/teacher/sheets/{sid}/draft',
+    '/teacher/courses/{id}/book/draft',
+    '/teacher/units/suggest',
+);
+$router->get('/jobs/{id}', [App\Core\BackgroundJob::class, 'show'], ['teacher', 'admin']);

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const api = useApi()
+const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 const data = ref<any>(null)
 const error = ref('')
 const editing = ref(false)
@@ -27,7 +28,7 @@ async function generate(type: 'course' | 'unit', topic?: string) {
   aiBusy.value = type === 'course' ? 'course' : topic!
   aiError.value = null
   try {
-    const res = await api(`/teacher/courses/${route.params.id}/ai`, { method: 'POST', body: { type, topic } })
+    const res = await aiApi(`/teacher/courses/${route.params.id}/ai`, { method: 'POST', body: { type, topic } })
     if (type === 'course') aiCourse.value = res.result
     else {
       aiUnits.value = { ...aiUnits.value, [topic!]: res.result }

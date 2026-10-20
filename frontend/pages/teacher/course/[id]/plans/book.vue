@@ -4,6 +4,7 @@ import { exportLessonPlansDocx } from '~/utils/lessonPlanDocx'
 
 const route = useRoute()
 const api = useApi()
+const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 const id = route.params.id as string
 
 const data = ref<any>(null)
@@ -73,7 +74,7 @@ async function aiDraft() {
   busy.value = 'ai'
   msg.value = null
   try {
-    const r = await api<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value } })
+    const r = await aiApi<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value } })
     Object.assign(book.value!, r.parts)
     aiModel.value = r.model
     tab.value = 'job'

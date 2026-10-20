@@ -5,6 +5,7 @@ import { PLAN_SECTIONS, type PlanContent } from '~/utils/lessonPlan'
 const props = defineProps<{ plan: any; learners: any }>()
 const emit = defineEmits<{ saved: [plan: any]; dirty: [value: boolean] }>()
 const api = useApi()
+const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 
 const header = reactive({ unit_no: 1, session_no: 1, unit_name: '', title: '', hours_theory: 0, hours_practice: 0 })
 const content = ref<PlanContent>(JSON.parse(JSON.stringify(props.plan.content)))
@@ -40,7 +41,7 @@ async function draft(source: 'ai' | 'guide') {
   busy.value = source
   msg.value = null
   try {
-    const r = await api<any>(`/teacher/plans/${props.plan.id}/draft`, { method: 'POST', body: { ...header, source } })
+    const r = await aiApi<any>(`/teacher/plans/${props.plan.id}/draft`, { method: 'POST', body: { ...header, source } })
     content.value = { ...r.content, after: content.value.after }
     aiModel.value = r.model
     msg.value = { ok: true, text: source === 'ai' ? `AI (${r.model}) ร่างแล้ว — เปิดดูทีละข้อ แก้ไข แล้วกด “บันทึก”` : 'เติมจากไกด์แล้ว — ตรวจแล้วกด “บันทึก”' }
@@ -60,7 +61,7 @@ async function findStandard() {
   if (has && !confirm('ค้นหามาตรฐานอาชีพใหม่? ถ้าพบ ข้อความในข้อ 2 จะถูกแทนที่ (ยังไม่บันทึกจนกว่าจะกด “บันทึก”)')) return
   std.value = { busy: true, result: null, error: '' }
   try {
-    const r = await api<any>(`/teacher/plans/${props.plan.id}/standard`, { method: 'POST', body: { ...header, competency: content.value.competency } })
+    const r = await aiApi<any>(`/teacher/plans/${props.plan.id}/standard`, { method: 'POST', body: { ...header, competency: content.value.competency } })
     if (r.found) content.value.standard = { ...content.value.standard, ...r.standard }
     std.value = { busy: false, result: r, error: '' }
   } catch (e) {

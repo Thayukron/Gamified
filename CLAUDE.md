@@ -134,3 +134,4 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - 2026-10-20: **Gemini รุ่นล่าสุดค้าง (3.8/3.7) → สลับรุ่นอัตโนมัติ** — `alive()` ทดสอบรุ่นก่อนใช้, จำรุ่นค้าง 15 นาที (`settings.gemini_slow_models`), timeout 85 วิ (ต่ำกว่า Cloudflare 100 วิ)
 - 2026-10-20: **ทดสอบโหลด** (`docs/load-test.md`) — แก้ error เมื่อพร้อมกัน 50+ ด้วย persistent PDO + MariaDB max-connections 300 → ~2,000 req/s, 300 พร้อมกัน p95 < 0.3 วิ ไม่มี error · คอขวดจริงคือ Quick Tunnel/อัปโหลดเน็ต/เครื่องเดียว
 - 2026-10-20: **คู่มือครู PDF** `docs/คู่มือการใช้งานสำหรับครู-ARCANA-PROFILE.pdf` (ต้นฉบับ `docs/src/teacher-manual.html` + `manual-img/`; ภาพถ่ายด้วย Playwright จาก :8090 มีกรอบส้มหมายเลข) — แก้หน้าจอครูเมื่อไรควรถ่ายภาพ/ปรับคู่มือ
+- 2026-10-20: **งาน AI ทำเบื้องหลัง** (`BackgroundJob`, `$router->background()`, `GET /jobs/{id}`, frontend `useAiApi()`) แก้ 524 ของ Cloudflare (ตัดที่ 100 วิ) · route AI ใหม่ให้เพิ่มใน `$router->background(...)` และเรียกด้วย `useAiApi()`

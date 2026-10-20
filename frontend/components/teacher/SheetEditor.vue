@@ -5,6 +5,7 @@ import { SHEET_TYPES, type Sheet } from '~/utils/lessonPlan'
 const props = defineProps<{ sheet: Sheet }>()
 const emit = defineEmits<{ saved: [sheet: Sheet]; dirty: [value: boolean]; removed: [] }>()
 const api = useApi()
+const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 
 const spec = SHEET_TYPES[props.sheet.type]
 const header = reactive({ number: props.sheet.number, title: props.sheet.title })
@@ -35,7 +36,7 @@ async function draft(source: 'ai' | 'plan') {
   busy.value = source
   msg.value = null
   try {
-    const r = await api<any>(`/teacher/sheets/${props.sheet.id}/draft`, { method: 'POST', body: { ...header, source } })
+    const r = await aiApi<any>(`/teacher/sheets/${props.sheet.id}/draft`, { method: 'POST', body: { ...header, source } })
     content.value = r.content
     aiModel.value = r.model
     msg.value = { ok: true, text: source === 'ai' ? `AI (${r.model}) ร่างแล้ว — ตรวจแล้วกด “บันทึก”` : 'เติมจากแผนแล้ว — ตรวจแล้วกด “บันทึก”' }
