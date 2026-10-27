@@ -15,6 +15,8 @@ onMounted(async () => {
     const res = await api('/teacher/courses')
     courses.value = res.courses
     term.value = res.term
+    // nothing in the current term yet (e.g. right after the admin switched term): show every course instead of an empty list
+    if (courses.value.length && !courses.value.some((c) => termKey(c) === termKey(res.term))) termFilter.value = 'all'
   } finally {
     loading.value = false
   }
@@ -41,6 +43,7 @@ const shown = computed(() => {
   const k = termFilter.value === 'current' ? (term.value ? termKey(term.value) : '') : termFilter.value
   return courses.value.filter((c) => termKey(c) === k)
 })
+const countIn = (k: string) => courses.value.filter((c) => termKey(c) === k).length
 const otherTerms = computed(() => terms.value.filter((t) => !term.value || t !== termKey(term.value)))
 const totals = computed(() => {
   const enrolled = shown.value.reduce((n, c) => n + c.enrolled, 0)
@@ -87,7 +90,7 @@ const TONES = ["indigo", "violet", "sky", "emerald", "amber", "rose"] as const
       </div>
       <div v-if="courses.length" class="flex flex-wrap gap-2" data-testid="term-filter">
         <button
-          v-for="t in [{ k: 'current', th: `ภาคเรียนปัจจุบัน${term ? ' ' + termKey(term) : ''}` }, ...otherTerms.map((x) => ({ k: x, th: 'ภาคเรียน ' + x })), { k: 'all', th: 'ทั้งหมด' }]"
+          v-for="t in [{ k: 'current', th: `ภาคเรียนปัจจุบัน${term ? ' ' + termKey(term) : ''} (${term ? countIn(termKey(term)) : 0})` }, ...otherTerms.map((x) => ({ k: x, th: `ภาคเรียน ${x} (${countIn(x)})` })), { k: 'all', th: `ทั้งหมด (${courses.length})` }]"
           :key="t.k"
           type="button"
           class="rounded-full px-3 py-1 text-sm ring-1 transition"
@@ -97,6 +100,9 @@ const TONES = ["indigo", "violet", "sky", "emerald", "amber", "rose"] as const
       </div>
       <p v-if="loading" class="text-slate-500">กำลังโหลดรายวิชา...</p>
       <p v-else-if="courses.length && !shown.length" class="text-sm text-slate-500">ยังไม่มีรายวิชาในภาคเรียนนี้ — สร้างรายวิชาใหม่ หรือดูภาคเรียนอื่นด้านบน</p>
+      <p v-if="!loading && termFilter === 'all' && term && !countIn(termKey(term)) && courses.length" class="rounded-xl bg-sky-500/10 px-3 py-2 text-sm text-sky-200" data-testid="term-note">
+        ภาคเรียนปัจจุบัน {{ termKey(term) }} ยังไม่มีรายวิชา — กำลังแสดงรายวิชาทุกภาคเรียน (รายวิชาเดิมยังอยู่ครบ) · สร้างรายวิชาของภาคใหม่ได้ที่ “+ สร้างรายวิชาใหม่”
+      </p>
       <NuxtLink v-else-if="!courses.length" to="/teacher/course/new" class="card card-hover flex items-center gap-4 border-dashed">
         <StaffIcon name="plus" tone="indigo" />
         <div>
