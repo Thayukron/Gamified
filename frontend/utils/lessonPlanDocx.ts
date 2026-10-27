@@ -77,6 +77,11 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       spacing: { before: o.before ?? 0, after: o.after ?? 0, line: 240 },
       keepNext: o.keepNext,
     })
+  /**
+   * Start a new page: an (almost) empty paragraph that begins on a new page. A page-break character would make Word
+   * add a blank page whenever the content before it fills its page exactly.
+   */
+  const pageBreak = () => new Paragraph({ pageBreakBefore: true, spacing: { before: 0, after: 0, line: 240 }, run: { size: 2, sizeComplexScript: 2 }, children: [] })
   /** dotted line to the right margin (for writing by hand), like the form */
   const dotLine = () =>
     new TextRun({
@@ -262,7 +267,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const appendix = () => {
     const L = opts.learners
     const out: any[] = [
-      p([new PageBreak()]),
+      pageBreak(),
       p([run('ภาคผนวก', { bold: true, size: 18 })], { align: AlignmentType.CENTER, after: 120 }),
       p([run('ผลการวิเคราะห์ผู้เรียนรายบุคคลเพื่อการออกแบบการจัดการเรียนรู้', { bold: true })], { align: AlignmentType.CENTER, after: 120 }),
       p(
@@ -361,7 +366,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
 
   const toc = () => [
     new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: true, spacing: { after: 160 }, children: [run('สารบัญ', { bold: true, size: 18 })] }),
-    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3' }),
+    // page numbers written from the layout estimate; dirty, so Word recounts them exactly when the file opens
+    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3', beginDirty: true }),
   ]
 
   const curriculumPart = () => {
@@ -575,7 +581,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     }
     for (const sec of spec.sections) {
       const v = String(c[sec.key] ?? '')
-      if (sec.pageBreak) out.push(p([new PageBreak()]))
+      if (sec.pageBreak) out.push(pageBreak())
       out.push(heading(`${sec.no}. ${sec.title}`))
       if (sec.numbered && lines(v).length) out.push(...numbered(lines(v), `${sec.no}.`))
       else out.push(...body(v, IND1, sec.rows && sec.rows > 3 ? 3 : 1))
@@ -602,7 +608,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   }
   let first = !children.length
   const newPage = () => {
-    if (!first) children.push(p([new PageBreak()]))
+    if (!first) children.push(pageBreak())
     first = false
   }
   opts.plans.filter(unitWanted).forEach((pl) => {
@@ -638,10 +644,23 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const page = { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } }
   const pageHeader = new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
   const headingRun = { font: FONT, bold: true, boldComplexScript: true, color: '000000' }
+  // The table of contents is written WITH page numbers (laid out from the TH SarabunPSK files the site serves),
+  // so it shows them in any program and before Word updates it; Word still offers to update them exactly.
+  let pageNumbers: any
+  if (book) {
+    try {
+      const { estimatePageNumbersWith } = await import('docx/layout')
+      const fonts = await Promise.all(['/fonts/THSarabun.ttf', '/fonts/THSarabun-Bold.ttf'].map(async (u) => ({ data: await fetch(u).then((r) => r.arrayBuffer()), name: FONT })))
+      pageNumbers = estimatePageNumbersWith({ fonts, guess: true })
+    } catch (e) {
+      console.warn('page numbers left for Word to fill in', e)
+    }
+  }
   const doc = new Document({
     creator: 'ARCANA PROFILE',
     title: `แผนการจัดการเรียนรู้ ${course.code} ${course.name}`,
-    features: book ? { updateFields: true } : undefined, // Word fills the table of contents when the file opens
+    pageNumbers,
+    features: book ? { updateFields: true } : undefined, // Word offers to refresh the table of contents when the file opens
     styles: {
       default: { document: { run: { font: FONT, size: PT(16), sizeComplexScript: PT(16), language: { value: 'th-TH', bidirectional: 'th-TH' } } } },
       paragraphStyles: [

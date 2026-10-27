@@ -247,6 +247,20 @@ html.theme-staff body {
 @page {
   size: A4;
   margin: 14mm 12mm;
+  /* page number top right, Thai official-document style (first page — cover/title — has none) */
+  @top-right {
+    content: counter(page);
+    font-family: 'THSarabunPSK', sans-serif;
+    font-size: 14pt;
+    color: #333;
+    vertical-align: bottom;
+    padding-bottom: 2mm;
+  }
+}
+@page :first {
+  @top-right {
+    content: none;
+  }
 }
 @media print {
   html,

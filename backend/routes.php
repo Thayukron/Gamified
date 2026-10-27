@@ -96,6 +96,7 @@ $router->post('/admin/import/preview', [App\Controllers\AdminController::class, 
 $router->post('/admin/import/commit', [App\Controllers\AdminController::class, 'importCommit'], ['admin']);
 $router->get('/admin/overview', [App\Controllers\AdminController::class, 'overview'], ['admin']);
 $router->get('/admin/users', [App\Controllers\AdminController::class, 'users'], ['admin']);
+$router->post('/admin/users', [App\Controllers\AdminController::class, 'createUser'], ['admin']);
 $router->post('/admin/users/{id}/reset-password', [App\Controllers\AdminController::class, 'resetPassword'], ['admin']);
 $router->put('/admin/users/{id}', [App\Controllers\AdminController::class, 'updateUser'], ['admin']);
 $router->get('/admin/reset-requests', [App\Controllers\AdminController::class, 'resetRequests'], ['admin']);

@@ -15,7 +15,7 @@ const msg = ref<{ ok: boolean; text: string } | null>(
   route.query.created !== undefined ? { ok: true, text: `สร้างรายวิชาแล้ว · เพิ่มผู้เรียน ${route.query.created} คน` } : null,
 )
 const busy = ref(false)
-const TABS = [{ k: 'group', th: 'ทั้งกลุ่มเรียน' }, { k: 'search', th: 'ค้นหารายคน' }, { k: 'paste', th: 'วางรหัสนักศึกษา' }, { k: 'file', th: 'นำเข้าจากไฟล์ Excel/CSV' }] as const
+const TABS = [{ k: 'group', th: 'ทั้งกลุ่มเรียน' }, { k: 'search', th: 'ค้นหารายคน' }, { k: 'paste', th: 'วางรหัสนักศึกษา' }, { k: 'one', th: 'เพิ่มนักศึกษาใหม่รายคน' }, { k: 'file', th: 'นำเข้าจากไฟล์ Excel/CSV' }] as const
 const tab = ref<(typeof TABS)[number]['k']>('group')
 const q = ref('')
 const qGroup = ref('')
@@ -178,6 +178,20 @@ const commitRoster = () => {
   })
 }
 
+// one new (or existing) student by hand: same rules as the file import
+const one = reactive({ student_code: '', full_name: '', class_group: '' })
+const addOne = () => run(async () => {
+  const rows = [{ ...one, _row: 'แบบฟอร์ม' }]
+  const p = await api<any>(`/teacher/courses/${id}/import/preview`, { method: 'POST', body: { rows } })
+  const r0 = p.rows[0]
+  if (r0.status === 'error') throw Object.assign(new Error(r0.messages.join(' · ')), { data: { error: r0.messages.join(' · ') } })
+  if (r0.status === 'enrolled') { msg.value = { ok: true, text: `${one.student_code} อยู่ในรายวิชานี้แล้ว` }; return }
+  const r = await api<any>(`/teacher/courses/${id}/import/commit`, { method: 'POST', body: { rows } })
+  msg.value = { ok: true, text: r.created ? `สร้างบัญชี ${one.full_name} (${one.student_code}) และเพิ่มเข้ารายวิชาแล้ว · รหัสผ่านเริ่มต้น = รหัสนักศึกษา` : `${one.student_code} มีบัญชีอยู่แล้ว — เพิ่มเข้ารายวิชาแล้ว (ไม่แก้ข้อมูลเดิม)` }
+  Object.assign(one, { student_code: '', full_name: '' })
+  await load()
+})
+
 const deleteCourse = () => {
   if (!confirm(`ลบรายวิชา ${course.value.code} ${course.value.name} (${course.value.section})?\nรายชื่อ การจัดกลุ่ม และผล AI ของวิชานี้จะถูกลบ — ผลการเล่นเกมของผู้เรียนยังอยู่`)) return
   run(async () => {
@@ -284,6 +298,16 @@ const deleteCourse = () => {
             </table>
           </div>
         </div>
+
+        <form v-else-if="tab === 'one'" class="space-y-3" data-testid="roster-one" @submit.prevent="addOne">
+          <p class="text-sm text-slate-400">สำหรับนักศึกษาที่ยังไม่มีในระบบ (เช่น ย้ายมาใหม่) — ระบบสร้างบัญชีให้ (แผนกตามรายวิชา · รหัสผ่านเริ่มต้น = รหัสนักศึกษา) แล้วเพิ่มเข้าวิชานี้ · ถ้ามีบัญชีอยู่แล้วจะเพิ่มเข้าวิชาอย่างเดียว</p>
+          <div class="grid gap-3 sm:grid-cols-[1fr_1.6fr_1fr_auto] sm:items-end">
+            <div><p class="label">รหัสนักศึกษา *</p><input v-model="one.student_code" class="input" placeholder="เช่น 6901001" data-testid="one-code"></div>
+            <div><p class="label">ชื่อ-สกุล *</p><input v-model="one.full_name" class="input" placeholder="เช่น นายกิตติ ใจดี" data-testid="one-name"></div>
+            <div><p class="label">กลุ่มเรียน</p><input v-model="one.class_group" class="input" :placeholder="course.section || 'เช่น ปวส.1/1'" data-testid="one-group"></div>
+            <button class="btn-primary !py-2.5 text-sm" :disabled="busy || !one.student_code.trim() || !one.full_name.trim()" data-testid="one-save"><AppIcon name="plus" :size="16" /> เพิ่ม</button>
+          </div>
+        </form>
 
         <div v-else-if="tab === 'file'" class="space-y-3" data-testid="roster-import">
           <div class="flex flex-wrap items-center gap-3">

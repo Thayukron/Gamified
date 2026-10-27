@@ -51,6 +51,26 @@ async function saveEdit() {
   }
 }
 
+// add one user (no template needed)
+const add = ref<any>(null)
+const addErr = ref('')
+function openAdd() {
+  addErr.value = ''
+  add.value = { role: 'teacher', username: '', full_name: '', department_id: null, class_group: '', password: '' }
+}
+async function saveAdd() {
+  addErr.value = ''
+  try {
+    const r = await api<any>('/admin/users', { method: 'POST', body: add.value })
+    msg.value = { ok: true, text: r.message }
+    q.value = add.value.username
+    add.value = null
+    await Promise.all([search(), load()])
+  } catch (e) {
+    addErr.value = apiErrorMessage(e)
+  }
+}
+
 const courses = computed(() => {
   const f = courseFilter.value.trim().toLowerCase()
   const list = data.value?.courses ?? []
@@ -86,9 +106,12 @@ async function removeCourse(c: any) {
       <div>
         <p class="font-display text-xs tracking-[0.4em] text-arcane-300/80">REALM LEDGER</p>
         <h1 class="title-glow mt-1 text-2xl sm:text-3xl">ข้อมูลในระบบ</h1>
-        <p class="mt-1 text-sm text-slate-400">แผนกวิชา รายวิชา/กลุ่มเรียน และผู้ใช้ — เพิ่ม/แก้ไขทีละมากผ่านหน้านำเข้าข้อมูล</p>
+        <p class="mt-1 text-sm text-slate-400">แผนกวิชา รายวิชา/กลุ่มเรียน และผู้ใช้ — เพิ่มผู้ใช้รายคนได้ที่นี่ หรือเพิ่มทีละมากผ่านการนำเข้าจากไฟล์</p>
       </div>
-      <NuxtLink to="/admin/import" class="btn-primary !py-2 text-sm"><AppIcon name="upload" :size="16" /> นำเข้าข้อมูล</NuxtLink>
+      <div class="flex gap-2">
+        <button class="btn-primary !py-2 text-sm" data-testid="add-user" @click="openAdd"><AppIcon name="plus" :size="16" /> เพิ่มผู้ใช้รายคน</button>
+        <NuxtLink to="/admin/import" class="btn-ghost !py-2 text-sm"><AppIcon name="upload" :size="16" /> นำเข้าจากไฟล์</NuxtLink>
+      </div>
     </div>
 
     <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'">{{ msg.text }}</p>
@@ -193,6 +216,37 @@ async function removeCourse(c: any) {
         </div>
       </section>
     </template>
+
+    <!-- add user dialog -->
+    <div v-if="add" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" @click.self="add = null">
+      <form class="card w-full max-w-lg space-y-3" data-testid="add-dialog" @submit.prevent="saveAdd">
+        <h2 class="text-lg font-medium text-slate-50">เพิ่มผู้ใช้รายคน</h2>
+        <div>
+          <p class="label">บทบาท</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button v-for="r in ['teacher', 'student', 'admin']" :key="r" type="button" class="rounded-xl px-3 py-2 text-sm ring-1 transition" :class="add.role === r ? 'bg-rune-400/15 font-medium text-rune-200 ring-rune-400/60' : 'text-slate-300 ring-white/15'" :data-testid="`a-role-${r}`" @click="add.role = r">{{ ROLE_TH[r] }}</button>
+          </div>
+        </div>
+        <div><p class="label">{{ add.role === 'student' ? 'รหัสนักศึกษา (ใช้เข้าสู่ระบบ)' : 'ชื่อผู้ใช้ (ใช้เข้าสู่ระบบ)' }} *</p><input v-model="add.username" class="input" :placeholder="add.role === 'student' ? 'เช่น 6901001' : 'เช่น t.somchai หรือ teacher5'" data-testid="a-username"></div>
+        <div><p class="label">ชื่อ-สกุล *</p><input v-model="add.full_name" class="input" :placeholder="add.role === 'student' ? 'เช่น นายกิตติ ใจดี' : 'เช่น ครูสมชาย ใจดี'" data-testid="a-name"></div>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <p class="label">แผนกวิชา</p>
+            <select v-model="add.department_id" class="input" data-testid="a-dept">
+              <option :value="null">— ไม่ระบุ —</option>
+              <option v-for="d in data?.departments ?? []" :key="d.id" :value="Number(d.id)">{{ d.code }} · {{ d.name }}</option>
+            </select>
+          </div>
+          <div v-if="add.role === 'student'"><p class="label">กลุ่มเรียน</p><input v-model="add.class_group" class="input" placeholder="เช่น ปวส.1/1" data-testid="a-group"></div>
+        </div>
+        <div><p class="label">รหัสผ่าน (ไม่บังคับ)</p><input v-model="add.password" type="text" class="input" autocomplete="off" placeholder="เว้นว่าง = ใช้ชื่อผู้ใช้/รหัสนักศึกษา และต้องตั้งใหม่เมื่อเข้าครั้งแรก" data-testid="a-password"></div>
+        <p v-if="addErr" class="text-sm text-red-300" data-testid="a-err">{{ addErr }}</p>
+        <div class="flex justify-end gap-2">
+          <button type="button" class="btn-ghost !py-2 text-sm" @click="add = null">ยกเลิก</button>
+          <button class="btn-primary !py-2 text-sm" :disabled="!add.username.trim() || !add.full_name.trim()" data-testid="a-save">เพิ่มผู้ใช้</button>
+        </div>
+      </form>
+    </div>
 
     <!-- edit user dialog -->
     <div v-if="edit" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" @click.self="edit = null">

@@ -149,6 +149,46 @@ class AdminController
         return ['ok' => true];
     }
 
+    /**
+     * POST /admin/users — add one account: { role, username, full_name, department_id?, class_group?, password? }
+     * No password = the username (student: the student code), changed at first login.
+     */
+    public static function createUser(Request $req): array
+    {
+        $role = (string) $req->input('role', '');
+        if (!in_array($role, ['student', 'teacher', 'admin'], true)) {
+            throw new HttpException(422, 'กรุณาเลือกบทบาท');
+        }
+        $username = trim((string) $req->input('username', ''));
+        $name = trim(preg_replace('/\s+/u', ' ', (string) $req->input('full_name', '')));
+        $password = (string) $req->input('password', '');
+        $label = $role === 'student' ? 'รหัสนักศึกษา' : 'ชื่อผู้ใช้';
+        if (!preg_match('/^[A-Za-z0-9._-]{3,50}$/', $username)) {
+            throw new HttpException(422, "$label ต้องเป็นตัวอักษรอังกฤษ ตัวเลข หรือ . _ - ยาว 3–50 ตัว (ไม่มีช่องว่าง)");
+        }
+        if ($name === '' || mb_strlen($name) > 150) {
+            throw new HttpException(422, 'กรุณากรอกชื่อ-สกุล');
+        }
+        if ($password !== '') {
+            PasswordService::assertStrong($password, $username);
+        }
+        $db = Database::get();
+        // case-insensitive (column collation) and never clashing with someone's student code
+        $dup = $db->prepare('SELECT COUNT(*) FROM users WHERE username = ? OR student_code = ?');
+        $dup->execute([$username, $username]);
+        if ($dup->fetchColumn()) {
+            throw new HttpException(409, "$label {$username} มีในระบบแล้ว");
+        }
+        $deptId = $req->input('department_id') ? (int) $req->input('department_id') : null;
+        $group = $role === 'student' ? (mb_substr(trim((string) $req->input('class_group', '')), 0, 30) ?: null) : null;
+        $db->prepare(
+            'INSERT INTO users (username, password_hash, full_name, role, department_id, student_code, class_group, student_status, must_change_password)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        )->execute([$username, password_hash($password !== '' ? $password : $username, PASSWORD_DEFAULT), $name, $role, $deptId,
+            $role === 'student' ? $username : null, $group, $role === 'student' ? 'studying' : null, $password === '' ? 1 : 0]);
+        return ['id' => (int) $db->lastInsertId(), 'message' => "เพิ่มผู้ใช้ {$name} ({$username}) แล้ว" . ($password === '' ? " · รหัสผ่านเริ่มต้น = {$username} (ต้องตั้งใหม่เมื่อเข้าสู่ระบบครั้งแรก)" : '')];
+    }
+
     /** GET /admin/reset-requests — pending "forgot password" requests. */
     public static function resetRequests(Request $req): array
     {
