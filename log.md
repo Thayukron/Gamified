@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-10-29 — Nuxt migration เฟส 3: เกม ผลประเมิน และรางวัล
+
+- เพิ่ม student API 9 endpoints และ services engine/progression/profile/game เทียบ PHP; frontend ส่ง auth/account/student ไป Nitro ส่วนที่ยังไม่ย้ายคง legacy API
+- ล็อกผู้เล่นใน transaction ของ progress/complete ป้องกันรางวัลซ้ำและ save/complete race; คงสูตรและ tie-breaking เดิม รวมผลล่าสุดข้ามภาค
+- สำรอง local MariaDB ก่อน live writes; ทดสอบชั่วคราวและ cleanup ตาม id/prefix เพิ่ม student-demo/student1234 สำหรับผู้ใช้ตรวจรับโดยไม่เติมผลล่วงหน้า
+- Build/typecheck ผ่าน; local suites 19 tests, PHP 8.2 engine parity 158 fixtures, live DB/API 78 requests/21 exact comparisons และ HTTP smoke 15 checks ผ่าน; test files/PHP oracle runtime อยู่ใน path ที่ ignore
+- อัปเดต issue/คู่มือเฟส 3; ไม่แก้ Docker และไม่รวม main.css formatting ที่ผู้ใช้แก้ค้างใน commit
+
 ## 2026-10-29 — Nuxt migration เฟส 2: ระบบพื้นฐานและฐานข้อมูลในเครื่อง
 
 - เพิ่ม Nitro API 9 endpoints สำหรับ health/auth/account, services/types, mysql2 pool/transaction/timezone และ role/password/ownership guards

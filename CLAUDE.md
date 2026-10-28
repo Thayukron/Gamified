@@ -29,7 +29,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | สคริปต์ | `start-dev.ps1` เปิด db (Docker) + API 8100 + Nuxt 3100 · **ห้ามรัน `migrate.php`** (ล้างข้อมูลจริง; สคริปต์ปฏิเสธเมื่อมีผู้ใช้ เว้นแต่ `--wipe-real-data`) |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
-ฐานใหม่ในเครื่องมีเฉพาะ `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด ไม่มีบัญชี demo; บัญชี teacher/student ในเอกสารเก่าเป็นของฐานเดิม
+ฐานใหม่ในเครื่องมี `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด; เฟส 3 เพิ่ม `student-demo/student1234` สำหรับตรวจรับเกม โดยไม่เติมผล/รางวัลล่วงหน้า บัญชี teacher/student อื่นในเอกสารเก่าเป็นของฐานเดิม
 
 ## โครงสร้างโค้ด
 ```
@@ -91,6 +91,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: Nuxt migration เฟส 3 เสร็จ — ย้าย student API 9 routes รวม 18/86, engine/progression/profiles และ completion/progress transaction ล็อก user ป้องกันรางวัลซ้ำ/เปิด session ที่จบแล้ว; frontend ส่ง auth/account/student เข้า Nitro ส่วน staff/AI ยัง PHP; build/typecheck ผ่าน, 19 local tests, engine parity PHP 8.2 จำนวน 158 fixtures และ live DB 78 requests/21 exact PHP comparisons ผ่าน; tests/runtime oracle ยังคง ignore; เพิ่ม student-demo สำหรับ preview; รอตรวจรับก่อนเฟส 4 ดู `docs/migration/phase3-game.md`
 - 2026-10-29: Nuxt migration เฟส 2 เสร็จ implementation/verification — 9 endpoints (health/auth/account), pool/transaction, guards, ownership/settings helpers, safe fresh installer Node และ base seeds; ผู้ใช้อนุญาตสร้างฐานใหม่บน MariaDB local 3306 แล้ว สำรองก่อน live tests; build/typecheck ผ่าน, tests 14 + HTTP 15 + DB/HTTP 28 requests ผ่าน; tests ถูก ignore ตามผู้ใช้, `main.css` formatting เดิมคงค้างแต่แก้ช่องว่าง arbitrary classes 2 จุดที่ทำ build พัง; รอตรวจรับก่อนเฟส 3 ดู `docs/migration/phase2-foundation.md`
 - 2026-10-29: ย้าย Nuxt 3 เฟส 1 สำรวจ/วางแผนแล้ว (`docs/migration/phase1-inventory.md`, API mapping/JSON 86 routes, generator `tools/migration-inventory.mjs`) — รอตรวจรับก่อนเฟส 2; ผู้ใช้กำหนดให้ลดงาน Docker และเตรียมถอด Docker ออก ใช้ Node.js/MariaDB service โดยตรงในเป้าหมายสุดท้าย ยังไม่เปลี่ยน DB/runtime
 - 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout)

@@ -1,13 +1,14 @@
 import { useAuthStore } from '~/stores/auth'
+import { apiBaseFor } from '~/shared/utils/apiRouting'
 
-/** $fetch wrapper that targets the PHP API and attaches the bearer token. */
+/** Shared bearer token; route migrated APIs to Nitro during the incremental cutover. */
 export function useApi() {
   const config = useRuntimeConfig()
   const auth = useAuthStore()
 
   return <T = any>(path: string, opts: Parameters<typeof $fetch>[1] = {}) =>
     $fetch<T>(path, {
-      baseURL: config.public.apiBase,
+      baseURL: apiBaseFor(path, config.public.apiBase),
       ...opts,
       headers: {
         ...(auth.token ? { Authorization: `Bearer ${auth.token}` } : {}),

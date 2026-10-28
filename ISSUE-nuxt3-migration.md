@@ -18,7 +18,7 @@
 - [x] ตั้งค่า database connection pool, transactions และ server runtime config
 - [x] ย้าย authentication, token และการตรวจ role พร้อม helper เจ้าของข้อมูล (การผูกกับ routes รายวิชาทำในเฟส 4)
 - [x] ย้าย API บัญชีผู้ใช้ โปรไฟล์ และคำขอรีเซ็ตรหัสผ่าน (admin/teacher reset ในเฟส 4)
-- [ ] ย้ายเกม การบันทึกความคืบหน้า การคิดคะแนน VARK/RIASEC/Mindset และรางวัล
+- [x] ย้ายเกม การบันทึกความคืบหน้า การคิดคะแนน VARK/RIASEC/Mindset และรางวัล
 - [ ] ย้ายรายวิชา รายชื่อผู้เรียน และการนำเข้าข้อมูล
 - [ ] ย้าย dashboard ไกด์การสอน การจัดกลุ่ม และข้อมูลรายงาน
 - [ ] ย้ายแผนการสอน เล่มรายวิชา และเอกสารประกอบ
@@ -26,7 +26,7 @@
 - [ ] ย้าย background jobs และ API ติดตามสถานะงาน
 - [ ] ย้าย API แอดมิน ภาคเรียน สถานศึกษา และสถานะนักศึกษา
 - [ ] ย้าย database installer/upgrades และคำสั่งดูแลระบบที่ยังใช้ PHP
-- [ ] ปรับ frontend ให้เรียก `/api` ของ Nuxt โดยตรง
+- [ ] ปรับ frontend ให้เรียก `/api` ของ Nuxt โดยตรงทั้งหมด (auth/account/student ใช้แล้วในเฟส 3; staff/AI ยังใช้ PHP)
 - [ ] ปรับสคริปต์เริ่มระบบและ environment variables ให้รัน Node.js โดยตรง ลดการแก้ Docker และเตรียมถอด Docker ออก
 - [ ] วางแผนย้าย MariaDB จาก Docker เป็น service โดยรักษาข้อมูลและฐานข้อมูลชุดเดียว
 - [ ] อัปเดต `DEPLOY.md`, `Manual.md` และเอกสารที่เกี่ยวข้อง
@@ -61,8 +61,9 @@
 - [x] เฟส 1 สำรวจและวางแผน: [รายละเอียด](docs/migration/phase1-inventory.md), [API mapping 86 endpoints](docs/migration/api-map.md), [inventory JSON](docs/migration/api-inventory.json)
 - [x] ตรวจรับเฟส 1 ก่อนเริ่มเฟส 2
 - [x] เฟส 2 ระบบพื้นฐาน: [รายละเอียดและวิธีรัน](docs/migration/phase2-foundation.md) — 9 endpoints, build/typecheck ผ่าน, service 14 กรณี, HTTP smoke 15 กรณี, live MariaDB/HTTP 28 requests ผ่าน
-- [ ] ตรวจรับเฟส 2 ก่อนเริ่มเฟส 3
-- [ ] เฟส 3 เกมและผลประเมิน
+- [x] ตรวจรับเฟส 2 ก่อนเริ่มเฟส 3
+- [x] เฟส 3 เกมและผลประเมิน — [รายละเอียด](docs/migration/phase3-game.md), เพิ่ม 9 endpoints รวม 18/86, engine parity 158 fixtures, live 78 requests/21 exact PHP comparisons ผ่าน
+- [ ] ตรวจรับเฟส 3 ก่อนเริ่มเฟส 4
 - [ ] เฟส 4 ครูและแอดมิน
 - [ ] เฟส 5 แผนการสอนและ AI
 - [ ] เฟส 6 เปลี่ยนระบบจริง

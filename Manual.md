@@ -1,5 +1,7 @@
 # 📘 คู่มือการรันระบบ ARCANA PROFILE
 
+> เฟส 3 (2026-10-29): เกม/ผลประเมินฝั่งนักศึกษาใช้ Nitro แล้ว รัน Nuxt โดยตรง เปิด `/login` ที่ port 3100 ใช้ `student-demo/student1234` เพื่อตรวจรับ รายละเอียด [เฟส 3](docs/migration/phase3-game.md) ส่วนครู/แอดมิน/AI ยังอยู่ระหว่างย้าย
+
 > อัปเดต 2026-10-29: งานย้าย Nuxt เฟส 2 ใช้ MariaDB service ในเครื่อง port 3306 และฐาน gamified ใหม่ตามผู้ใช้ รัน API โดยไม่ใช้ Docker: เข้า `frontend` แล้ว `npm run dev -- --dotenv ../.env` เปิด `http://localhost:3100/api/health` รองรับเฉพาะ auth/account ที่ย้ายแล้ว ดู [วิธีรันและขอบเขตเฟส 2](docs/migration/phase2-foundation.md) คำสั่ง Docker/start-dev เดิมด้านล่างเป็นของระบบ PHP เดิม
 
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
