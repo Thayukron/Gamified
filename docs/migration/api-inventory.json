@@ -1,0 +1,1399 @@
+{
+  "formatVersion": 1,
+  "prefix": "/api",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "roles": [],
+      "handler": "inline",
+      "source": "backend/routes.php",
+      "sourceLine": 7,
+      "target": "frontend/server/api/health.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "roles": [],
+      "handler": "AuthController::login",
+      "source": "backend/src/Controllers/AuthController.php",
+      "sourceLine": 11,
+      "target": "frontend/server/api/auth/login.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "username",
+        "password"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/auth/logout",
+      "roles": [
+        "*"
+      ],
+      "handler": "AuthController::logout",
+      "source": "backend/src/Controllers/AuthController.php",
+      "sourceLine": 34,
+      "target": "frontend/server/api/auth/logout.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "roles": [
+        "*"
+      ],
+      "handler": "AuthController::me",
+      "source": "backend/src/Controllers/AuthController.php",
+      "sourceLine": 40,
+      "target": "frontend/server/api/auth/me.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/student/quests",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::quests",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 40,
+      "target": "frontend/server/api/student/quests.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/student/quests/{id}",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::show",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 69,
+      "target": "frontend/server/api/student/quests/[id].get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/student/quests/{id}/progress",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::progress",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 94,
+      "target": "frontend/server/api/student/quests/[id]/progress.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "current_scene",
+        "choices_log"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/student/quests/{id}/complete",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::complete",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 119,
+      "target": "frontend/server/api/student/quests/[id]/complete.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "choices_log"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/student/results",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::results",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 247,
+      "target": "frontend/server/api/student/results.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/student/results/{id}",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::result",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 255,
+      "target": "frontend/server/api/student/results/[id].get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/student/profile",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::profile",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 267,
+      "target": "frontend/server/api/student/profile.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/student/player",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::player",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 188,
+      "target": "frontend/server/api/student/player.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/student/player/avatar",
+      "roles": [
+        "student"
+      ],
+      "handler": "StudentGameController::saveAvatar",
+      "source": "backend/src/Controllers/StudentGameController.php",
+      "sourceLine": 195,
+      "target": "frontend/server/api/student/player/avatar.put.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::courses",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 41,
+      "target": "frontend/server/api/teacher/courses.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/units/suggest",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::suggestUnits",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 22,
+      "target": "frontend/server/api/teacher/units/suggest.post.ts",
+      "background": true,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/meta",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::meta",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 32,
+      "target": "frontend/server/api/teacher/meta.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::create",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 97,
+      "target": "frontend/server/api/teacher/courses.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "class_groups"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/teacher/courses/{id}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::update",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 115,
+      "target": "frontend/server/api/teacher/courses/[id].put.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/teacher/courses/{id}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::delete",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 130,
+      "target": "frontend/server/api/teacher/courses/[id].delete.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/students",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::roster",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 138,
+      "target": "frontend/server/api/teacher/courses/[id]/students.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/students",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::add",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 195,
+      "target": "frontend/server/api/teacher/courses/[id]/students.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "class_groups",
+        "student_ids",
+        "codes"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/students/remove",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::removeMany",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 242,
+      "target": "frontend/server/api/teacher/courses/[id]/students/remove.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "class_group",
+        "student_ids"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/import/preview",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::importPreview",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 225,
+      "target": "frontend/server/api/teacher/courses/[id]/import/preview.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "rows"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/import/commit",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::importCommit",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 232,
+      "target": "frontend/server/api/teacher/courses/[id]/import/commit.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "rows"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/teacher/courses/{id}/students/{sid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::remove",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 264,
+      "target": "frontend/server/api/teacher/courses/[id]/students/[sid].delete.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/students",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::search",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 166,
+      "target": "frontend/server/api/teacher/students.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": [
+        "q",
+        "group",
+        "course"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/students/{sid}/reset-password",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherCourseController::resetPassword",
+      "source": "backend/src/Controllers/TeacherCourseController.php",
+      "sourceLine": 153,
+      "target": "frontend/server/api/teacher/courses/[id]/students/[sid]/reset-password.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/me/profile",
+      "roles": [
+        "*"
+      ],
+      "handler": "AccountController::profile",
+      "source": "backend/src/Controllers/AccountController.php",
+      "sourceLine": 14,
+      "target": "frontend/server/api/me/profile.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/me/profile",
+      "roles": [
+        "*"
+      ],
+      "handler": "AccountController::updateProfile",
+      "source": "backend/src/Controllers/AccountController.php",
+      "sourceLine": 28,
+      "target": "frontend/server/api/me/profile.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "full_name"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/me/password",
+      "roles": [
+        "*"
+      ],
+      "handler": "AccountController::changePassword",
+      "source": "backend/src/Controllers/AccountController.php",
+      "sourceLine": 80,
+      "target": "frontend/server/api/me/password.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "current_password",
+        "new_password"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/me/username",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "AccountController::changeUsername",
+      "source": "backend/src/Controllers/AccountController.php",
+      "sourceLine": 46,
+      "target": "frontend/server/api/me/username.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "current_password",
+        "username"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/auth/forgot",
+      "roles": [],
+      "handler": "AccountController::forgot",
+      "source": "backend/src/Controllers/AccountController.php",
+      "sourceLine": 105,
+      "target": "frontend/server/api/auth/forgot.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "username",
+        "note"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/plans",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::index",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 72,
+      "target": "frontend/server/api/teacher/courses/[id]/plans.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/plans/full",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::full",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 351,
+      "target": "frontend/server/api/teacher/courses/[id]/plans/full.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/plans",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::create",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 92,
+      "target": "frontend/server/api/teacher/courses/[id]/plans.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "prefill"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/book",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::book",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 298,
+      "target": "frontend/server/api/teacher/courses/[id]/book.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/teacher/courses/{id}/book",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::saveBook",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 326,
+      "target": "frontend/server/api/teacher/courses/[id]/book.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "content",
+        "ai_model"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/book/draft",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::bookDraft",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 343,
+      "target": "frontend/server/api/teacher/courses/[id]/book/draft.post.ts",
+      "background": true,
+      "directBodyFields": [
+        "content"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/plans/{pid}/sheets",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::sheets",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 227,
+      "target": "frontend/server/api/teacher/plans/[pid]/sheets.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/plans/{pid}/sheets",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::createSheet",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 234,
+      "target": "frontend/server/api/teacher/plans/[pid]/sheets.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "type"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/sheets/{sid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::showSheet",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 251,
+      "target": "frontend/server/api/teacher/sheets/[sid].get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/teacher/sheets/{sid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::updateSheet",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 258,
+      "target": "frontend/server/api/teacher/sheets/[sid].put.ts",
+      "background": false,
+      "directBodyFields": [
+        "content",
+        "ai_model"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/teacher/sheets/{sid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::deleteSheet",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 272,
+      "target": "frontend/server/api/teacher/sheets/[sid].delete.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/sheets/{sid}/draft",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::draftSheet",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 280,
+      "target": "frontend/server/api/teacher/sheets/[sid]/draft.post.ts",
+      "background": true,
+      "directBodyFields": [
+        "source"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/plans/{pid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::show",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 109,
+      "target": "frontend/server/api/teacher/plans/[pid].get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/teacher/plans/{pid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::update",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 121,
+      "target": "frontend/server/api/teacher/plans/[pid].put.ts",
+      "background": false,
+      "directBodyFields": [
+        "content",
+        "ai_model"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/teacher/plans/{pid}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::delete",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 139,
+      "target": "frontend/server/api/teacher/plans/[pid].delete.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/plans/{pid}/draft",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::draft",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 147,
+      "target": "frontend/server/api/teacher/plans/[pid]/draft.post.ts",
+      "background": true,
+      "directBodyFields": [
+        "source"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/plans/{pid}/standard",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "LessonPlanController::standard",
+      "source": "backend/src/Controllers/LessonPlanController.php",
+      "sourceLine": 162,
+      "target": "frontend/server/api/teacher/plans/[pid]/standard.post.ts",
+      "background": true,
+      "directBodyFields": [
+        "competency"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/dashboard",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::dashboard",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 67,
+      "target": "frontend/server/api/teacher/courses/[id]/dashboard.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/guide",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::guide",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 73,
+      "target": "frontend/server/api/teacher/courses/[id]/guide.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/teacher/courses/{id}/context",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::saveContext",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 203,
+      "target": "frontend/server/api/teacher/courses/[id]/context.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "course_type",
+        "topics",
+        "level",
+        "context_note"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/ai",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::aiCached",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 81,
+      "target": "frontend/server/api/teacher/courses/[id]/ai.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": [
+        "type",
+        "topic"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/ai/all",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::aiAll",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 91,
+      "target": "frontend/server/api/teacher/courses/[id]/ai/all.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/ai",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::aiGenerate",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 106,
+      "target": "frontend/server/api/teacher/courses/[id]/ai.post.ts",
+      "background": true,
+      "directBodyFields": [
+        "type",
+        "topic"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/me/ai",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "AiController::status",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 15,
+      "target": "frontend/server/api/me/ai.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/me/ai",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "AiController::saveKey",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 21,
+      "target": "frontend/server/api/me/ai.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "api_key",
+        "model"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/me/ai/test",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "AiController::test",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 28,
+      "target": "frontend/server/api/me/ai/test.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/me/ai/model",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "AiController::setModel",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 34,
+      "target": "frontend/server/api/me/ai/model.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "model"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/me/ai",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "AiController::removeKey",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 41,
+      "target": "frontend/server/api/me/ai.delete.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/ai",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AiController::adminStatus",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 55,
+      "target": "frontend/server/api/admin/ai.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/ai",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AiController::adminSave",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 76,
+      "target": "frontend/server/api/admin/ai.put.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/ai/teachers/{id}",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AiController::adminAllow",
+      "source": "backend/src/Controllers/AiController.php",
+      "sourceLine": 104,
+      "target": "frontend/server/api/admin/ai/teachers/[id].put.ts",
+      "background": false,
+      "directBodyFields": [
+        "central_allowed"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/teacher/courses/{id}/groups/preview",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::groupsPreview",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 148,
+      "target": "frontend/server/api/teacher/courses/[id]/groups/preview.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "mode",
+        "size",
+        "seed",
+        "include_unprofiled"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/groups",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::groupsSaved",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 163,
+      "target": "frontend/server/api/teacher/courses/[id]/groups.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/teacher/courses/{id}/groups",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::groupsSave",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 180,
+      "target": "frontend/server/api/teacher/courses/[id]/groups.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "mode",
+        "groups",
+        "dry_run",
+        "size"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/teacher/courses/{id}/report",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "TeacherController::report",
+      "source": "backend/src/Controllers/TeacherController.php",
+      "sourceLine": 118,
+      "target": "frontend/server/api/teacher/courses/[id]/report.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/term",
+      "roles": [
+        "admin"
+      ],
+      "handler": "SettingsController::term",
+      "source": "backend/src/Controllers/SettingsController.php",
+      "sourceLine": 21,
+      "target": "frontend/server/api/admin/term.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/term",
+      "roles": [
+        "admin"
+      ],
+      "handler": "SettingsController::saveTerm",
+      "source": "backend/src/Controllers/SettingsController.php",
+      "sourceLine": 27,
+      "target": "frontend/server/api/admin/term.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "semester",
+        "academic_year"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/class-groups",
+      "roles": [
+        "admin"
+      ],
+      "handler": "StudentAdminController::groups",
+      "source": "backend/src/Controllers/StudentAdminController.php",
+      "sourceLine": 19,
+      "target": "frontend/server/api/admin/class-groups.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/class-groups/members",
+      "roles": [
+        "admin"
+      ],
+      "handler": "StudentAdminController::members",
+      "source": "backend/src/Controllers/StudentAdminController.php",
+      "sourceLine": 42,
+      "target": "frontend/server/api/admin/class-groups/members.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": [
+        "group"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/class-groups/rename",
+      "roles": [
+        "admin"
+      ],
+      "handler": "StudentAdminController::rename",
+      "source": "backend/src/Controllers/StudentAdminController.php",
+      "sourceLine": 53,
+      "target": "frontend/server/api/admin/class-groups/rename.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "from",
+        "to"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/admin/students/status",
+      "roles": [
+        "admin"
+      ],
+      "handler": "StudentAdminController::setStatus",
+      "source": "backend/src/Controllers/StudentAdminController.php",
+      "sourceLine": 71,
+      "target": "frontend/server/api/admin/students/status.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "status",
+        "class_group",
+        "student_ids"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/institution",
+      "roles": [
+        "admin"
+      ],
+      "handler": "SettingsController::institution",
+      "source": "backend/src/Controllers/SettingsController.php",
+      "sourceLine": 14,
+      "target": "frontend/server/api/admin/institution.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/institution",
+      "roles": [
+        "admin"
+      ],
+      "handler": "SettingsController::saveInstitution",
+      "source": "backend/src/Controllers/SettingsController.php",
+      "sourceLine": 45,
+      "target": "frontend/server/api/admin/institution.put.ts",
+      "background": false,
+      "directBodyFields": [
+        "name",
+        "affiliation"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/admin/import/preview",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::importPreview",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 24,
+      "target": "frontend/server/api/admin/import/preview.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/admin/import/commit",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::importCommit",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 30,
+      "target": "frontend/server/api/admin/import/commit.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/overview",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::overview",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 36,
+      "target": "frontend/server/api/admin/overview.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/users",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::users",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 66,
+      "target": "frontend/server/api/admin/users.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": [
+        "q",
+        "role"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/admin/users",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::createUser",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 156,
+      "target": "frontend/server/api/admin/users.post.ts",
+      "background": false,
+      "directBodyFields": [
+        "role",
+        "username",
+        "full_name",
+        "password",
+        "department_id",
+        "class_group"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/admin/users/{id}/reset-password",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::resetPassword",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 93,
+      "target": "frontend/server/api/admin/users/[id]/reset-password.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "PUT",
+      "path": "/admin/users/{id}",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::updateUser",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 114,
+      "target": "frontend/server/api/admin/users/[id].put.ts",
+      "background": false,
+      "directBodyFields": [
+        "username",
+        "full_name",
+        "is_active",
+        "department_id",
+        "class_group"
+      ],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/admin/reset-requests",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::resetRequests",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 193,
+      "target": "frontend/server/api/admin/reset-requests.get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "POST",
+      "path": "/admin/reset-requests/{id}/dismiss",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::dismissRequest",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 203,
+      "target": "frontend/server/api/admin/reset-requests/[id]/dismiss.post.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/admin/courses/{id}",
+      "roles": [
+        "admin"
+      ],
+      "handler": "AdminController::deleteCourse",
+      "source": "backend/src/Controllers/AdminController.php",
+      "sourceLine": 211,
+      "target": "frontend/server/api/admin/courses/[id].delete.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    },
+    {
+      "method": "GET",
+      "path": "/jobs/{id}",
+      "roles": [
+        "teacher",
+        "admin"
+      ],
+      "handler": "BackgroundJob::show",
+      "source": "backend/src/Core/BackgroundJob.php",
+      "sourceLine": 35,
+      "target": "frontend/server/api/jobs/[id].get.ts",
+      "background": false,
+      "directBodyFields": [],
+      "directQueryFields": []
+    }
+  ],
+  "tables": [
+    "departments",
+    "users",
+    "courses",
+    "enrollments",
+    "scenarios",
+    "archetype_master",
+    "assessment_results",
+    "game_sessions",
+    "ai_insights_cache",
+    "settings",
+    "auth_tokens",
+    "player_progress",
+    "user_ai_settings",
+    "course_groupings",
+    "password_reset_requests",
+    "lesson_plans",
+    "course_plans",
+    "lesson_sheets",
+    "background_jobs"
+  ],
+  "migrationTrackingTable": "schema_migrations",
+  "schemaHashes": {
+    "backend/database/schema.sql": "267a3647e48ef84612bc5a585671bc377bec8c4a9638b77ce9a2f9bc31fbc45c",
+    "backend/database/upgrades/2026-10-16_lesson_plans.sql": "7b50273eab78c93a5bc830486f12e4b0e28022107ac33fc0cc3b2effa9ec2e15",
+    "backend/database/upgrades/2026-10-16b_course_plans.sql": "df7bdd37fc90427250a19770815bdc8fd99e5f98364b53b9d511ecaf8aa04e2c",
+    "backend/database/upgrades/2026-10-16c_lesson_sheets.sql": "5fd1defd707cff30da920c6dbca845da692f4bf69e150269542864f6cbc67488",
+    "backend/database/upgrades/2026-10-17_course_content.sql": "763722752ad5ef7414d638e1d3ec006e35a7479a3cdeae111f9cbadcac328f47",
+    "backend/database/upgrades/2026-10-20_student_status.sql": "e18a8873f8be1cbce962fc9df92e7a6ba43355453b083d4bcb8df53c486a6438",
+    "backend/database/upgrades/2026-10-20b_background_jobs.sql": "9413b8013f7f36c2a19e0e959716231e27e0d87170e3721adb132b91c57b1eff"
+  }
+}

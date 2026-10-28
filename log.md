@@ -1,5 +1,12 @@
 # Change Log
 
+## 2026-10-29 — Nuxt migration เฟส 1: สำรวจและแผนย้าย
+
+- เพิ่ม issue, API mapping/JSON จาก source ครบ 86 endpoints, 6 background routes และ 19 domain tables + schema_migrations
+- เพิ่ม `tools/migration-inventory.mjs` สำหรับสร้าง/ตรวจ inventory โดยไม่ต่อ DB พร้อมเอกสารกฎ auth/crypto/game/AI, schema, โครงสร้าง server และ deploy/rollback
+- ตามผู้ใช้: ลดงาน Docker และเตรียมย้ายสู่ Node.js + MariaDB service โดยตรง รักษาฐานข้อมูลเดียวและข้อมูลล่าสุดเมื่อ rollback
+- ตรวจด้วย generator `--check` และ `git diff --check`; ยังไม่เปลี่ยน runtime/DB และยังไม่เริ่มเฟส 2
+
 บันทึกการแก้ไขทุกครั้ง (ใหม่สุดอยู่บน)
 
 ---

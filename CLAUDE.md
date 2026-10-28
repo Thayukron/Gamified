@@ -91,6 +91,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: ย้าย Nuxt 3 เฟส 1 สำรวจ/วางแผนแล้ว (`docs/migration/phase1-inventory.md`, API mapping/JSON 86 routes, generator `tools/migration-inventory.mjs`) — รอตรวจรับก่อนเฟส 2; ผู้ใช้กำหนดให้ลดงาน Docker และเตรียมถอด Docker ออก ใช้ Node.js/MariaDB service โดยตรงในเป้าหมายสุดท้าย ยังไม่เปลี่ยน DB/runtime
 - 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout)
 - 2026-09-26: ผู้ใช้ขอปรับ UI ให้ลึกลับ/ตื่นเต้น → ทำธีม ARCANA เสร็จ, E2E ผ่าน (ผู้ใช้ชอบ)
 - 2026-09-26: เสร็จเฟส 2 Game Engine
