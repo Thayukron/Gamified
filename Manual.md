@@ -1,5 +1,7 @@
 # 📘 คู่มือการรันระบบ ARCANA PROFILE
 
+> อัปเดต 2026-10-29: งานย้าย Nuxt เฟส 2 ใช้ MariaDB service ในเครื่อง port 3306 และฐาน gamified ใหม่ตามผู้ใช้ รัน API โดยไม่ใช้ Docker: เข้า `frontend` แล้ว `npm run dev -- --dotenv ../.env` เปิด `http://localhost:3100/api/health` รองรับเฉพาะ auth/account ที่ย้ายแล้ว ดู [วิธีรันและขอบเขตเฟส 2](docs/migration/phase2-foundation.md) คำสั่ง Docker/start-dev เดิมด้านล่างเป็นของระบบ PHP เดิม
+
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
 (รายละเอียดการติดตั้งบนเซิร์ฟเวอร์ใหม่ดูที่ [DEPLOY.md](DEPLOY.md))
 

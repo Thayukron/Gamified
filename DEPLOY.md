@@ -1,5 +1,7 @@
 # 🚀 การติดตั้งและ Deploy ด้วย Docker
 
+> งานย้าย Nuxt 3 (2026-10-29): เป้าหมายใหม่เป็น Node.js + MariaDB service โดยตรง เฟส 2 รัน API auth/account ได้แล้วด้วยฐานใหม่ในเครื่อง port 3306 ดู [วิธีรันแบบไม่ใช้ Docker](docs/migration/phase2-foundation.md) ระบบ Nuxt ยังย้ายไม่ครบทุก API จึงยังไม่ใช่ replacement สำหรับ production ทั้งระบบ ขั้นตอนด้านล่างสำหรับ PHP deployment เดิม
+
 ระบบมี 3 container ทำงานร่วมกัน สั่งรันด้วยคำสั่งเดียว
 
 | container | หน้าที่ | ภายใน |

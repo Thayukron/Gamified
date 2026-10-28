@@ -6,6 +6,12 @@ export default defineNuxtConfig({
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
+    db: {
+      host: '127.0.0.1', port: 3306, name: 'gamified', user: 'arcana',
+      password: '', connectionLimit: 10,
+    },
+    tokenTtlHours: 168,
+    corsOrigins: 'http://localhost:3100,http://127.0.0.1:3100',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://127.0.0.1:8100/api',
     },

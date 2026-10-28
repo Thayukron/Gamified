@@ -14,10 +14,10 @@
 
 ## ขอบเขตงาน
 
-- [ ] จัดโครงสร้าง `server/api`, `server/services`, `server/utils` และ shared types
-- [ ] ตั้งค่า database connection pool, transactions และ server runtime config
-- [ ] ย้าย authentication, token และการตรวจ role/เจ้าของข้อมูล
-- [ ] ย้าย API บัญชีผู้ใช้ โปรไฟล์ และการรีเซ็ตรหัสผ่าน
+- [x] จัดโครงสร้าง `server/api`, `server/services`, `server/utils` และ shared types
+- [x] ตั้งค่า database connection pool, transactions และ server runtime config
+- [x] ย้าย authentication, token และการตรวจ role พร้อม helper เจ้าของข้อมูล (การผูกกับ routes รายวิชาทำในเฟส 4)
+- [x] ย้าย API บัญชีผู้ใช้ โปรไฟล์ และคำขอรีเซ็ตรหัสผ่าน (admin/teacher reset ในเฟส 4)
 - [ ] ย้ายเกม การบันทึกความคืบหน้า การคิดคะแนน VARK/RIASEC/Mindset และรางวัล
 - [ ] ย้ายรายวิชา รายชื่อผู้เรียน และการนำเข้าข้อมูล
 - [ ] ย้าย dashboard ไกด์การสอน การจัดกลุ่ม และข้อมูลรายงาน
@@ -59,14 +59,17 @@
 ### ความคืบหน้า
 
 - [x] เฟส 1 สำรวจและวางแผน: [รายละเอียด](docs/migration/phase1-inventory.md), [API mapping 86 endpoints](docs/migration/api-map.md), [inventory JSON](docs/migration/api-inventory.json)
-- [ ] ตรวจรับเฟส 1 ก่อนเริ่มเฟส 2
-- [ ] เฟส 2 ระบบพื้นฐาน
+- [x] ตรวจรับเฟส 1 ก่อนเริ่มเฟส 2
+- [x] เฟส 2 ระบบพื้นฐาน: [รายละเอียดและวิธีรัน](docs/migration/phase2-foundation.md) — 9 endpoints, build/typecheck ผ่าน, service 14 กรณี, HTTP smoke 15 กรณี, live MariaDB/HTTP 28 requests ผ่าน
+- [ ] ตรวจรับเฟส 2 ก่อนเริ่มเฟส 3
 - [ ] เฟส 3 เกมและผลประเมิน
 - [ ] เฟส 4 ครูและแอดมิน
 - [ ] เฟส 5 แผนการสอนและ AI
 - [ ] เฟส 6 เปลี่ยนระบบจริง
 
 ข้อกำหนดเพิ่มเติมจากผู้ใช้: พยายามไม่แก้ Docker มาก เพราะจะถอด Docker ออกด้วย เป้าหมาย deployment จึงเป็น Nuxt/Node.js และ MariaDB service โดยตรง ระหว่างเปลี่ยนผ่านยังรักษาฐานข้อมูลชุดเดิมก่อนย้ายอย่างมีแผน
+
+อัปเดต 2026-10-29: ผู้ใช้ให้ใช้ MariaDB ในเครื่อง และอนุญาตสร้างฐานข้อมูลใหม่ (ไม่มี gamified เดิมในเครื่อง) จึงใช้ MariaDB 10.6.26 port 3306 โดยไม่พึ่ง Docker; ฐานนี้เป็นการติดตั้งใหม่ ไม่ใช่การกู้ข้อมูลเดิม
 
 ## เกณฑ์รับงาน
 

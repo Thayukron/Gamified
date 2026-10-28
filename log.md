@@ -1,5 +1,14 @@
 # Change Log
 
+## 2026-10-29 — Nuxt migration เฟส 2: ระบบพื้นฐานและฐานข้อมูลในเครื่อง
+
+- เพิ่ม Nitro API 9 endpoints สำหรับ health/auth/account, services/types, mysql2 pool/transaction/timezone และ role/password/ownership guards
+- ผู้ใช้กำหนดใช้ MariaDB ในเครื่องและอนุญาตฐานใหม่: สร้าง gamified บน MariaDB 10.6.26 port 3306 มี 20 ตาราง, admin บังคับเปลี่ยนรหัส, 6 archetypes และ 3 quests; เพิ่ม Node initializer ที่ปฏิเสธฐานมีตาราง ไม่เรียก migrate.php
+- เพิ่ม `.env.nuxt.example`, เอกสารเฟส 2 และบันทึกความคืบหน้า issue; `.env` จริงไม่ commit; ไม่แก้ Docker
+- ผู้ใช้ให้ ignore tests: เพิ่ม frontend/tests/ ใน .gitignore; ผล local tests ผ่าน 14 กรณี, production HTTP smoke 15 กรณี, live DB/HTTP 28 requests; build และ server typecheck ผ่าน
+- สำรองก่อน live writes ใน backups/ แล้ว cleanup เฉพาะบัญชีทดสอบ ตรวจเหลือ admin 1 บัญชี ไม่มี tokens/reset requests ค้าง
+- main.css มีการจัดรูปแบบค้างจากผู้ใช้: แก้เฉพาะช่องว่างใน Tailwind arbitrary class 2 จุดให้ build ได้ โดยไม่ commit formatting ที่เหลือ
+
 ## 2026-10-29 — Nuxt migration เฟส 1: สำรวจและแผนย้าย
 
 - เพิ่ม issue, API mapping/JSON จาก source ครบ 86 endpoints, 6 background routes และ 19 domain tables + schema_migrations

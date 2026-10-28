@@ -3,6 +3,7 @@ frontend/.nuxt/
 frontend/.output/
 frontend/.data/
 frontend/dist/
+frontend/tests/
 backend/config.local.php
 backend/vendor/
 *.log

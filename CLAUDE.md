@@ -23,13 +23,13 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 ## สภาพแวดล้อม Dev (เครื่องผู้ใช้ Windows 11)
 | ส่วน | รายละเอียด |
 |---|---|
-| DB | **ชุดเดียว = MariaDB 11.4 ใน Docker `127.0.0.1:3320`** (ผู้ใช้กำหนด: ห้ามแยกฐานข้อมูล dev/จริง) · `config.php` อ่าน `.env` เมื่อรันนอก Docker · `backend/storage/app.key` = ตัวเดียวกับ container · ฐานเก่า 3310 (`C:\Users\USER\.gamified-mysql`) เลิกใช้แล้ว |
+| DB | **ปัจจุบัน (2026-10-29): MariaDB 10.6.26 service ในเครื่อง `127.0.0.1:3306` ฐาน `gamified` ใหม่ตามคำสั่งผู้ใช้** · credentials ใน `.env` (gitignored) · เดิม Docker 3320 ไม่ใช้เป็น DB ของงานย้ายรอบนี้ · ไม่ได้กู้ข้อมูลเดิม |
 | API | PHP 8.2 built-in server `php -S 127.0.0.1:8100 -t public public/index.php` (ใน `backend/`) |
 | Frontend | Nuxt 3.21 dev **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · **API dev ใช้ 8100 เพราะ 8000 ถูก Docker ของ btech-sice ใช้** |
 | สคริปต์ | `start-dev.ps1` เปิด db (Docker) + API 8100 + Nuxt 3100 · **ห้ามรัน `migrate.php`** (ล้างข้อมูลจริง; สคริปต์ปฏิเสธเมื่อมีผู้ใช้ เว้นแต่ `--wipe-real-data`) |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
-บัญชีทดสอบ: `admin/admin1234`, `teacher1/teacher1234` (วิชา DSA แผนก IT), `teacher2/teacher1234` (บัญชี), `student001..010/student1234` (ยังไม่เล่น) · student011–046 = ข้อมูลตัวอย่างที่เล่นแล้ว (DemoPlayer)
+ฐานใหม่ในเครื่องมีเฉพาะ `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด ไม่มีบัญชี demo; บัญชี teacher/student ในเอกสารเก่าเป็นของฐานเดิม
 
 ## โครงสร้างโค้ด
 ```
@@ -91,6 +91,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: Nuxt migration เฟส 2 เสร็จ implementation/verification — 9 endpoints (health/auth/account), pool/transaction, guards, ownership/settings helpers, safe fresh installer Node และ base seeds; ผู้ใช้อนุญาตสร้างฐานใหม่บน MariaDB local 3306 แล้ว สำรองก่อน live tests; build/typecheck ผ่าน, tests 14 + HTTP 15 + DB/HTTP 28 requests ผ่าน; tests ถูก ignore ตามผู้ใช้, `main.css` formatting เดิมคงค้างแต่แก้ช่องว่าง arbitrary classes 2 จุดที่ทำ build พัง; รอตรวจรับก่อนเฟส 3 ดู `docs/migration/phase2-foundation.md`
 - 2026-10-29: ย้าย Nuxt 3 เฟส 1 สำรวจ/วางแผนแล้ว (`docs/migration/phase1-inventory.md`, API mapping/JSON 86 routes, generator `tools/migration-inventory.mjs`) — รอตรวจรับก่อนเฟส 2; ผู้ใช้กำหนดให้ลดงาน Docker และเตรียมถอด Docker ออก ใช้ Node.js/MariaDB service โดยตรงในเป้าหมายสุดท้าย ยังไม่เปลี่ยน DB/runtime
 - 2026-09-26: เสร็จเฟส 1 และทดสอบ E2E ผ่าน (login ทั้ง 3 role, กันเข้าพื้นที่ role อื่น, reload คง session, logout)
 - 2026-09-26: ผู้ใช้ขอปรับ UI ให้ลึกลับ/ตื่นเต้น → ทำธีม ARCANA เสร็จ, E2E ผ่าน (ผู้ใช้ชอบ)
