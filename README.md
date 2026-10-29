@@ -14,11 +14,11 @@
 
 ต้องมี **Node.js 22+** และ **MariaDB** (เครื่องปัจจุบันใช้ 10.6) ระบบใช้ Nuxt 3 / Vue 3 สำหรับหน้าเว็บ และ Nitro สำหรับ API
 
+สร้าง `.env` ด้วย editor และกำหนดค่าของเครื่องเอง โดยดูชื่อค่าจาก [.env.example](.env.example) หากมี `.env` อยู่แล้วให้ใช้ไฟล์เดิม ห้ามนำไฟล์ตัวอย่างมาเขียนทับ
+
 รันคำสั่งจากโฟลเดอร์โปรเจกต์ได้ทั้ง Windows และ Linux:
 
 ```sh
-node -e "require('node:fs').copyFileSync('.env.example', '.env')"
-# แก้ค่าเชื่อมต่อ MariaDB ใน .env ให้ตรงกับเครื่องก่อนเริ่มใช้งาน
 npm install
 ```
 
@@ -34,7 +34,7 @@ npm run db:init -- --create-empty
 npm run dev
 ```
 
-เปิด <http://localhost:8090> โดย API อยู่ใต้ `/api` ของเว็บเดียวกัน
+เปิด <http://localhost:3000> โดย API อยู่ใต้ `/api` ของเว็บเดียวกัน
 
 การติดตั้งใหม่สร้างบัญชี `admin` โดยใช้ `ADMIN_PASSWORD` ใน `.env` หากไม่ได้กำหนดจะใช้ `admin1234` และบังคับเปลี่ยนเมื่อเข้าสู่ระบบครั้งแรก บัญชีครูและนักเรียน demo ไม่ได้สร้างอัตโนมัติ
 
@@ -42,7 +42,7 @@ npm run dev
 
 ## รัน production (Windows / Linux)
 
-ตั้ง `PORT=8090` ใน `.env` แล้วรัน:
+ใช้ `PORT` ที่ผู้ดูแลกำหนดใน `.env` (เช่น `PORT=3000`) แล้วรัน:
 
 ```sh
 npm run build

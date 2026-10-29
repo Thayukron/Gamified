@@ -7,7 +7,7 @@
 
 คำสั่ง `npm` ในคู่มือนี้ใช้ได้ทั้ง Windows และ Linux โดยรันจากโฟลเดอร์โปรเจกต์ ส่วนคำสั่งจัดการ service และสคริปต์ `.ps1` เป็นตัวอย่างสำหรับ Windows; Linux ดู [คู่มือ Deploy](DEPLOY.md)
 
-ตั้ง `PORT=8090` สำหรับทั้ง production และ development ใน `.env` เปลี่ยนค่าแล้วเปิดโปรเซสใหม่ และปรับ URL / Cloudflare Tunnel ให้ตรงกับพอร์ต
+ใช้ `PORT` ที่ผู้ดูแลกำหนดใน `.env` สำหรับทั้ง production และ development (ตัวอย่างในคู่มือใช้ 3000) เปลี่ยนค่าแล้วเปิดโปรเซสใหม่ และปรับ URL / Cloudflare Tunnel ให้ตรงกับพอร์ต
 
 ---
 
@@ -17,7 +17,7 @@
 
 | ส่วน | หน้าที่ | ที่อยู่ |
 |---|---|---|
-| แอป (Node) | หน้าเว็บ + REST API (Nuxt/Nitro) | http://localhost:8090 (dev / production) |
+| แอป (Node) | หน้าเว็บ + REST API (Nuxt/Nitro) | http://localhost:3000 (dev / production) |
 | ฐานข้อมูล | MariaDB service ในเครื่อง (**ข้อมูลจริงชุดเดียวของระบบ**) | `127.0.0.1:3306` |
 
 - ค่ารหัสผ่านฐานข้อมูลและพอร์ตอยู่ในไฟล์ `.env` (ห้ามส่งไฟล์นี้ให้ใคร / ไม่ขึ้น GitHub)
@@ -41,14 +41,14 @@
    npm run dev
    ```
 
-3. เปิดเบราว์เซอร์ไปที่ **http://localhost:8090**
+3. เปิดเบราว์เซอร์ไปที่ **http://localhost:3000**
 
 > 💡 ถ้าต้องการรันแบบ production (เร็วขึ้น เหมาะเปิดทิ้งไว้):
 > ```powershell
 > npm run build
 > npm start
 > ```
-> แล้วเปิด http://localhost:8090
+> แล้วเปิด http://localhost:3000
 
 ## 3. ปิดระบบ ⏹️
 
@@ -79,7 +79,7 @@ npm run build         # ถ้ารันแบบ production
 เครื่องนี้ติดตั้ง `cloudflared` ไว้แล้ว เปิด PowerShell **หน้าต่างใหม่** แล้วพิมพ์
 
 ```powershell
-cloudflared tunnel --url http://localhost:8090
+cloudflared tunnel --url http://localhost:3000
 ```
 
 รอประมาณ 10–20 วินาที จะมีกล่องข้อความแบบนี้
@@ -105,7 +105,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 2. กรอก
    - **Subdomain:** เช่น `arcana` (จะได้ `arcana.โดเมนของคุณ`)
    - **Domain:** เลือกโดเมน
-   - **Service:** Type `HTTP` · URL `localhost:8090`
+   - **Service:** Type `HTTP` · URL `localhost:3000`
 3. กด **Save** — ใช้งานได้ในไม่กี่วินาที ไม่ต้องรีสตาร์ทอะไร
 
 ตราบใดที่ Tunnel ตัวนั้นทำงานและระบบ ARCANA เปิดอยู่ ลิงก์จะใช้ได้ตลอด
@@ -168,7 +168,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 
 | อาการ | สาเหตุ / วิธีแก้ |
 |---|---|
-| เปิด http://localhost:8090 ไม่ขึ้น | ยังไม่ได้รัน `npm run dev` หรือมีโปรเจกต์อื่นยึดพอร์ต 8090 อยู่ → ตรวจ `Get-NetTCPConnection -LocalPort 8090` แล้ว kill node ตัวเก่า |
+| เปิด http://localhost:3000 ไม่ขึ้น | ยังไม่ได้รัน `npm run dev` หรือมีโปรเจกต์อื่นยึดพอร์ต 3000 อยู่ → ตรวจ `Get-NetTCPConnection -LocalPort 3000` แล้ว kill node ตัวเก่า |
 | `npm` : The term 'npm' is not recognized | Node.js ยังไม่ได้ติดตั้ง หรือเปิด PowerShell ก่อนติดตั้ง → ปิดแล้วเปิด PowerShell ใหม่ |
 | `Access denied for user 'arcana'` | รันสคริปต์โดยไม่โหลด `.env` → ใช้ `npm run db:reset-password -- <username>` หรือ `node --env-file-if-exists=.env tools/scripts/...` |
 | ลิงก์ trycloudflare เปิดไม่ได้ / ขึ้น *could not resolve host* | Tunnel หลุด (เปลี่ยนเน็ต/เครื่อง Sleep/ปิดหน้าต่าง) → เปิด Tunnel ใหม่ (ข้อ 5) แล้วส่งลิงก์ใหม่ |
@@ -176,7 +176,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 | ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษาบล็อก Google AI → ลองจากเน็ตมือถือ (hotspot) |
 | AI ขึ้น “เกินโควตา” / “Google ไม่ว่าง” | รอ 1–2 นาทีแล้วกดใหม่ (โควตาของ Key ครูแต่ละคน) — ไกด์แบบไม่ใช้ AI ใช้ได้ตามปกติ |
 | ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `npm run db:reset-password -- admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
-| พอร์ตถูกรายโปรเจกต์อื่นใช้ | แก้ `PORT` ใน `.env` เป็นเลขอื่น (เช่น 8091) แล้วรันใหม่ |
+| พอร์ตถูกรายโปรเจกต์อื่นใช้ | แก้ `PORT` ใน `.env` เป็นเลขอื่น (เช่น 3001) แล้วรันใหม่ |
 
 ## 9. (สำหรับนักพัฒนา) โหมดแก้โค้ด 👩‍💻
 
@@ -185,7 +185,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 ```powershell
 npm run dev
 ```
-- หน้าเว็บ: http://localhost:8090 (API อยู่ /api ของเว็บตัวเดียว)
+- หน้าเว็บ: http://localhost:3000 (API อยู่ /api ของเว็บตัวเดียว)
 - ⚠️ ฐานข้อมูลชุดเดียว — การทดสอบใด ๆ กระทบข้อมูลจริง: สำรองก่อนด้วย `tools/backup.ps1`
 
 ---
@@ -198,6 +198,6 @@ npm run dev
 | เปิดระบบ (production) | `npm run build` แล้ว `npm start` |
 | ปิดระบบ | `Ctrl + C` ในหน้าต่างที่รันแอป |
 | อัปเดตโค้ดใหม่ | `git pull` แล้ว `npm install` แล้วรันใหม่ |
-| เปิดลิงก์ภายนอก | `cloudflared tunnel --url http://localhost:8090` (ปิดด้วย `Ctrl + C`) |
+| เปิดลิงก์ภายนอก | `cloudflared tunnel --url http://localhost:3000` (ปิดด้วย `Ctrl + C`) |
 | สำรองข้อมูล | `.\tools\backup.ps1` (ดูข้อ 6) |
 | รีเซ็ตรหัสฉุกเฉิน | `npm run db:reset-password -- <username>` |

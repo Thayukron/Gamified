@@ -2,7 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: false,
   devtools: { enabled: false },
-  devServer: { port: Number(process.env.PORT || 8090) },
+  devServer: { port: Number(process.env.PORT || 3000) },
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss'],
   css: ['~/assets/css/main.css'],
   runtimeConfig: {
@@ -14,7 +14,7 @@ export default defineNuxtConfig({
     appKeyPath: 'storage/app.key',
     geminiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     geminiTimeoutSeconds: 85,
-    corsOrigins: 'http://localhost:8090,http://127.0.0.1:8090',
+    corsOrigins: 'http://localhost:3000,http://127.0.0.1:3000',
     public: {
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api',
     },

@@ -11,8 +11,8 @@
 | ฐานข้อมูล | MariaDB service ในเครื่อง | `127.0.0.1:3306` (ค่าใน `.env`) |
 
 ผู้ใช้เปิดแค่ `http://<เครื่อง>:<PORT>` — API อยู่ใต้ `/api` ของเว็บเดียวกัน (ไม่ต้องตั้ง CORS)
-- **Production:** รัน `npm start` โดยอ่าน `PORT` จาก `.env` → `http://localhost:8090`
-- **Development:** `npm run dev` → `http://localhost:8090`
+- **Production:** รัน `npm start` โดยอ่าน `PORT` จาก `.env` → `http://localhost:3000`
+- **Development:** `npm run dev` → `http://localhost:3000`
 
 ---
 
@@ -23,11 +23,12 @@
 ```sh
 git clone https://github.com/rungrot-muangchalerm/gamefile.git
 cd gamefile
-node -e "require('node:fs').copyFileSync('.env.example', '.env')"
-# เปิด .env ด้วย editor แล้วตั้ง DB_PASSWORD และ PORT
+# สร้าง .env ด้วย editor ตามหัวข้อด้านล่างก่อนติดตั้งฐานข้อมูล
 npm install
 npm run db:init -- --create-empty   # เฉพาะฐานวาง: สรางตาราง + บัญชี admin + archetypes + scenarios
 ```
+
+สร้าง `.env` ด้วย editor โดยอ้างอิงชื่อค่าจาก [.env.example](../../.env.example) และกำหนดค่าฐานข้อมูลกับ `PORT` ให้ตรงกับเซิร์ฟเวอร์ก่อนรันคำสั่งติดตั้งฐานข้อมูล หากมี `.env` เดิมให้ใช้ไฟล์นั้นต่อ ไม่คัดลอกค่าตัวอย่างทับไฟล์เดิม ระบบอ่านค่าเท่านั้น ไม่สร้างหรือเขียน `.env` ระหว่าง install/build/start
 
 รันแอป production:
 
@@ -36,7 +37,7 @@ npm run build
 npm start
 ```
 
-เปิด `http://<เครื่อง>:8090` → เขาสู่ระบบ `admin` / `admin1234` → ระบบบังคัับใหตังรหัสผานใหมทันที
+เปิด `http://<เครื่อง>:3000` → เขาสู่ระบบ `admin` / `admin1234` → ระบบบังคัับใหตังรหัสผานใหมทันที
 (หรือนิยาม `ADMIN_PASSWORD` ใน `.env` กอนติดตั้ง)
 
 จากนั้้น: หน้าแอดมิน → **นำเข้าข้อมูล** (แผนก ครู นักเรเรียน พรอมกลุ่่มเรียน) → ครูเข้่าไปสร้างรายวิชาของตนเอง
@@ -50,11 +51,11 @@ npm start
 คำสั่งเริ่มระบบใช้เหมือนกันทั้งสองระบบปฏิบัติการ โดยรันจากโฟลเดอร์โปรเจกต์ และตั้งค่าใน `.env`:
 
 ```dotenv
-PORT=8090
+PORT=3000
 ```
 
 - `npm start` อ่าน `PORT` จาก `.env` ตอนเริ่มโปรเซส
-- `npm run dev` อ่าน `PORT` ตัวเดียวกับ production (ค่าเริ่มต้นของ dev คือ 8090)
+- `npm run dev` อ่าน `PORT` ตัวเดียวกับ production (ค่าเริ่มต้นของ dev คือ 3000)
 - ตัวเลข URL ในคู่มือเป็นตัวอย่างตามค่าข้างต้น ถ้าเปลี่ยนพอร์ตให้ปรับ URL และ Tunnel ตามด้วย
 - Environment ของเครื่องมีลำดับความสำคัญเหนือ `.env` หากตั้ง `PORT` ไว้ภายนอก ต้องแก้ค่านั้นด้วย
 - เปลี่ยนพอร์ตแล้วรีสตาร์ตได้เลย ไม่ต้อง build ใหม่; เปลี่ยนโค้ดต้อง build ใหม่
@@ -116,7 +117,7 @@ cp app.key.backup storage/app.key
 | ตองการ | คำสั่ง |
 |---|---|
 | รัน production | `npm start` |
-| รัน development | `npm run dev` (http://localhost:8090) |
+| รัน development | `npm run dev` (http://localhost:3000) |
 | อัปเกรด schema | `npm run db:upgrade` |
 | รีเซ็ตรหัสฉุกระเหิน | `npm run db:reset-password -- <username>` |
 | เปลี่ยนภาคเรียน | แก `ACADEMIC_YEAR` / `SEMESTER` ใน `.env` แลวรีสตารท |
@@ -128,7 +129,7 @@ cp app.key.backup storage/app.key
 
 ## 5. ใชงานจริงผานอินเทอรเน็ต
 
-- ควรเปิดผาน **HTTPS** — วาง reverse proxy (เชน Nginx/Caddy ของเซิรฟ์เวอร หรอ Cloudflare Tunnel) หนา `localhost:8090`
+- ควรเปิดผาน **HTTPS** — วาง reverse proxy (เชน Nginx/Caddy ของเซิรฟ์เวอร หรอ Cloudflare Tunnel) หนา `localhost:3000`
 - เปิด firewall เฉพาะพอรตเว็บ ไมตองเปิดพอรตฐานขอมูล (3306 ควรผูกกับ 127.0.0.1 เทานัน)
 - เปลี่ยนรหัสผานใน `.env` จากคาตัวอยางทุกตัว
 

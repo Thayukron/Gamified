@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **ผู้ดูแลตั้ง .env เอง** — ถอดคำสั่งคัดลอกไฟล์ตัวอย่างจากคู่มือ/.env.example, ห้ามทับไฟล์เดิมเมื่ออัปเดต; แอปอ่าน env เท่านั้น; fallback/ตัวอย่างพอร์ต 3000; ไม่แก้ .env จริง
 - 2026-10-29: แก้ชื่อไฟล์แผนเป็น ROADMAP.md และอัปเดตลิงก์อ้างอิงแล้ว
 - 2026-10-29: **ย้ายอัปเดตแผนกจาก main c165a6a มา dev** — Nitro CRUD แผนก 3 routes + overview courses + UI จัดการแผนก, รวม inventory 89 routes; แผน ROADMAP.md ย้ายมา dev แล้ว; tests 13 + logic UI + typecheck/build + production health/HTTP 5 checks ผ่าน; ไม่เปลี่ยน DB จริง/ยังไม่ browser E2E/deploy; origin ตอนนี้ชี้ Thayukron/Gamified ตามคำสั่งผู้ใช้ ไม่ push เอง
 - 2026-10-29: **ใช้ PORT เดียวทุกโหมดตามผู้ใช้** — ยกเลิก DEV_PORT ในโค้ดและคู่มือ; dev และ production ใช้ PORT ตัวเดียวกัน
