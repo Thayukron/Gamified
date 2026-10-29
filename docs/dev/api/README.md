@@ -1,6 +1,6 @@
 # API Reference
 
-[หน้ารวมเอกสาร](../README.md) · [หน้าแรกโปรเจกต์](../../README.md)
+[หน้ารวมเอกสาร](../../README.md) · [หน้าแรกโปรเจกต์](../../../README.md)
 
 API อยู่ใต้ `/api` บน origin เดียวกับหน้าเว็บ ตารางนี้สรุป endpoint หลักจาก README เดิม ไม่ใช่รายการครบทุก route
 
@@ -48,4 +48,4 @@ API อยู่ใต้ `/api` บน origin เดียวกับหน้
 | PUT | /api/admin/users/{id} · GET /api/admin/reset-requests · POST …/{id}/dismiss | admin |
 | POST | /api/teacher/courses/{id}/students/{sid}/reset-password | teacher (ผู้เรียนในวิชาที่สอน), admin |
 
-รายการ route และประวัติการย้ายระบบดูที่ [API mapping](migration/api-map.md) ส่วน implementation ปัจจุบันอยู่ใน `server/api/`
+รายการ route และประวัติการย้ายระบบดูที่ [API mapping](../migration/api-map.md) ส่วน implementation ปัจจุบันอยู่ใน `server/api/`

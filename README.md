@@ -50,7 +50,7 @@ npm run dev
 | การใช้งานสำหรับครู | [คู่มือครู (PDF)](docs/presentation/คู่มือการใช้งานสำหรับครู-ARCANA-PROFILE.pdf) |
 | แนวคิดและทฤษฎีที่ใช้ | [ที่มาและแนวคิดของระบบ](docs/knowled.md) |
 | ข้อกำหนดและขอบเขตของระบบ | [ข้อกำหนดระบบ](docs/dev/requiments.md) |
-| Endpoint และสิทธิ์เข้าถึง | [API Reference](docs/dev/api.md) |
+| Endpoint และสิทธิ์เข้าถึง | [API Reference](docs/dev/api/README.md) |
 
 ## ประวัติการเปลี่ยนแปลง
 

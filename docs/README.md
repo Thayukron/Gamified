@@ -18,7 +18,7 @@
 ## นักพัฒนา
 
 - [ข้อกำหนดและขอบเขตระบบ](dev/requiments.md)
-- [API Reference: endpoint หลักและสิทธิ์](dev/api.md)
+- [API Reference: endpoint หลักและสิทธิ์](dev/api/README.md)
 - [โครงสร้างฐานข้อมูล SQL](database/schema.sql)
 - [แนวทางอัปเกรดฐานข้อมูล](database/upgrades/README.md)
 - [เครื่องมือและสคริปต์](../tools/README.md)
