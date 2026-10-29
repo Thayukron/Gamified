@@ -47,7 +47,8 @@ class AdminController
             'departments' => $db->query(
                 "SELECT d.id, d.code, d.name,
                         (SELECT COUNT(*) FROM users u WHERE u.department_id = d.id AND u.role = 'student') AS students,
-                        (SELECT COUNT(*) FROM users u WHERE u.department_id = d.id AND u.role = 'teacher') AS teachers
+                        (SELECT COUNT(*) FROM users u WHERE u.department_id = d.id AND u.role = 'teacher') AS teachers,
+                        (SELECT COUNT(*) FROM courses c WHERE c.department_id = d.id) AS courses
                    FROM departments d ORDER BY d.code"
             )->fetchAll(),
             'courses' => $db->query(
@@ -214,6 +215,60 @@ class AdminController
         $stmt->execute([(int) $req->params['id']]);
         if (!$stmt->rowCount()) {
             throw new HttpException(404, 'ไม่พบรายวิชา');
+        }
+        return ['ok' => true];
+    }
+
+    /** Validated [code, name] of a department; the code must be unique (excluding $id when editing). */
+    private static function departmentInput(Request $req, int $id = 0): array
+    {
+        $code = mb_strtoupper(trim((string) $req->input('code', '')));
+        $name = trim(preg_replace('/\s+/u', ' ', (string) $req->input('name', '')));
+        if (!preg_match('/^[A-Z0-9._-]{1,20}$/', $code)) {
+            throw new HttpException(422, 'รหัสแผนกต้องเป็นตัวอักษรอังกฤษ/ตัวเลข ไม่เกิน 20 ตัว (เช่น IT, ACC)');
+        }
+        if ($name === '' || mb_strlen($name) > 150) {
+            throw new HttpException(422, 'กรุณากรอกชื่อแผนกวิชา (ไม่เกิน 150 ตัวอักษร)');
+        }
+        $dup = Database::get()->prepare('SELECT name FROM departments WHERE code = ? AND id <> ?');
+        $dup->execute([$code, $id]);
+        if (($other = $dup->fetchColumn()) !== false) {
+            throw new HttpException(409, "รหัสแผนก {$code} ถูกใช้แล้ว ({$other})");
+        }
+        return [$code, $name];
+    }
+
+    /** POST /admin/departments — { code, name } */
+    public static function createDepartment(Request $req): array
+    {
+        [$code, $name] = self::departmentInput($req);
+        $db = Database::get();
+        $db->prepare('INSERT INTO departments (code, name) VALUES (?, ?)')->execute([$code, $name]);
+        return ['id' => (int) $db->lastInsertId(), 'message' => "เพิ่มแผนก {$code} {$name} แล้ว"];
+    }
+
+    /** PUT /admin/departments/{id} — { code, name }; users and courses keep pointing to it by id. */
+    public static function updateDepartment(Request $req): array
+    {
+        $id = (int) $req->params['id'];
+        $db = Database::get();
+        $exists = $db->prepare('SELECT 1 FROM departments WHERE id = ?');
+        $exists->execute([$id]);
+        if (!$exists->fetchColumn()) {
+            throw new HttpException(404, 'ไม่พบแผนกวิชา');
+        }
+        [$code, $name] = self::departmentInput($req, $id);
+        $db->prepare('UPDATE departments SET code = ?, name = ? WHERE id = ?')->execute([$code, $name, $id]);
+        return ['ok' => true, 'message' => "บันทึกแผนก {$code} {$name} แล้ว"];
+    }
+
+    /** DELETE /admin/departments/{id} — its users and courses become "not specified" (FK ON DELETE SET NULL); nothing else is lost. */
+    public static function deleteDepartment(Request $req): array
+    {
+        $stmt = Database::get()->prepare('DELETE FROM departments WHERE id = ?');
+        $stmt->execute([(int) $req->params['id']]);
+        if (!$stmt->rowCount()) {
+            throw new HttpException(404, 'ไม่พบแผนกวิชา');
         }
         return ['ok' => true];
     }
