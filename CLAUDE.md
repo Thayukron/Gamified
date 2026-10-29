@@ -56,21 +56,6 @@ frontend/  (Nuxt 3, ssr:false SPA + Nitro API ครบ 86 routes, Pinia, Tailwi
   components/game/CharacterPortrait.vue  ครอปหน้าสำหรับกล่องข้อความ/HUD
   utils/progression.ts    XP/เลเวล/เหรียญ/ระดับการด์ (ต้องตรงกบ server/services/progression.ts)
   composables/usePlayer.ts  ข้อมลผู้เล่น (xp, coins, avatar)
-frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
-  composables/useApi.ts   $fetch + Bearer token, 401 -> logout
-  stores/auth.ts          token ใน localStorage key gsp_token
-  middleware/auth.global.ts  บังคับ login + จำกัดพื้นที่ /student /teacher /admin ตาม role
-  layouts/default.vue, blank.vue · pages/{login,student,teacher,admin}
-  assets/css/main.css     class ร่วม: btn-primary, btn-ghost, input, label, card, card-hover, title-glow, divider-rune
-  components/             MysticBackground, MagicCircle, AppIcon (ไอคอน SVG), ComingSoonGrid (การ์ด "ผนึก"), ArchetypeCard, RadarChart, game/VnBackground
-  composables/useGameAudio.ts  เสียงสังเคราะห์ Web Audio (bgm preset: mystery/wonder/tension หรือ URL)
-  utils/profile.ts        ป้ายชื่อเชิงบวก VARK/RIASEC/Mindset + type AssessmentResult
-  pages/student/          index (แผนที่โลก), play/[id] (VN player), result/[id], profile (Core Profile รวม), history
-  components/game/        CharacterSprite, StageCast, ChoicePanel, MiniGameSequence, MiniGameOrbs, VnBackground
-  components/ProfileReport.vue  การ์ด+กราฟ+แชร์ ใช้ร่วม result/profile · RewardSummary, AvatarCreator
-  components/game/CharacterPortrait.vue  ครอปหน้าสำหรับกล่องข้อความ/HUD
-  utils/progression.ts + backend Services/Progression.php  XP/เลเวล/เหรียญ/ระดับการ์ด (ตัวเลขต้องตรงกัน)
-  composables/usePlayer.ts  ข้อมูลผู้เล่น (xp, coins, avatar)
 ```
 
 ### ธีม UI "ARCANA" (ผู้ใช้ต้องการแนวลึกลับ น่าตื่นเต้น — ใช้ต่อทุกหน้าใหม่)
@@ -85,21 +70,20 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - ใช้ `AppIcon` แทน emoji · ถ้อยคำเชิงผจญภัย (นักผจญภัย, เควสต์, ผนึก, คัมภีร์) · แอนิเมชัน `animate-fade-up` ไล่ delay
 - แก้ `tailwind.config.js` แล้วต้อง restart nuxt dev · ถ้า port 3100 ถูกยึดโดย nuxt ตัวเก่า ให้ kill node ที่ commandline มี `nuxt` + `Gamified`
 
-### รูปแบบโค้ด
-- Controller เป็น static method รับ `Request $req` คืน array (Router แปลงเป็น JSON) · error ใช้ `throw new HttpException(code, 'ข้อความไทย')`
-- Route ที่ต้อง login ส่ง roles เป็น argument ที่ 3 (`['*']` = ทุก role) → `$req->user`
+### รูปแบบโค้ด (Nitro)
+- Route handler = `export default` ใน `frontend/server/api/**` · guard auth/role ด้วย `authenticated(event, roles)` (utils/auth) · error ทอย `ApiError(code, 'ข้อความไทย')` (utils/errors) · route ฝั่่งครู/แอดมินใช้ `staffHandler(roles, handler)` (utils/staffHandler)
 - คะแนนเก็บเป็นคอลัมน์แยกใน `assessment_results` (vark_v/a/r/k, riasec_r..c, mindset_growth/fixed) เพื่อ query สถิติง่าย
 - Save state อยู่ในตาราง `game_sessions` (1 แถวต่อ user+scenario)
-- เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content` (ดูรูปแบบเต็มใน docblock ของ `ScenarioEngine.php` และ type ใน `frontend/utils/game.ts`; มี `meta`, `characters`, scene `cast`, `layout`, `timer`, `minigame`, choice `reply`/`reward`/`icon`/`x,y`) เดิม: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
+- เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content` (type ใน `frontend/utils/game.ts`; มี `meta`, `characters`, scene `cast`, `layout`, `timer`, `minigame`, choice `reply`/`reward`/`icon`/`x,y`) เดิม: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
 - แท็กคะแนนที่ใช้ได้: vark_v/a/r/k, riasec_r/i/a/s/e/c, mindset_growth/fixed · `choices_log` = `[{scene, choice}]`
-- ภาคเรียนปัจจุบันมาจาก `config.php` (academic_year, semester) · ผลลัพธ์ unique ต่อ user+scenario+ภาคเรียน
+- ภาคเรียนปัจจุบันมาจาก settings ในฐานข้อมูล (academic_year, semester) · ผลลัพธ์ unique ต่อ user+scenario+ภาคเรียน
 
 ## แผนการพัฒนา (Phases)
 - [x] **เฟส 1 Foundation** — schema, PHP API + auth token, Nuxt login + role routing
 - [x] **เฟส 2 Game Engine** — Quest list (เช็คเล่นแล้วหรือยัง), VN player (typewriter/shake/fade/เสียง), save state real-time, rule-based scoring, Archetype card, ประวัติ, แชร์ผล + seed เนื้อเรื่องสากล 1 ชุด
 - [ ] **เฟส 3 Scenario Builder + Story Library** — CRUD scene/choice ผูกคะแนน, export JSON, คัดลอกจากคลังกลาง, แอดมินเปิด/ปิดชุดสากล
-- [ ] **เฟส 4 Dashboard** — Pie/Bar ระดับห้อง, Radar รายบุคคล (Chart.js), จัดกลุ่มทำงานอัจฉริยะ
-- [ ] **เฟส 5 AI** — ตั้งค่า BYOK, Contextual AI Prompting + ai_insights_cache, AI Story Generator
+- [x] **เฟส 4 Dashboard** — Pie/Bar ระดับห้อง, Radar รายบุคคล (Chart.js), จัดกลุ่มทำงานอัจฉริยะ
+- [x] **เฟส 5 AI** — ตั้งค่า BYOK, Contextual AI Prompting + ai_insights_cache, AI Story Generator
 - [x] **เฟส 6 Management & Reports** — นำเข้า Excel/CSV (`/admin/import`), ข้อมูลในระบบ (`/admin/data`), ส่งออก PDF/Excel (ว.PA)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
