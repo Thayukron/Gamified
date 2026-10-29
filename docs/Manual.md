@@ -187,7 +187,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 ใช้เฉพาะตอนแก้โค้ดแล้วอยากเห็นผลทันที — ใช้ฐานข้อมูลชุดเดียวกับ production
 
 ```powershell
-./start-dev.ps1
+npm run dev
 ```
 - หน้าเว็บ: http://localhost:3100 (API อยู่ /api ของเว็บตัวเดียว)
 - ⚠️ ฐานข้อมูลชุดเดียว — การทดสอบใด ๆ กระทบข้อมูลจริง: สำรองก่อนด้วย `tools/backup.ps1`

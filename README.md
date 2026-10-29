@@ -13,7 +13,7 @@ npm run db:init            # ครั้งแรก: สร้างตาร�
 npm run dev                # เปิดชุดพัฒนา http://localhost:3100 (API อยู่ใต้ /api เดียวกัน)
 ```
 
-หรือรัน `.\start-dev.ps1` (เปิด Nuxt dev ที่ 3100) · อัปเดต: `git pull` แล้วรัน `npm run db:upgrade` (รัน upgrades ตาม ledger ไม่ลบข้อมูล)
+อัปเดต: `git pull` แล้วรัน `npm run db:upgrade` (รัน upgrades ตาม ledger ไม่ลบข้อมูล)
 รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [docs/DEPLOY.md](docs/DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [docs/Manual.md](docs/Manual.md)
 
 ## เริ่มต้นใช้งาน (Development)

@@ -26,7 +26,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | DB | **ปัจจุบัน (2026-10-29): MariaDB 10.6.26 service ในเครื่อง `127.0.0.1:3306` ฐาน `gamified` ใหม่ตามคำสั่งผู้ใช้** · credentials ใน `.env` (gitignored) · เดิม Docker 3320 ไม่ใช้เป็น DB ของงานย้ายรอบนี้ · ไม่ได้กู้ข้อมูลเดิม |
 | API | Nitro `/api` ครบ 86 routes เดียว (PHP ถอดออกแล้ว 2026-10-29 เฟส 6 — โฟลเดอร์ `backend/` ลบแล้ว) |
 | Frontend | Nuxt 3.21 production preview **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · API same origin `/api` |
-| สคริปต์ | `start-dev.ps1` = MariaDB 3306 + nuxt dev 3100 · สำรอง/กู้คืน `tools/backup.ps1` / `tools/restore.ps1` · รัน Node โดยตรงตาม docs/migration/phase5-ai-plans-jobs.md |
+| สคริปต์ | `npm run dev` (3100) · สำรอง/กู้คืน `tools/backup.ps1` / `tools/restore.ps1` · รัน Node โดยตรงตาม docs/migration/phase5-ai-plans-jobs.md |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
 ฐานใหม่ในเครื่องมี `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด; เฟส 3 เพิ่ม `student-demo/student1234` สำหรับตรวจรับเกม โดยไม่เติมผล/รางวัลล่วงหน้า บัญชี teacher/student อื่นในเอกสารเก่าเป็นของฐานเดิม

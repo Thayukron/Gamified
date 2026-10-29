@@ -1,6 +1,10 @@
 # Changelog
 
 
+## 2026-10-29 — ลบ start-dev.ps1
+
+- เปิด dev ใช้ `npm run dev` ตรง ๆ (สคริปตตตดสอบน้ีแค่่ช่่วยความสะดวก)
+- แก้ referenc ใน README.md, docs/Manual.md, CLAUDE.md
 ## 2026-10-29 — ย้ายเอก 4 ไฟลเขั้ docs/
 
 - DEPLOY.md, Manual.md, requiments.md, ISSUE-nuxt3-migration.md → docs/ (git mv)
