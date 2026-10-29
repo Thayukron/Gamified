@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **ใช้ PORT เดียวทุกโหมดตามผู้ใช้** — ยกเลิก DEV_PORT ในโค้ดและคู่มือ; dev และ production ใช้ PORT ตัวเดียวกัน
 - 2026-10-29: **ถอด PM2 ตามผู้ใช้** — ลบ ecosystem.config.cjs และคำแนะนำในคู่มือปัจจุบัน; ใช้ npm start โหลด .env ต่อไป
 - 2026-10-29: **พอร์ตจาก env + PM2** — npm start โหลด .env, ecosystem.config.cjs กำหนด cwd/โหลด .env; dev ใช้ DEV_PORT → PORT → 3100, production ใช้ PORT; คู่มือรัน Windows/Linux อัปเดตแล้ว; build + health บนพอร์ตจาก env 2 ค่าผ่านโดยไม่ build ซ้ำ (ยังไม่ได้รัน Linux/PM2 จริง)
 - 2026-10-29: **เอกสาร API ใช้โฟลเดอร์เฉพาะ** — ย้าย docs/dev/api.md → docs/dev/api/README.md และแก้ลิงก์เข้า/ออกครบ; ตรวจลิงก์ relative ผ่าน

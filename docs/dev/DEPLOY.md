@@ -12,7 +12,7 @@
 
 ผู้ใช้เปิดแค่ `http://<เครื่อง>:<PORT>` — API อยู่ใต้ `/api` ของเว็บเดียวกัน (ไม่ต้องตั้ง CORS)
 - **Production:** รัน `npm start` โดยอ่าน `PORT` จาก `.env` → `http://localhost:8090`
-- **Development:** `npm run dev` → `http://localhost:3100`
+- **Development:** `npm run dev` → `http://localhost:8090`
 
 ---
 
@@ -24,7 +24,7 @@
 git clone https://github.com/rungrot-muangchalerm/gamefile.git
 cd gamefile
 node -e "require('node:fs').copyFileSync('.env.example', '.env')"
-# เปิด .env ด้วย editor แล้วตั้ง DB_PASSWORD, PORT และ DEV_PORT
+# เปิด .env ด้วย editor แล้วตั้ง DB_PASSWORD และ PORT
 npm install
 npm run db:init -- --create-empty   # เฉพาะฐานวาง: สรางตาราง + บัญชี admin + archetypes + scenarios
 ```
@@ -51,11 +51,10 @@ npm start
 
 ```dotenv
 PORT=8090
-DEV_PORT=3100
 ```
 
 - `npm start` อ่าน `PORT` จาก `.env` ตอนเริ่มโปรเซส
-- `npm run dev` อ่าน `DEV_PORT` ถ้าไม่กำหนดจะใช้ `PORT` และสุดท้ายใช้ 3100
+- `npm run dev` อ่าน `PORT` ตัวเดียวกับ production (ค่าเริ่มต้นของ dev คือ 8090)
 - ตัวเลข URL ในคู่มือเป็นตัวอย่างตามค่าข้างต้น ถ้าเปลี่ยนพอร์ตให้ปรับ URL และ Tunnel ตามด้วย
 - Environment ของเครื่องมีลำดับความสำคัญเหนือ `.env` หากตั้ง `PORT` ไว้ภายนอก ต้องแก้ค่านั้นด้วย
 - เปลี่ยนพอร์ตแล้วรีสตาร์ตได้เลย ไม่ต้อง build ใหม่; เปลี่ยนโค้ดต้อง build ใหม่
@@ -117,7 +116,7 @@ cp app.key.backup storage/app.key
 | ตองการ | คำสั่ง |
 |---|---|
 | รัน production | `npm start` |
-| รัน development | `npm run dev` (http://localhost:3100) |
+| รัน development | `npm run dev` (http://localhost:8090) |
 | อัปเกรด schema | `npm run db:upgrade` |
 | รีเซ็ตรหัสฉุกระเหิน | `npm run db:reset-password -- <username>` |
 | เปลี่ยนภาคเรียน | แก `ACADEMIC_YEAR` / `SEMESTER` ใน `.env` แลวรีสตารท |

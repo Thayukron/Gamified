@@ -34,7 +34,7 @@ npm run db:init -- --create-empty
 npm run dev
 ```
 
-เปิด <http://localhost:3100> โดย API อยู่ใต้ `/api` ของเว็บเดียวกัน
+เปิด <http://localhost:8090> โดย API อยู่ใต้ `/api` ของเว็บเดียวกัน
 
 การติดตั้งใหม่สร้างบัญชี `admin` โดยใช้ `ADMIN_PASSWORD` ใน `.env` หากไม่ได้กำหนดจะใช้ `admin1234` และบังคับเปลี่ยนเมื่อเข้าสู่ระบบครั้งแรก บัญชีครูและนักเรียน demo ไม่ได้สร้างอัตโนมัติ
 
@@ -49,7 +49,7 @@ npm run build
 npm start
 ```
 
-คำสั่ง `npm start` โหลด `.env` ให้อัตโนมัติ ส่วนโหมดพัฒนาใช้ `DEV_PORT=3100` ดูรายละเอียดใน [คู่มือ Deploy](docs/dev/DEPLOY.md)
+คำสั่ง `npm start` โหลด `.env` ให้อัตโนมัติ ทั้งโหมดพัฒนาและ production ใช้ `PORT` ตัวเดียวกัน ดูรายละเอียดใน [คู่มือ Deploy](docs/dev/DEPLOY.md)
 
 ## เอกสารเพิ่มเติม
 
