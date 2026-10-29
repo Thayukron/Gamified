@@ -1,5 +1,10 @@
 # Change Log
 
+## 2026-10-29 — README แก้ขั้่นตอน Docker เป็น Node + MariaDB ในเครื่ อง
+
+- README.md ยั งระบ `docker compose up -d --build` + port 8090 + บัญชี teacher1/student001 (ฐานเดิ ม) → แก้เป็น Node 22 + MariaDB 10.6 service 3306, คำสั่ ง npm (db:init/db:upgrade/dev), port 3100, บัญชี demo ท่ ีอย่ ูในฐานปจั จุ บั น
+- หมายเหต: DEPLOY.md และ Manual.md ยั งเป็นขั้่นตอน Docker เก่า — ต้ องแก้ตาม (รอผ้ ู ้ใช้ตรวจ README ก่อน)
+
 ## 2026-10-29 — แก้สคริปต reset-password หลังก้าย Nuxt ออกมา root
 
 - สาเหตุ: สคริปต reset-password.mjs ยังระบ flag `--env-file-if-exists=../.env` (โครงสร้าง frontend/ เก่า) → รันแล้ว DB password ว่าง → Access denied
