@@ -25,7 +25,7 @@
 - [แนวทางดีไซน์](design/design-gemini.md)
 - [คำสั่งสร้างภาพประกอบ](design/art-prompts.md)
 - [ประวัติการเปลี่ยนแปลง](../CHANGELOG.md)
-- [แผนและสถานะ migration จาก upstream](../ROADMA.md)
+- [แผนและสถานะ migration จาก upstream](../ROADMAP.md)
 
 ## เอกสารอ้างอิงและประวัติการพัฒนา
 

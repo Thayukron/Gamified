@@ -117,7 +117,7 @@ swap /swap-arcana ที่เปิดระหว่าง session ยัง�
 - [x] สลับ main เชื่อม remote เก่า และ pull สำเร็จแบบ fast-forward
 - [x] เปรียบเทียบ 2 commits และระบุจุดย้ายจาก PHP ไป Nitro
 - [x] ตรวจว่า teacher home ไม่ต้องย้ายซ้ำ และ schema ของ dev มี FK SET NULL ใน source
-- [x] จัดทำ ROADMA.md
+- [x] จัดทำ ROADMAP.md
 - [x] ย้ายแผนและ implementation มาที่ dev ตามคำสั่งผู้ใช้
 
 ## ผลดำเนินการบน dev (2026-10-29)

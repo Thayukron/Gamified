@@ -88,7 +88,8 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
-- 2026-10-29: **ย้ายอัปเดตแผนกจาก main c165a6a มา dev** — Nitro CRUD แผนก 3 routes + overview courses + UI จัดการแผนก, รวม inventory 89 routes; แผน ROADMA.md ย้ายมา dev แล้ว; tests 13 + logic UI + typecheck/build + production health/HTTP 5 checks ผ่าน; ไม่เปลี่ยน DB จริง/ยังไม่ browser E2E/deploy; origin ตอนนี้ชี้ Thayukron/Gamified ตามคำสั่งผู้ใช้ ไม่ push เอง
+- 2026-10-29: แก้ชื่อไฟล์แผนเป็น ROADMAP.md และอัปเดตลิงก์อ้างอิงแล้ว
+- 2026-10-29: **ย้ายอัปเดตแผนกจาก main c165a6a มา dev** — Nitro CRUD แผนก 3 routes + overview courses + UI จัดการแผนก, รวม inventory 89 routes; แผน ROADMAP.md ย้ายมา dev แล้ว; tests 13 + logic UI + typecheck/build + production health/HTTP 5 checks ผ่าน; ไม่เปลี่ยน DB จริง/ยังไม่ browser E2E/deploy; origin ตอนนี้ชี้ Thayukron/Gamified ตามคำสั่งผู้ใช้ ไม่ push เอง
 - 2026-10-29: **ใช้ PORT เดียวทุกโหมดตามผู้ใช้** — ยกเลิก DEV_PORT ในโค้ดและคู่มือ; dev และ production ใช้ PORT ตัวเดียวกัน
 - 2026-10-29: **ถอด PM2 ตามผู้ใช้** — ลบ ecosystem.config.cjs และคำแนะนำในคู่มือปัจจุบัน; ใช้ npm start โหลด .env ต่อไป
 - 2026-10-29: **พอร์ตจาก env + PM2** — npm start โหลด .env, ecosystem.config.cjs กำหนด cwd/โหลด .env; dev ใช้ DEV_PORT → PORT → 3100, production ใช้ PORT; คู่มือรัน Windows/Linux อัปเดตแล้ว; build + health บนพอร์ตจาก env 2 ค่าผ่านโดยไม่ build ซ้ำ (ยังไม่ได้รัน Linux/PM2 จริง)
