@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2026-10-29 — ย้าย database/ เข้า docs/database/
+
+- ย้ายโฟลเดอร database/ (schema.sql, upgrades/, scenarios/) ไป docs/database/ ตามคำสั่่งผ้้ใช้
+- แก้ path ใน scripts/init-db.mjs (3 จุด) และ scripts/upgrade-db.mjs (1 จุด) จาก ../database/ เป็็น ../docs/database/
+- อัปเดตตารางโครงสร้างโค้ดใน CLAUDE.md
+- ทดสอบ: upgrade-db.mjs รันผานกบ path ใหม่ (idempotent, ไม่มี upgrade ค้าง)
+
 ## 2026-10-29 — ย้าย op.png เข้า docs/
 
 - ย้าย op.png (ภาพกำมะลอ ไม่ถูก ref จากไฟล์ใด) จาก root เข้า docs/op.png
