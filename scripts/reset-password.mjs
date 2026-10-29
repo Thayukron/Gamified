@@ -1,5 +1,5 @@
 // Emergency password reset (replaces backend/bin/reset-password.php).
-// Usage:  node --env-file-if-exists=../.env scripts/reset-password.mjs <username> [new-password]
+// Usage:  node --env-file-if-exists=.env scripts/reset-password.mjs <username> [new-password]
 // Without new-password the password becomes the username itself and the user must change it on first login.
 import { createConnection } from 'mysql2/promise'
 import { hash } from 'bcryptjs'

@@ -196,7 +196,7 @@ docker rm -f arcana-quick-tunnel
 | ลิงก์ Tunnel ขึ้น *Error 502 / 1033* | ระบบ ARCANA ปิดอยู่ → `docker compose up -d` |
 | ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษา (UniNet) บล็อก `generativelanguage.googleapis.com` → ให้เครื่องนี้ใช้ฮอตสปอตมือถือ หรือขอผู้ดูแลเครือข่ายเปิดโดเมนนี้ |
 | AI ขึ้น “เกินโควตา” / “Google ไม่ว่าง” | รอ 1–2 นาทีแล้วกดใหม่ (โควตาของ Key ครูแต่ละคน) — ไกด์แบบไม่ใช้ AI ใช้ได้ตามปกติ |
-| ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `docker compose exec web node scripts/reset-password.mjs admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
+| ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `node --env-file-if-exists=.env scripts/reset-password.mjs admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
 | พอร์ต 8090 ถูกโปรแกรมอื่นใช้ | แก้ `APP_PORT` ในไฟล์ `.env` เป็นเลขอื่น (เช่น 8091) แล้ว `docker compose up -d` |
 
 ## 9. (สำหรับนักพัฒนา) โหมดแก้โค้ด 👩‍💻
