@@ -1,5 +1,11 @@
 # Change Log
 
+## 2026-10-29 — แก้สคริปต reset-password หลังก้าย Nuxt ออกมา root
+
+- สาเหตุ: สคริปต reset-password.mjs ยังระบ flag `--env-file-if-exists=../.env` (โครงสร้าง frontend/ เก่า) → รันแล้ว DB password ว่าง → Access denied
+- แก้ usage comment เป็น `--env-file-if-exists=.env` · Manual.md แก้ขั้่นตอนจาก `docker compose exec web` เป็นรัน Node โดยตรง · เพิ่่ม npm script `db:reset-password`
+- ทดสอบ: `node --env-file-if-exists=.env scripts/reset-password.mjs admin` สำเร็จ (รหัส admin กลายเป็น `admin` + บังคับตังใหม่ตอนเข้่า)
+
 ## 2026-10-29 — Nuxt migration เฟส 4: ครูและแอดมิน
 
 - เพิ่ม 38 staff endpoints รวม 56/86 พร้อม services รายวิชา รายชื่อ imports dashboard guide grouping report และ admin/status/settings
