@@ -36,7 +36,7 @@ export interface Avatar {
 
 export const DEFAULT_AVATAR: Avatar = { gender: 'f', hairStyle: 'bob', hair: '#1f2937', skin: '#f1c7a5', eyes: '#7c3aed', robe: '#4c1d95' }
 
-/** Painted heroes: one pose each, public/characters/{id}.webp (prompts in docs/art-prompts.md). */
+/** Painted heroes: one pose each, public/characters/{id}.webp (prompts in docs/design/art-prompts.md). */
 export const HERO_PRESETS = [
   { id: 'hero-m1', gender: 'm', title: 'นักผจญภัยผู้กล้า' },
   { id: 'hero-m2', gender: 'm', title: 'นักเดินทางไร้พรมแดน' },

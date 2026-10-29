@@ -1,6 +1,18 @@
 # Changelog
 
 
+## 2026-10-29 — จัดกลุ่มโฟลเดอร์เอกสารใน docs/
+
+- ผ้้ใช้สั่่ง: ไฟลท่ีกองอยู่่่ root `docs/` แยกเข้้าโฟลเดอรตามชนิิิ
+- `docs/dev/`: DEPLOY.md, Manual.md, load-test.md, requiments.md (เอกสาร Dev/Deploy)
+- `docs/design/`: design-gemini.md, art-prompts.md (ดี่ไซน/ภาพ)
+- `docs/academic/` (โฟลเดอรใหม): ตั้ัวอย่่าง 10 ไฟล (แผน/รายงาน ว.PA/ใบความร้้้/แบบประเมิิน/ไกด่่การสอน) + op.png (ผ้้ใช้สั่่งให้้เก็็บไว)
+- `docs/presentation/` (โฟลเดอรใหม): สรุ้้ปนำเสนอระบบ-ARCANA-PROFILE.pdf, ค่่่มื่่อการใช้งานสำหร้้บคร่่-ARCANA-PROFILE.pdf + `src/` (ต้นฉบัับ HTML + manual-img 20 ชั่่ง)
+- ลบ `docs/name/` (โฟลเดรว่่าง)
+- root `docs/` เหลือ `knowled.md` ไฟลเดี่ยว + โฟลเดอร 5 ชุ่ด (academic/database/design/dev/presentation)
+- แก้ live refs: README.md (3), CLAUDE.md (3), utils/progression.ts (1) · ไม่แกบรรทดัับประวตัิใน CHANGELOG/สถานะเก่่า
+- ลิงกใน teacher-manual.html ใช้ relative `manual-img/` — ย้ายพร้้อมกััน ไม่ต้อ้งแก้
+
 ## 2026-10-29 — ย้าย docs/migration/ + ISSUE เข้า docs/dev/
 
 - ย้าย docs/migration/ (7 ไฟล) และ ISSUE-nuxt3-migration.md เข้า docs/dev/ ตามคำสั่่งผ้้ใช้

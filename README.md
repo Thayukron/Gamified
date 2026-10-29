@@ -1,7 +1,7 @@
 # Gamified Universal Student Profiling System
 
 ระบบประเมินโปรไฟล์ผู้เรียนผ่านเกมจำลองสถานการณ์ (VARK, RIASEC, Mindset) พร้อมแดชบอร์ดครูและ AI ช่วยวิเคราะห์การสอน
-ดูข้อกำหนดทั้งหมดใน [docs/requiments.md](docs/requiments.md)
+ดูข้อกำหนดทั้งหมดใน [docs/dev/requiments.md](docs/dev/requiments.md)
 
 ## รันระบบ (Node + MariaDB)
 ระบบรันด้วย Node 22 (Nuxt/Nitro) ตัวเดียว ทั้งเว็บและ API (86 endpoints) + MariaDB 10.6 service ในเครื่อง (127.0.0.1:3306) — ไม่มี Docker แล้ว (ถอดออก 2026-10-29)
@@ -14,7 +14,7 @@ npm run dev                # เปิดชุดพัฒนา http://localho
 ```
 
 อัปเดต: `git pull` แล้วรัน `npm run db:upgrade` (รัน upgrades ตาม ledger ไม่ลบข้อมูล)
-รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [docs/DEPLOY.md](docs/DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [docs/Manual.md](docs/Manual.md)
+รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [docs/dev/DEPLOY.md](docs/dev/DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [docs/dev/Manual.md](docs/dev/Manual.md)
 
 ## เริ่มต้นใช้งาน (Development)
 **ฐานข้อมูลชุดเดียวกับ production เสมอ** (MariaDB 127.0.0.1:3306 ค่าเชื่อมต่ออ่านจาก `.env`) — ข้อมูลที่เห็นตอนพัฒนา = ข้อมูลที่ผู้ใช้จริงเห็น

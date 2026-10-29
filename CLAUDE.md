@@ -1,7 +1,7 @@
 # CLAUDE.md — บริบทโปรเจกต์สำหรับต่อแชท
 
 > ไฟล์นี้เก็บบริบทการสนทนา/การตัดสินใจ เพื่อให้เปิดแชทใหม่แล้วทำงานต่อได้ทันที
-> ประวัติการแก้ไขละเอียดอยู่ใน [CHANGELOG.md](CHANGELOG.md) · ข้อกำหนดระบบอยู่ใน [docs/requiments.md](docs/requiments.md)
+> ประวัติการแก้ไขละเอียดอยู่ใน [CHANGELOG.md](CHANGELOG.md) · ข้อกำหนดระบบอยู่ใน [docs/dev/requiments.md](docs/dev/requiments.md)
 
 ## ข้อตกลงการทำงานกับผู้ใช้ (ต้องทำทุกครั้ง)
 1. สื่อสารเป็นภาษาไทย
@@ -14,7 +14,7 @@
 - **เป้าหมายหลักของระบบ = ไกด์การจัดการเรียนการสอนให้ครู** (สื่อ/วิธีสอน/ซ่อมเสริม/จัดกลุ่ม) ตามผู้เรียนที่แตกต่าง แยกตามรายวิชาและแผนก · เกมเป็นแค่เครื่องมือคัดกรอง
 - ชื่อระบบ **ARCANA PROFILE** (ไม่ใช้ Questify) · ธีม **ผสม**: dark fantasy เป็นหลัก + เพิ่มเควสต์ฉากวิทยาลัย/สายอาชีพ · **ยังไม่เพิ่ม Computational Thinking**
 - ระดับการ์ดต้องไม่ทำให้ผู้เรียนรู้สึกแย่: ไม่มีระดับต่ำ, ให้รางวัลจากการมีส่วนร่วม ไม่ใช่บุคลิก
-- ดีไซน์อ้างอิงจาก Gemini: [docs/design-gemini.md](docs/design-gemini.md)
+- ดีไซน์อ้างอิงจาก Gemini: [docs/design/design-gemini.md](docs/design/design-gemini.md)
 
 ## ภาพรวมระบบ
 Gamified Universal Student Profiling System — ผู้เรียนเล่นเกม Visual Novel เพื่อวัด VARK / RIASEC / Mindset (Rule-based 100%, ไม่เสียค่า API ระหว่างเล่น)
@@ -64,7 +64,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - **เครื่องผู้ใช้เปิด “ลดการเคลื่อนไหว”**: ทุกแอนิเมชันที่เริ่มจาก opacity 0 ต้องมี fallback `prefers-reduced-motion` และทดสอบด้วย Playwright `reducedMotion: 'reduce'`
 - **ต้องอธิบายวิธีเล่นทุกจุด** (ผู้ใช้ย้ำ): ทุกการโต้ตอบใหม่ต้องมีป้ายบอกว่าทำอะไร, มินิเกมต้องมีกติกา+ปุ่มเริ่ม
 - **เกมต้องมีส่วนร่วมสูง** (ผู้ใช้ย้ำ): มีตัวละครบนจอ + สีหน้า + ตอบสนองทุกตัวเลือก, ข้อความสั้น, สลับรูปแบบ (cards/hotspots/timer/มินิเกม), มีรางวัล — อย่าทำเกมที่ต้องอ่านอย่างเดียว
-- **ภาพจริงจาก Gemini** (ผู้ใช้สร้าง): ตัวละคร `public/characters/{id}-{expr}.webp`, ฉาก `public/backgrounds/{key}.webp` · ต้นฉบับ `art-source/` (gitignore) · แปลงด้วย `tools/process-art.js` · ภาพใหม่ให้ผู้ใช้สร้างตาม `docs/art-prompts.md` (พื้นเขียว 9:16)
+- **ภาพจริงจาก Gemini** (ผู้ใช้สร้าง): ตัวละคร `public/characters/{id}-{expr}.webp`, ฉาก `public/backgrounds/{key}.webp` · ต้นฉบับ `art-source/` (gitignore) · แปลงด้วย `tools/process-art.js` · ภาพใหม่ให้ผู้ใช้สร้างตาม `docs/design/art-prompts.md` (พื้นเขียว 9:16)
 - SVG ใน `CharacterSprite.vue` เป็น fallback + ใช้กับ avatar ผู้เล่น
 - เพิ่มโฟลเดอร์ใหม่ใน `public/` แล้วต้อง restart nuxt dev
 - ใช้ `AppIcon` แทน emoji · ถ้อยคำเชิงผจญภัย (นักผจญภัย, เควสต์, ผนึก, คัมภีร์) · แอนิเมชัน `animate-fade-up` ไล่ delay
@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **จัดกลุ่มโฟลเดอร์เอกสารใน docs/** (ผู้ใช้สั่ง) — dev/: DEPLOY/Manual/load-test/requiments · design/: design-gemini/art-prompts · academic/: ตัวอย่าง 10 ไฟล์ + op.png · presentation/: PDF 2 ไฟล์ + src/ · ลบ docs/name/ · เหลือ root เดียว knowled.md · แก้ live refs (README/CLAUDE/progression.ts)
 - 2026-10-29: **ย้าย docs/migration/ + ISSUE-nuxt3-migration.md → docs/dev/** (ผ้้ใช้สั่่ง) — เอกสารประวัติ Nuxt migration 7 ไฟล + ไฟล ISSUE · แก link ท่ีใช้อยู่ใน Manual.md, DEPLOY.md, ISSUE (7 links), CLAUDE.md (ไม่แกบรรทัดประวัติเก่า)
 - 2026-10-29: **ย้าย scripts/ → tools/scripts/** (ผ้้ใช้สั่่ง) — สคริปต์ CLI 4 ไฟล · แก้ path สคริปต์ + npm scripts ใน package.json + เอกสาร 3 ไฟล · ทดสอบ upgrade-db.mjs รันผานกบ path ใหม่
 - 2026-10-29: **ย้าย database/ → docs/database/** (ผ้้ใช้สั่่ง) — schema.sql/upgrades/scenarios ย้ายตาม · แก้ path ใน init-db.mjs + upgrade-db.mjs · ทดสอบ upgrade-db.mjs รันผานกบ path ใหม่
