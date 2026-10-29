@@ -1,76 +1,61 @@
-# Gamified Universal Student Profiling System
+# ARCANA PROFILE
 
-ระบบประเมินโปรไฟล์ผู้เรียนผ่านเกมจำลองสถานการณ์ (VARK, RIASEC, Mindset) พร้อมแดชบอร์ดครูและ AI ช่วยวิเคราะห์การสอน
-ดูข้อกำหนดทั้งหมดใน [docs/dev/requiments.md](docs/dev/requiments.md)
+ระบบประเมินโปรไฟล์ผู้เรียนผ่านเกมจำลองสถานการณ์ (Gamified Universal Student Profiling System) เพื่อช่วยครูวางแผนการสอนตามความแตกต่างของผู้เรียน โดยใช้กรอบ VARK, RIASEC และ Mindset
 
-## รันระบบ (Node + MariaDB)
-ระบบรันด้วย Node 22 (Nuxt/Nitro) ตัวเดียว ทั้งเว็บและ API (86 endpoints) + MariaDB 10.6 service ในเครื่อง (127.0.0.1:3306) — ไม่มี Docker แล้ว (ถอดออก 2026-10-29)
+## ความสามารถหลัก
+
+- **ผู้เรียน:** เล่นเกม Visual Novel ทำเควสต์ และดูผลโปรไฟล์พร้อมความคืบหน้าของตนเอง
+- **ครู:** ดูแดชบอร์ดรายวิชา จัดกลุ่มผู้เรียน และใช้ไกด์การจัดการเรียนการสอน
+- **แผนการสอน:** จัดทำแผนรายหน่วย เล่มแผนรายวิชา และเอกสารประกอบ พร้อมส่งออก Word
+- **AI ช่วยครู:** วิเคราะห์และร่างเนื้อหาผ่าน Gemini โดยครูใช้ API Key ของตนเอง (BYOK)
+- **ผู้ดูแลระบบ:** จัดการบัญชี นำเข้าข้อมูล และตั้งค่าข้อมูลสถานศึกษาและภาคเรียน
+
+## เริ่มต้นใช้งาน
+
+ต้องมี **Node.js 22+** และ **MariaDB** (เครื่องปัจจุบันใช้ 10.6) ระบบใช้ Nuxt 3 / Vue 3 สำหรับหน้าเว็บ และ Nitro สำหรับ API
+
+รันคำสั่งจากโฟลเดอร์โปรเจกต์ด้วย PowerShell:
 
 ```powershell
-copy .env.example .env     # ตั้ง DB_PASSWORD และตรวจ ACADEMIC_YEAR / SEMESTER
+Copy-Item .env.example .env
+# แก้ค่าเชื่อมต่อ MariaDB ใน .env ให้ตรงกับเครื่องก่อนเริ่มใช้งาน
 npm install
-npm run db:init            # ครั้งแรก: สร้างตาราง + บัญชี admin (เฉพาะฐานว่าง)
-npm run dev                # เปิดชุดพัฒนา http://localhost:3100 (API อยู่ใต้ /api เดียวกัน)
 ```
 
-อัปเดต: `git pull` แล้วรัน `npm run db:upgrade` (รัน upgrades ตาม ledger ไม่ลบข้อมูล)
-รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [docs/dev/DEPLOY.md](docs/dev/DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [docs/dev/Manual.md](docs/dev/Manual.md)
+**ติดตั้งใหม่บนฐานข้อมูลว่างเท่านั้น:** สร้างตาราง บัญชีผู้ดูแลระบบ และเควสต์เริ่มต้น
 
-## เริ่มต้นใช้งาน (Development)
-**ฐานข้อมูลชุดเดียวกับ production เสมอ** (MariaDB 127.0.0.1:3306 ค่าเชื่อมต่ออ่านจาก `.env`) — ข้อมูลที่เห็นตอนพัฒนา = ข้อมูลที่ผู้ใช้จริงเห็น
-⚠ ฐานข้อมูลเดียว = ข้อมูลจริง — ห้ามแก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้าง: `npm run db:upgrade`
+```powershell
+npm run db:init -- --create-empty
+```
 
-เปิด http://localhost:3100
+หากใช้ฐานข้อมูลเดิม ให้ดู [ขั้นตอนอัปเดตระบบ](docs/dev/DEPLOY.md) ก่อนดำเนินการ จากนั้นเปิดชุดพัฒนา:
 
-| บทบาท | ชื่อผู้ใช้ | รหัสผ่าน |
-|---|---|---|
-| ผู้ดูแลระบบ | admin | admin1234 (บังคับเปลี่ยนครั้งแรก) |
-| ครู (demo) | teacher-demo | teacher1234 |
-| นักเรียน (demo) | student-demo | student1234 (บังคับตั้งใหม่ครั้งแรก) |
+```powershell
+npm run dev
+```
 
-ค่าเชื่อมต่อฐานข้อมูลมาจาก `.env`
+เปิด <http://localhost:3100> โดย API อยู่ใต้ `/api` ของเว็บเดียวกัน
 
-## API
-| Method | Path | สิทธิ์ |
-|---|---|---|
-| GET | /api/health | - |
-| POST | /api/auth/login | - |
-| POST | /api/auth/logout | ทุกบทบาท |
-| GET | /api/auth/me | ทุกบทบาท |
-| GET | /api/student/quests | student |
-| GET | /api/student/quests/{id} | student |
-| PUT | /api/student/quests/{id}/progress | student |
-| POST | /api/student/quests/{id}/complete | student |
-| GET | /api/student/results | student |
-| GET | /api/student/results/{id} | student |
-| GET | /api/student/profile | student |
-| GET | /api/student/player | student |
-| PUT | /api/student/player/avatar | student |
-| GET | /api/teacher/courses | teacher, admin |
-| GET/POST | /api/teacher/courses/{id}/plans · GET …/plans/full | teacher (เฉพาะวิชาที่สอน), admin — แผนการจัดการเรียนรู้รายหน่วย |
-| GET/PUT/DELETE | /api/teacher/plans/{pid} · POST …/{pid}/draft (source: guide \| ai) | teacher (เฉพาะวิชาที่สอน), admin |
-| GET/PUT | /api/teacher/courses/{id}/book · POST …/book/draft | teacher (เฉพาะวิชาที่สอน), admin — เล่มแผนระดับรายวิชา |
-| GET/POST | /api/teacher/plans/{pid}/sheets · GET/PUT/DELETE /api/teacher/sheets/{sid} · POST …/{sid}/draft | teacher (เฉพาะวิชาที่สอน), admin — ใบความรู้/ใบงาน/ใบกิจกรรม/ใบมอบหมายงาน/แบบประเมิน |
-| GET | /api/teacher/meta · /api/teacher/students?q=&group=&course= | teacher, admin |
-| POST | /api/teacher/courses | teacher, admin (สร้างวิชาของตนเอง + class_groups) |
-| PUT/DELETE | /api/teacher/courses/{id} | teacher (เฉพาะวิชาที่สอน), admin |
-| GET/POST | /api/teacher/courses/{id}/students · DELETE …/students/{sid} | teacher (เฉพาะวิชาที่สอน), admin |
-| GET | /api/teacher/courses/{id}/dashboard | teacher (เฉพาะวิชาที่สอน), admin |
-| GET | /api/teacher/courses/{id}/guide | teacher (เฉพาะวิชาที่สอน), admin |
-| PUT | /api/teacher/courses/{id}/context | teacher (เฉพาะวิชาที่สอน), admin |
-| GET/PUT/DELETE | /api/me/ai | teacher, admin (API Key ของตนเอง) |
-| POST | /api/me/ai/test · PUT /api/me/ai/model | teacher, admin |
-| GET/POST | /api/teacher/courses/{id}/ai · GET …/ai/all | teacher (เฉพาะวิชาที่สอน), admin |
-| GET/PUT | /api/admin/ai · PUT /api/admin/ai/teachers/{id} | admin |
-| POST | /api/teacher/courses/{id}/groups/preview | teacher (เฉพาะวิชาที่สอน), admin |
-| GET/PUT | /api/teacher/courses/{id}/groups | teacher (เฉพาะวิชาที่สอน), admin |
-| GET | /api/teacher/courses/{id}/report | teacher (เฉพาะวิชาที่สอน), admin |
-| GET/PUT | /api/admin/institution | admin |
-| POST | /api/admin/import/preview · /api/admin/import/commit | admin (นำเข้าแผนก/ครู/นักศึกษา/รายวิชา/การลงทะเบียน) |
-| GET | /api/admin/overview · /api/admin/users?q=&role= | admin |
-| POST | /api/admin/users/{id}/reset-password | admin (รีเซ็ตเป็นชื่อผู้ใช้/รหัสนักศึกษา) |
-| DELETE | /api/admin/courses/{id} | admin |
-| GET/PUT | /api/me/profile · PUT /api/me/password | ทุก role (บัญชีของตนเอง) |
-| POST | /api/auth/forgot | สาธารณะ (ส่งคำขอรีเซ็ต) |
-| PUT | /api/admin/users/{id} · GET /api/admin/reset-requests · POST …/{id}/dismiss | admin |
-| POST | /api/teacher/courses/{id}/students/{sid}/reset-password | teacher (ผู้เรียนในวิชาที่สอน), admin |
+การติดตั้งใหม่สร้างบัญชี `admin` โดยใช้ `ADMIN_PASSWORD` ใน `.env` หากไม่ได้กำหนดจะใช้ `admin1234` และบังคับเปลี่ยนเมื่อเข้าสู่ระบบครั้งแรก บัญชีครูและนักเรียน demo ไม่ได้สร้างอัตโนมัติ
+
+> เครื่องพัฒนาปัจจุบันใช้ฐานข้อมูลชุดเดียวกับระบบจริง การเปลี่ยนข้อมูลระหว่างพัฒนาจึงกระทบผู้ใช้จริงด้วย ดูวิธีสำรองข้อมูลก่อนดำเนินการในคู่มือติดตั้ง
+
+## เอกสารเพิ่มเติม
+
+| ต้องการอ่านเรื่อง | เอกสาร |
+|---|---|
+| เอกสารทั้งหมดและแนวทางเลือกอ่าน | [หน้ารวมเอกสาร](docs/README.md) |
+| ติดตั้ง อัปเดต Deploy และสำรอง/กู้คืน | [คู่มือติดตั้งและ Deploy](docs/dev/DEPLOY.md) |
+| เปิด–ปิดระบบ และ Cloudflare Tunnel | [คู่มือดูแลระบบ](docs/dev/Manual.md) |
+| การใช้งานสำหรับครู | [คู่มือครู (PDF)](docs/presentation/คู่มือการใช้งานสำหรับครู-ARCANA-PROFILE.pdf) |
+| แนวคิดและทฤษฎีที่ใช้ | [ที่มาและแนวคิดของระบบ](docs/knowled.md) |
+| ข้อกำหนดและขอบเขตของระบบ | [ข้อกำหนดระบบ](docs/dev/requiments.md) |
+| Endpoint และสิทธิ์เข้าถึง | [API Reference](docs/dev/api.md) |
+
+## ประวัติการเปลี่ยนแปลง
+
+ดูการเปลี่ยนแปลงแต่ละรอบใน [CHANGELOG.md](CHANGELOG.md)
+
+## สัญญาอนุญาต
+
+เผยแพร่ภายใต้ [MIT License](LICENSE)
