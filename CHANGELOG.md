@@ -1,6 +1,12 @@
 # Changelog
 
 
+## 2026-10-29 — ลบไฟล .php + PHP runtime ออกจาก tests/
+
+- ลบ oracle/export .php 7 ไฟล (require backend/ ท่ีหายแล้ว — รันไม่ได้อีกแล้ว)
+- ลบ tests/php82.zip (33 MB) + โฟลเดอร tests/php82/ (PHP runtime)
+- tests/ คงเหลือเฉพาะไฟล .ts/.mjs/.log (ไม่ได้ track ใน git)
+
 ## 2026-10-29 — ถอดไฟล .php ทังหมดออก (tools/log-entry.php → .mjs)
 
 - ลบ tools/log-entry.php · สร้าง tools/log-entry.mjs (Node) ทดแทน ใช้งานเดียวกัน
