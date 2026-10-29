@@ -24,9 +24,9 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | ส่วน | รายละเอียด |
 |---|---|
 | DB | **ปัจจุบัน (2026-10-29): MariaDB 10.6.26 service ในเครื่อง `127.0.0.1:3306` ฐาน `gamified` ใหม่ตามคำสั่งผู้ใช้** · credentials ใน `.env` (gitignored) · เดิม Docker 3320 ไม่ใช้เป็น DB ของงานย้ายรอบนี้ · ไม่ได้กู้ข้อมูลเดิม |
-| API | PHP 8.2 built-in server `php -S 127.0.0.1:8100 -t public public/index.php` (ใน `backend/`) |
-| Frontend | Nuxt 3.21 dev **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · **API dev ใช้ 8100 เพราะ 8000 ถูก Docker ของ btech-sice ใช้** |
-| สคริปต์ | `start-dev.ps1` เปิด db (Docker) + API 8100 + Nuxt 3100 · **ห้ามรัน `migrate.php`** (ล้างข้อมูลจริง; สคริปต์ปฏิเสธเมื่อมีผู้ใช้ เว้นแต่ `--wipe-real-data`) |
+| API | ปัจจุบัน Nitro `/api` ครบ 86 routes; PHP 8100 เป็นระบบอ้างอิงเดิม ไม่จำเป็นสำหรับ preview |
+| Frontend | Nuxt 3.21 production preview **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · API same origin `/api` |
+| สคริปต์ | รัน Node โดยตรงตาม docs/migration/phase5-ai-plans-jobs.md; start-dev.ps1 ยังเป็นสคริปต์ Docker/PHP เดิม รอปรับเฟส 6 · **ห้ามรัน migrate.php** ที่ล้างข้อมูล |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
 ฐานใหม่ในเครื่องมี `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด; เฟส 3 เพิ่ม `student-demo/student1234` สำหรับตรวจรับเกม โดยไม่เติมผล/รางวัลล่วงหน้า บัญชี teacher/student อื่นในเอกสารเก่าเป็นของฐานเดิม
@@ -93,6 +93,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: Nuxt migration เฟส 5 ย้าย AI/plans/sheets/book/jobs เพิ่ม 30 routes รวม 86/86; frontend default /api ทุก API เข้า Nitro แล้ว; AES-compatible BYOK, dynamic model discovery/retry/cooldown, prompts/normalization เทียบ PHP 95+16 fixtures, background lease/heartbeat/timeout และ process-crash recovery; tests 25 และ typecheck ผ่าน ทดสอบ Gemini ด้วย mock เท่านั้น ยังต้องตรวจ key จริงก่อนรับงาน; รายละเอียด/ผล live ดู docs/migration/phase5-ai-plans-jobs.md; เฟส 6 deployment/asset paths/ถอด PHP-Docker ยังไม่เริ่ม; commit local เท่านั้น ไม่รวม main.css ของผู้ใช้ และ ignore tests
 - 2026-10-29: Nuxt migration เฟส 4 เสร็จ — เพิ่ม 38 staff routes รวม 56/86 (courses/roster/import/dashboard/guide/groups/report/admin/term/institution/status), เก็บ lookup ของ routes ที่ย้ายใน shared/data/migrated-api.json ใช้ routing/method guard ร่วมกัน; rules/MT19937/knowledge เทียบ PHP 251 fixtures ผ่าน, live staff 262 requests/56 comparisons ผ่านครบ38routesรวมrollback, regression game78/21และsmoke15ผ่าน, build/typecheckผ่าน; teacher-demo + DEMO-TEACHER สำหรับ preview; AI/plans/jobs รอเฟส5; ผู้ใช้สั่งไม่ push ให้ commit local เท่านั้น; tests ยัง ignore ดู docs/migration/phase4-staff.md
 - 2026-10-29: Nuxt migration เฟส 3 เสร็จ — ย้าย student API 9 routes รวม 18/86, engine/progression/profiles และ completion/progress transaction ล็อก user ป้องกันรางวัลซ้ำ/เปิด session ที่จบแล้ว; frontend ส่ง auth/account/student เข้า Nitro ส่วน staff/AI ยัง PHP; build/typecheck ผ่าน, 19 local tests, engine parity PHP 8.2 จำนวน 158 fixtures และ live DB 78 requests/21 exact PHP comparisons ผ่าน; tests/runtime oracle ยังคง ignore; เพิ่ม student-demo สำหรับ preview; รอตรวจรับก่อนเฟส 4 ดู `docs/migration/phase3-game.md`
 - 2026-10-29: Nuxt migration เฟส 2 เสร็จ implementation/verification — 9 endpoints (health/auth/account), pool/transaction, guards, ownership/settings helpers, safe fresh installer Node และ base seeds; ผู้ใช้อนุญาตสร้างฐานใหม่บน MariaDB local 3306 แล้ว สำรองก่อน live tests; build/typecheck ผ่าน, tests 14 + HTTP 15 + DB/HTTP 28 requests ผ่าน; tests ถูก ignore ตามผู้ใช้, `main.css` formatting เดิมคงค้างแต่แก้ช่องว่าง arbitrary classes 2 จุดที่ทำ build พัง; รอตรวจรับก่อนเฟส 3 ดู `docs/migration/phase2-foundation.md`

@@ -21,12 +21,12 @@
 - [x] ย้ายเกม การบันทึกความคืบหน้า การคิดคะแนน VARK/RIASEC/Mindset และรางวัล
 - [x] ย้ายรายวิชา รายชื่อผู้เรียน และการนำเข้าข้อมูล
 - [x] ย้าย dashboard ไกด์การสอน การจัดกลุ่ม และข้อมูลรายงาน
-- [ ] ย้ายแผนการสอน เล่มรายวิชา และเอกสารประกอบ
-- [ ] ย้าย Gemini BYOK, model selection, cache และการตั้งค่า AI
-- [ ] ย้าย background jobs และ API ติดตามสถานะงาน
+- [x] ย้ายแผนการสอน เล่มรายวิชา และเอกสารประกอบ
+- [x] ย้าย Gemini BYOK, model selection, cache และการตั้งค่า AI (ยังรอตรวจรับด้วย key จริง)
+- [x] ย้าย background jobs และ API ติดตามสถานะงาน
 - [x] ย้าย API แอดมิน ภาคเรียน สถานศึกษา และสถานะนักศึกษา
 - [ ] ย้าย database installer/upgrades และคำสั่งดูแลระบบที่ยังใช้ PHP
-- [ ] ปรับ frontend ให้เรียก `/api` ของ Nuxt โดยตรงทั้งหมด (56/86 endpoints ใช้แล้วถึงเฟส 4; AI/plans/jobs ยังใช้ PHP)
+- [x] ปรับ frontend ให้เรียก `/api` ของ Nuxt โดยตรงทั้งหมด (86/86 endpoints ถึงเฟส 5)
 - [ ] ปรับสคริปต์เริ่มระบบและ environment variables ให้รัน Node.js โดยตรง ลดการแก้ Docker และเตรียมถอด Docker ออก
 - [ ] วางแผนย้าย MariaDB จาก Docker เป็น service โดยรักษาข้อมูลและฐานข้อมูลชุดเดียว
 - [ ] อัปเดต `DEPLOY.md`, `Manual.md` และเอกสารที่เกี่ยวข้อง
@@ -65,8 +65,9 @@
 - [x] เฟส 3 เกมและผลประเมิน — [รายละเอียด](docs/migration/phase3-game.md), เพิ่ม 9 endpoints รวม 18/86, engine parity 158 fixtures, live 78 requests/21 exact PHP comparisons ผ่าน
 - [x] ตรวจรับเฟส 3 ก่อนเริ่มเฟส 4
 - [x] เฟส 4 ครูและแอดมิน — [รายละเอียด](docs/migration/phase4-staff.md), เพิ่ม 38 routes รวม 56/86; staff parity 251 fixtures, live 262 requests/56 PHP comparisons ผ่าน
-- [ ] ตรวจรับเฟส 4 ก่อนเริ่มเฟส 5
-- [ ] เฟส 5 แผนการสอนและ AI
+- [x] ตรวจรับเฟส 4 ก่อนเริ่มเฟส 5
+- [x] เฟส 5 แผนการสอนและ AI — [รายละเอียด](docs/migration/phase5-ai-plans-jobs.md), เพิ่ม 30 routes รวม 86/86; รอตรวจรับด้วย Gemini key จริง
+- [ ] ตรวจรับเฟส 5 ก่อนเริ่มเฟส 6 รวมคุณภาพเอกสารจาก Gemini จริง
 - [ ] เฟส 6 เปลี่ยนระบบจริง
 
 ข้อกำหนดเพิ่มเติมจากผู้ใช้: พยายามไม่แก้ Docker มาก เพราะจะถอด Docker ออกด้วย เป้าหมาย deployment จึงเป็น Nuxt/Node.js และ MariaDB service โดยตรง ระหว่างเปลี่ยนผ่านยังรักษาฐานข้อมูลชุดเดิมก่อนย้ายอย่างมีแผน

@@ -801,3 +801,11 @@
 ### ทดสอบ
 - curl: health / login ผิด-ถูก / me / logout / CORS preflight ผ่าน
 - E2E (Playwright + Edge): login ผิดแสดงข้อความ, login 3 role เข้าหน้าถูก, กันเข้าพื้นที่ role อื่น, reload คง session, logout ผ่านทั้งหมด
+# 2026-10-29 — Nuxt migration เฟส 5: API ครบ 86/86
+
+- ย้าย 30 routes ที่เหลือ: แผนการสอน/เอกสารประกอบ/เล่มรายวิชา Gemini BYOK/model discovery/cache/admin settings และ background jobs; frontend default /api พร้อม 404/405/CORS ของ Nitro
+- แยก prompt/normalization เป็น TypeScript และ JSON เทียบ PHP; AES-256-GCM compatible พร้อมป้องกันสร้าง app.key ทับเมื่อกุญแจเดิมหาย เพิ่ม lease/heartbeat/deadline และ polling แสดง error เมื่อ process ตาย ไม่ retry งานเสียเงินอัตโนมัติ
+- เพิ่ม db:upgrade แบบ ledger/lock และ lease schema upgrade โดยสำรองฐานก่อนเขียน ไม่แก้ Docker; สำรอง app.key ครั้งแรกหลังสร้างในฐานใหม่
+- ตรวจผ่าน: build, server typecheck, 25 tests, prompt/model parity 95+16 fixtures, phase5 live311requests/43comparisons/30routes, regression staff262/56 และเกม78/21, smoke15; ตรวจ preview3100 และล้างผู้ใช้/mock keys พร้อมคืน settings แล้ว
+- Gemini ทดสอบกับ mock เท่านั้น ยังไม่มี key จริง จึงรอตรวจรับคุณภาพ/provider จริง; เฟส6 startup/deployment/backup/rollback/ย้าย assets และถอด PHP-Docker ยังเหลือ ดู docs/migration/phase5-ai-plans-jobs.md
+- ไม่ push ตามผู้ใช้; tests/backups/storage/.env ignore ต่อไป และไม่รวม main.css formatting ของผู้ใช้ใน commit

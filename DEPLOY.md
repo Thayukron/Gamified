@@ -1,5 +1,7 @@
 # 🚀 การติดตั้งและ Deploy ด้วย Docker
 
+> เฟส 5: API ทั้ง 86 endpoints ย้ายเป็น Nitro แล้ว รวม AI/แผนการสอน/jobs ค่า frontend เริ่มต้น `/api`; ดู [วิธีรัน Node + MariaDB และอัปเกรด schema](docs/migration/phase5-ai-plans-jobs.md) การตรวจ Gemini ใช้ mock ยังรอตรวจรับด้วย key จริง และจัด deployment/ถอด PHP ในเฟส 6 ขั้นตอน Docker ด้านล่างเป็นระบบเดิม
+
 > เฟส 4: เพิ่ม staff APIs รวม 56/86 endpoints แล้ว ใช้ Node + MariaDB ในเครื่องโดยตรง ดู [สถานะและการทดลอง](docs/migration/phase4-staff.md) ยังไม่ถอด PHP ทั้งระบบจนกว่า AI/plans/jobs และ deployment จะย้ายครบ
 
 > เฟส 3: auth/account/student ย้ายเป็น Nitro รวม 18/86 endpoints แล้ว ดู [สถานะและวิธีทดลอง](docs/migration/phase3-game.md) ใช้ MariaDB ในเครื่อง ไม่ต้อง Docker สำหรับส่วนที่ย้ายแล้ว

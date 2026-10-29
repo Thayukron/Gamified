@@ -1,5 +1,7 @@
 # 📘 คู่มือการรันระบบ ARCANA PROFILE
 
+> เฟส 5 (2026-10-29): API ย้ายเป็น Nitro ครบ 86/86 แล้ว ทดลองแผนการสอน/ใบงาน/เล่มรายวิชาและการตั้งค่า AI ที่ port 3100 ด้วย teacher-demo/teacher1234; ครูต้องกรอก Gemini key ของตนเองก่อนสร้างด้วย AI ดู [รายละเอียดและข้อจำกัดการตรวจรับ](docs/migration/phase5-ai-plans-jobs.md) การทดสอบ provider รอบนี้ใช้ mock ยังรอ key จริง
+
 > เฟส 4 (2026-10-29): ครู/แอดมินส่วนจัดการข้อมูล dashboard ไกด์ จัดกลุ่ม และรายงานใช้ Nitro แล้ว รวม 56/86 API ทดลองที่ port 3100 ด้วย `teacher-demo/teacher1234` ดู [คู่มือเฟส 4](docs/migration/phase4-staff.md) AI/แผนการสอนยังรอเฟส 5
 
 > เฟส 3 (2026-10-29): เกม/ผลประเมินฝั่งนักศึกษาใช้ Nitro แล้ว รัน Nuxt โดยตรง เปิด `/login` ที่ port 3100 ใช้ `student-demo/student1234` เพื่อตรวจรับ รายละเอียด [เฟส 3](docs/migration/phase3-game.md) ส่วนครู/แอดมิน/AI ยังอยู่ระหว่างย้าย

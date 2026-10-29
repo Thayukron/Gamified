@@ -56,6 +56,10 @@
     "path": "/teacher/courses"
   },
   {
+    "method": "POST",
+    "path": "/teacher/units/suggest"
+  },
+  {
     "method": "GET",
     "path": "/teacher/meta"
   },
@@ -125,6 +129,74 @@
   },
   {
     "method": "GET",
+    "path": "/teacher/courses/{id}/plans"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/plans/full"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/plans"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/book"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/courses/{id}/book"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/book/draft"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/plans/{pid}/sheets"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/plans/{pid}/sheets"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/sheets/{sid}"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/sheets/{sid}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/teacher/sheets/{sid}"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/sheets/{sid}/draft"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/plans/{pid}"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/plans/{pid}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/teacher/plans/{pid}"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/plans/{pid}/draft"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/plans/{pid}/standard"
+  },
+  {
+    "method": "GET",
     "path": "/teacher/courses/{id}/dashboard"
   },
   {
@@ -134,6 +206,50 @@
   {
     "method": "PUT",
     "path": "/teacher/courses/{id}/context"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/ai"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/ai/all"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/ai"
+  },
+  {
+    "method": "GET",
+    "path": "/me/ai"
+  },
+  {
+    "method": "PUT",
+    "path": "/me/ai"
+  },
+  {
+    "method": "POST",
+    "path": "/me/ai/test"
+  },
+  {
+    "method": "PUT",
+    "path": "/me/ai/model"
+  },
+  {
+    "method": "DELETE",
+    "path": "/me/ai"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/ai"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/ai"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/ai/teachers/{id}"
   },
   {
     "method": "POST",
@@ -222,5 +338,9 @@
   {
     "method": "DELETE",
     "path": "/admin/courses/{id}"
+  },
+  {
+    "method": "GET",
+    "path": "/jobs/{id}"
   }
 ]

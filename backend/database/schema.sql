@@ -300,6 +300,7 @@ CREATE TABLE IF NOT EXISTS background_jobs (
     status       ENUM('running','done','error') NOT NULL DEFAULT 'running',
     http_status  SMALLINT NULL,
     result       MEDIUMTEXT NULL,
+    lease_until  DATETIME NULL COMMENT 'Node job heartbeat; expired jobs fail instead of staying running',
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_jobs_user (user_id),

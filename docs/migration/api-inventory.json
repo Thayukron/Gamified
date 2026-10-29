@@ -1388,12 +1388,13 @@
   ],
   "migrationTrackingTable": "schema_migrations",
   "schemaHashes": {
-    "backend/database/schema.sql": "267a3647e48ef84612bc5a585671bc377bec8c4a9638b77ce9a2f9bc31fbc45c",
+    "backend/database/schema.sql": "c24e9fee638b3aa96c5eb42ebbd942c1fd071c72c85cab68e097549fe2d873d5",
     "backend/database/upgrades/2026-10-16_lesson_plans.sql": "7b50273eab78c93a5bc830486f12e4b0e28022107ac33fc0cc3b2effa9ec2e15",
     "backend/database/upgrades/2026-10-16b_course_plans.sql": "df7bdd37fc90427250a19770815bdc8fd99e5f98364b53b9d511ecaf8aa04e2c",
     "backend/database/upgrades/2026-10-16c_lesson_sheets.sql": "5fd1defd707cff30da920c6dbca845da692f4bf69e150269542864f6cbc67488",
     "backend/database/upgrades/2026-10-17_course_content.sql": "763722752ad5ef7414d638e1d3ec006e35a7479a3cdeae111f9cbadcac328f47",
     "backend/database/upgrades/2026-10-20_student_status.sql": "e18a8873f8be1cbce962fc9df92e7a6ba43355453b083d4bcb8df53c486a6438",
-    "backend/database/upgrades/2026-10-20b_background_jobs.sql": "9413b8013f7f36c2a19e0e959716231e27e0d87170e3721adb132b91c57b1eff"
+    "backend/database/upgrades/2026-10-20b_background_jobs.sql": "9413b8013f7f36c2a19e0e959716231e27e0d87170e3721adb132b91c57b1eff",
+    "backend/database/upgrades/2026-10-29_job_lease.sql": "0c02edc77ec339b8ee9d7edbbea649a62fab3c04a57d238a6ad5e01af92d8821"
   }
 }

@@ -1,0 +1,191 @@
+{
+  "plan": {
+    "EMPTY": {
+      "outcome": "",
+      "standard": {
+        "occupation": "",
+        "sub_competency": "",
+        "criteria": "",
+        "method": "",
+        "performance_evidence": "",
+        "knowledge_evidence": "",
+        "career_integration": ""
+      },
+      "competency": {
+        "knowledge": "",
+        "practice": "",
+        "apply": ""
+      },
+      "objectives": {
+        "cognitive": "",
+        "psychomotor": "",
+        "affective": "",
+        "application": ""
+      },
+      "content": "",
+      "activities": {
+        "motivation": "",
+        "information": "",
+        "application": "",
+        "progress": ""
+      },
+      "differentiation": "",
+      "media": "",
+      "evidence": {
+        "knowledge": "",
+        "performance": ""
+      },
+      "assessment": {
+        "criteria": "",
+        "methods": "",
+        "tools": ""
+      },
+      "after": {
+        "results": "",
+        "problems": "",
+        "solution_result": "",
+        "next_time": ""
+      }
+    },
+    "SYSTEM": "คุณเป็นศึกษานิเทศก์ผู้เชี่ยวชาญการเขียนแผนการจัดการเรียนรู้ฐานสมรรถนะ หลักสูตร ปวช./ปวส. 2567 ของสำนักงานคณะกรรมการการอาชีวศึกษา เขียนตามแบบฟอร์มทางการ ใช้ภาษาไทยทางการ เนื้อหาถูกต้องตามหลักวิชา ละเอียดครบถ้วนได้ใจความ นำไปใช้สอนได้จริง เจาะจงกับเนื้อหาหน่วย (ไม่เขียนกว้าง ๆ หรือมีแค่ชื่อหัวข้อ) ปรับกิจกรรมและสื่อให้เหมาะกับผลวิเคราะห์ผู้เรียนของห้อง (สถิติรวม ไม่มีข้อมูลรายบุคคล) โดยยังใช้สื่อหลายรูปแบบ ห้ามแต่งรหัสหรือชื่อมาตรฐานอาชีพ/หน่วยสมรรถนะที่ไม่แน่ใจว่ามีจริง ถ้าไม่ทราบให้เว้นว่าง \"\" แนะนำเฉพาะสื่อ/เว็บไซต์ที่มีอยู่จริง ตอบเป็น JSON ตามโครงสร้างที่กำหนดเท่านั้น"
+  },
+  "sheet": {
+    "FIELDS": {
+      "knowledge": [
+        "outcome",
+        "standard",
+        "competency",
+        "objectives",
+        "content",
+        "exercises",
+        "references",
+        "appendix"
+      ],
+      "job": [
+        "outcome",
+        "standard",
+        "competency",
+        "objectives",
+        "tools",
+        "advice",
+        "steps",
+        "conclusion",
+        "evaluation",
+        "references"
+      ],
+      "activity": [
+        "outcome",
+        "standard",
+        "competency",
+        "objectives",
+        "tools",
+        "steps",
+        "conclusion",
+        "evaluation",
+        "references"
+      ],
+      "assignment": [
+        "outcome",
+        "standard",
+        "competency",
+        "objectives",
+        "details",
+        "deadline",
+        "guidelines",
+        "sources",
+        "evaluation"
+      ],
+      "assessment": [
+        "instructions",
+        "pass"
+      ]
+    },
+    "TYPE_TH": {
+      "knowledge": "ใบความรู้",
+      "job": "ใบงาน",
+      "activity": "ใบกิจกรรม",
+      "assignment": "ใบมอบหมายงาน",
+      "assessment": "แบบประเมิน"
+    },
+    "RUBRIC_ROW": {
+      "item": "",
+      "l4": "",
+      "l3": "",
+      "l2": "",
+      "l1": ""
+    },
+    "SYSTEM": "คุณเป็นครูอาชีวศึกษาผู้เชี่ยวชาญการเขียนเอกสารประกอบแผนการจัดการเรียนรู้ฐานสมรรถนะ หลักสูตร ปวช./ปวส. 2567 ของ สอศ. เขียนเนื้อหาที่ถูกต้องตามหลักวิชา ละเอียดครบถ้วนได้ใจความ (ไม่ใช่แค่หัวข้อ) ใช้ได้จริงในห้องเรียน ภาษาไทยทางการ อ่านง่ายสำหรับผู้เรียน สอดคล้องกับแผนการจัดการเรียนรู้ที่ให้มา อ้างอิงเฉพาะหนังสือ/เว็บไซต์ที่มีอยู่จริง ถ้าไม่แน่ใจให้เขียนเป็นประเภทแหล่งข้อมูลแทน ห้ามแต่งมาตรฐานอาชีพ ตอบเป็น JSON ตามโครงสร้างที่กำหนดเท่านั้น"
+  },
+  "book": {
+    "EMPTY": {
+      "curriculum": {
+        "program": "",
+        "field_type": "",
+        "occupation_group": "",
+        "major": "",
+        "theory_hours": "",
+        "practice_hours": "",
+        "credits": "",
+        "standards_ref": "",
+        "outcome": "",
+        "objectives": "",
+        "competencies": "",
+        "description": ""
+      },
+      "occupational": {
+        "agency": "",
+        "standard": "",
+        "occupation": "",
+        "level": "",
+        "rows": []
+      },
+      "job_analysis": {
+        "job": "",
+        "rows": []
+      },
+      "units": [],
+      "final_eval": {
+        "hours_theory": "",
+        "hours_practice": "",
+        "percent": ""
+      },
+      "preface": "",
+      "bibliography": "",
+      "author": ""
+    },
+    "OCC_ROW": {
+      "unit_code": "",
+      "unit_desc": "",
+      "sub_code": "",
+      "sub_desc": "",
+      "criteria": "",
+      "method": ""
+    },
+    "JOB_ROW": {
+      "duty": "",
+      "task": "",
+      "sub_competency": "",
+      "knowledge": "",
+      "skill": ""
+    },
+    "UNIT_ROW": {
+      "no": "",
+      "name": "",
+      "k": "",
+      "s": "",
+      "a": "",
+      "ap": "",
+      "hours_theory": "",
+      "hours_practice": "",
+      "percent": ""
+    },
+    "SYSTEM": "คุณเป็นศึกษานิเทศก์ผู้เชี่ยวชาญการวิเคราะห์หลักสูตรและการเขียนแผนการจัดการเรียนรู้ฐานสมรรถนะ หลักสูตร ปวช./ปวส. 2567 ของ สอศ. วิเคราะห์จากคำอธิบายรายวิชา จุดประสงค์ และสมรรถนะรายวิชาที่ให้มาเท่านั้น ห้ามเพิ่มเนื้อหานอกหลักสูตร ห้ามแต่งรหัสหรือชื่อมาตรฐานอาชีพ ถ้าไม่ทราบให้เว้นว่าง ใช้ภาษาไทยทางการ กระชับ ตอบเป็น JSON ตามโครงสร้างที่กำหนดเท่านั้น"
+  },
+  "ai": {
+    "TYPES": [
+      "course",
+      "unit"
+    ],
+    "SYSTEM": "คุณเป็นผู้เชี่ยวชาญด้านการออกแบบการเรียนการสอนระดับอาชีวศึกษาของไทย ให้คำแนะนำที่นำไปใช้ได้จริงในห้องเรียน เจาะจงกับเนื้อหาวิชา ใช้ภาษาไทยที่กระชับ สุภาพ ยึดหลักการสอนที่มีหลักฐานวิจัยรองรับ (Worked Examples, Retrieval Practice, Dual Coding, Active Learning) ใช้ข้อมูล VARK เป็นข้อมูลประกอบการเลือกสื่อเพื่อเพิ่มการมีส่วนร่วม ไม่ใช่การจำกัดให้สอนแบบเดียว แนะนำเครื่องมือ/เว็บไซต์ที่มีอยู่จริงและใช้ได้ฟรีหรือหาได้ในวิทยาลัยเท่านั้น ห้ามแต่งชื่อเครื่องมือขึ้นเอง ตอบเป็น JSON ตามโครงสร้างที่กำหนดเท่านั้น"
+  }
+}

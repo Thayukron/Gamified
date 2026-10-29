@@ -5,7 +5,7 @@ import { migratedMethods } from '../../shared/utils/apiRouting'
 export default defineEventHandler(event => {
   const path = getRequestURL(event).pathname.replace(/\/$/, '')
   const allowed = path.startsWith('/api/') ? migratedMethods(path.slice(4)) : undefined
-  if (allowed) {
+  if (path === '/api' || path.startsWith('/api/')) {
     const origin = getHeader(event, 'origin') || ''
     const origins = useRuntimeConfig(event).corsOrigins.split(',').map((value: string) => value.trim())
     if (origins.includes(origin)) {
@@ -15,7 +15,7 @@ export default defineEventHandler(event => {
       setHeader(event, 'Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     }
   }
-  if (allowed && event.method === 'OPTIONS') {
+  if ((path === '/api' || path.startsWith('/api/')) && event.method === 'OPTIONS') {
     setResponseStatus(event, 204)
     return ''
   }

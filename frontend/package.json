@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "db:init": "node --env-file-if-exists=../.env scripts/init-db.mjs",
+    "db:upgrade": "node --env-file-if-exists=../.env scripts/upgrade-db.mjs",
     "typecheck:server": "nuxt prepare && tsc --noEmit -p tsconfig.server.json",
     "dev": "nuxt dev",
     "build": "nuxt build",
