@@ -1,12 +1,12 @@
 # CLAUDE.md — บริบทโปรเจกต์สำหรับต่อแชท
 
 > ไฟล์นี้เก็บบริบทการสนทนา/การตัดสินใจ เพื่อให้เปิดแชทใหม่แล้วทำงานต่อได้ทันที
-> ประวัติการแก้ไขละเอียดอยู่ใน [log.md](log.md) · ข้อกำหนดระบบอยู่ใน [requiments.md](requiments.md)
+> ประวัติการแก้ไขละเอียดอยู่ใน [CHANGELOG.md](CHANGELOG.md) · ข้อกำหนดระบบอยู่ใน [requiments.md](requiments.md)
 
 ## ข้อตกลงการทำงานกับผู้ใช้ (ต้องทำทุกครั้ง)
 1. สื่อสารเป็นภาษาไทย
 2. ทำทีละเฟส → **รันให้ผู้ใช้ดูก่อน** → รอผู้ใช้ตอบรับ แล้วค่อยทำเฟสต่อไป
-3. ทุกครั้งที่แก้ไข: บันทึกใน `log.md` + อัปเดตสถานะใน `CLAUDE.md` นี้
+3. ทุกครั้งที่แก้ไข: บันทึกใน `CHANGELOG.md` + อัปเดตสถานะใน `CLAUDE.md` นี้
 4. ทุกครั้งที่แก้ไข: `git commit` ในเครื่องเท่านั้น — ผู้ใช้สั่ง 2026-10-29 ว่าไม่ต้อง push เพราะไม่มีสิทธิ์ repository
 
 ## การตัดสินใจสำคัญของผู้ใช้
@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **log.md → CHANGELOG.md** (ตามมาตรฐาน markdown) — git mv เก็บประวัติ · หัวข้อ # Changelog · อัปเดตอ้างอิงใน CLAUDE.md + tools/log-entry.php
 - 2026-10-29: **ลบ Docker ออกจากเอกสารทังหมด** — DEPLOY.md/Manual.md รีดไรตเป็น Node 22 + MariaDB service ในเครื่อง (dev 3100 / production 8090, Cloudflare Tunnel ชี้ 3100) · tools/backup.ps1 + restore.ps1 แก้ทาง app.key เป็น storage\app.key (root) ทดสอบ backup ผาน · remote เปลี่ยนเป็น rungrot-muangchalerm/gamefile (push main+dev) · แก้ reset-password.mjs + README.md (Node) · ถัดไป: ทดสอบ Gemini key จรง
 - 2026-10-29: Nuxt migration เฟส 5 ย้าย AI/plans/sheets/book/jobs เพิ่ม 30 routes รวม 86/86; frontend default /api ทุก API เข้า Nitro แล้ว; AES-compatible BYOK, dynamic model discovery/retry/cooldown, prompts/normalization เทียบ PHP 95+16 fixtures, background lease/heartbeat/timeout และ process-crash recovery; tests 25 และ typecheck ผ่าน ทดสอบ Gemini ด้วย mock เท่านั้น ยังต้องตรวจ key จริงก่อนรับงาน; รายละเอียด/ผล live ดู docs/migration/phase5-ai-plans-jobs.md; เฟส 6 deployment/asset paths/ถอด PHP-Docker ยังไม่เริ่ม; commit local เท่านั้น ไม่รวม main.css ของผู้ใช้ และ ignore tests
 - 2026-10-29: **เฟส 6 Node deployment เสร็จ** — ย้าย schema/upgrades/scenarios/app.key เข้า frontend/ · Docker 2 container (web=Node 22 + db) ถอด PHP/Nginx · tools/backup.ps1 + restore.ps1 (ฐาน+app.key) · reset-password.mjs · DEPLOY.md/Manual.md/.env.example/start-dev.ps1 แกครบ · ทดสอบ upgrade-db + backup dump 20 ตารางผาน · ถัดไป: ทดสอบ Gemini key จรง
