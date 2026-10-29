@@ -79,7 +79,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - Save state อยู่ในตาราง `game_sessions` (1 แถวต่อ user+scenario)
 - เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content` (ดูรูปแบบเต็มใน docblock ของ `ScenarioEngine.php` และ type ใน `frontend/utils/game.ts`; มี `meta`, `characters`, scene `cast`, `layout`, `timer`, `minigame`, choice `reply`/`reward`/`icon`/`x,y`) เดิม: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
 - แท็กคะแนนที่ใช้ได้: vark_v/a/r/k, riasec_r/i/a/s/e/c, mindset_growth/fixed · `choices_log` = `[{scene, choice}]`
-- ภาคเรียนปัจจุบันมาจาก `config.php` (academic_year, semester) · ผลลัพธ์ unique ต่อ user+scenario+ภาคเรียน
+- ภาคเรียนปัจจุบันตั้งในหน้าแอดมิน (settings `term_semester`/`term_academic_year`; `config.php`/.env เป็นค่าสำรอง) · ผลลัพธ์ unique ต่อ user+scenario+ภาคเรียน · โปรไฟล์ใช้ผลล่าสุดข้ามภาค
 
 ## แผนการพัฒนา (Phases)
 - [x] **เฟส 1 Foundation** — schema, PHP API + auth token, Nuxt login + role routing
@@ -136,3 +136,5 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - 2026-10-20: **คู่มือครู PDF** `docs/คู่มือการใช้งานสำหรับครู-ARCANA-PROFILE.pdf` (ต้นฉบับ `docs/src/teacher-manual.html` + `manual-img/`; ภาพถ่ายด้วย Playwright จาก :8090 มีกรอบส้มหมายเลข) — แก้หน้าจอครูเมื่อไรควรถ่ายภาพ/ปรับคู่มือ
 - 2026-10-20: **งาน AI ทำเบื้องหลัง** (`BackgroundJob`, `$router->background()`, `GET /jobs/{id}`, frontend `useAiApi()`) แก้ 524 ของ Cloudflare (ตัดที่ 100 วิ) · route AI ใหม่ให้เพิ่มใน `$router->background(...)` และเรียกด้วย `useAiApi()`
 - 2026-10-27: **เพิ่มผู้ใช้รายคน** (`POST /admin/users`, ครูเพิ่มนักศึกษาใหม่รายคนในหน้ารายชื่อ) · **สารบัญ Word มีเลขหน้า** (`estimatePageNumbersWith` + ฟอนต์ TH Sarabun, ยัง dirty ให้ Word นับใหม่) · ขึ้นหน้าใหม่ใช้ `pageBreak()` (pageBreakBefore) ห้ามใช้ `new PageBreak()` (ทำให้เกิดหน้าว่าง) · PDF เบราว์เซอร์มีเลขหน้า `@page @top-right` · แนวทางต่อไป (ยังไม่ทำ): สมัครใช้เองสำหรับวิทยาลัยอื่น
+- 2026-10-28: ส่งออกฐานข้อมูลให้ผู้ใช้ `backups/arcana.sql` (+ `backups/app.key`) · ลิงก์ Quick Tunnel ปัจจุบันดูได้ด้วย `(Invoke-RestMethod http://127.0.0.1:20241/quicktunnel).hostname` (ผู้ใช้รัน cloudflared เอง; “Failed to fetch” มักเกิดจากเปิดลิงก์เก่า)
+- **เรื่องค้างที่ต้องติดตาม:** นักศึกษากลุ่ม ปวส.1/1 45 คน ถูกตั้ง “สำเร็จการศึกษา” (2026-10-20 15:32, ไม่ทราบที่มา) → วิชา DSA ของ teacher1 แสดงผู้เรียน 1 คน — แจ้งผู้ใช้แล้ว รอผู้ใช้ตัดสินใจคืนสถานะ · ภาคเรียนปัจจุบันตอนนี้ = 2/2569 · แนวทางต่อไป (ยังไม่ทำ): สมัครใช้งานเองสำหรับวิทยาลัยอื่น
