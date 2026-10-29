@@ -825,3 +825,5 @@
 - แก้ referenc: `CLAUDE.md` (โครงสร้างโค้ด = Nitro, status), `README.md` (tech stack + dev section), `.gitignore` (ลบบรรทัด backend/mock-gemini), `start-dev.ps1`, `tools/README.md`, comment ใน `useApi.ts` / `lessonPlan.ts` / `progression.ts`
 - ทดสอบ: build + typecheck:server ผาน · production smoke ท่ี 3100: health, login ครู/นักศึกษา, PUT /me/password, protected endpoint /teacher/courses, /me/ai (app.key) — ผานทังหมด
 - commit + push ตามปกตติ (ผ้ใชตรวจรบัแล้ว)
+
+- 2026-10-29: **ย้าน Nuxt ออกมา root (งาน 7)** — ลบ Docker ทังหมด (docker-compose.yml, frontend/Dockerfile, .dockerignore) · git mv ไฟลท่ี track 284 ไฟลจาก frontend/ → root (server/, pages/, components/, public/, database/, scripts/, tests/, storage/app.key ฯลฯ) · แก้ config: .gitignore/.gitattributes/start-dev.ps1/package.json (../.env → .env) · รีดไรต .env.example (Node + MariaDB ล็อกัล 3306) + ลบ .env.nuxt.example · แก้ reference frontend/ ใน README/DEPLOY/CLAUDE/tools/README/art-prompts/docs/src HTML · ทดสอบ: npm install + build + tsc server (exit 0) + production smoke (health/login/admin guard/auth guard) ผ่าน

@@ -5,7 +5,7 @@
 
 $root = $PSScriptRoot
 
-Start-Process -FilePath 'npm' -ArgumentList 'run', 'dev' -WorkingDirectory "$root\frontend"
+Start-Process -FilePath 'npm' -ArgumentList 'run', 'dev' -WorkingDirectory $root
 
 Write-Host 'Database: local MariaDB 127.0.0.1:3306 (credentials from .env)'
 Write-Host 'App:      http://localhost:3100 (API under /api)'

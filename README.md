@@ -4,9 +4,9 @@
 ดูข้อกำหนดทั้งหมดใน [requiments.md](requiments.md)
 
 ## Tech Stack
-- **Frontend:** Nuxt 3 (SPA), Pinia, Tailwind CSS — `frontend/`
-- **Backend:** Nitro (Nuxt 3 server) TypeScript — `frontend/server/`
-- **Database:** MySQL / MariaDB — `frontend/database/schema.sql`
+- **Frontend:** Nuxt 3 (SPA), Pinia, Tailwind CSS — ``
+- **Backend:** Nitro (Nuxt 3 server) TypeScript — `server/`
+- **Database:** MySQL / MariaDB — `database/schema.sql`
 
 ## 🐳 รันด้วย Docker (แนะนำ · ใช้ deploy จริง)
 ```bash
@@ -27,9 +27,9 @@ cp .env.example .env; docker compose up -d --build
 cd frontend; npm install; cd ..
 # 3) เปิิดชุดพัฒนา (Nuxt dev 3100 — เสิ้่ง API เองท่ี /api ต้อฐานข้อมูลเดีียว)
 ./start-dev.ps1
-⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node frontend/scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
+⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
 
-⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node frontend/scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
+⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
 
 เปิด http://localhost:3100
 

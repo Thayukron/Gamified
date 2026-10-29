@@ -28,7 +28,7 @@ docker compose up -d --build
 
 เมื่อ container `web` เริ่มทำงานจะรัน `scripts/init-db.mjs` อัตโนมัติ:
 - ฐานว่าง → สร้างตารางทั้งหมด + บัญชี `admin` + archetypes + scenarios สากล
-- ฐานมีข้อมูลแล้ว → รันเฉพาะไฟล์ upgrade ใน `frontend/database/upgrades/` (**ไม่ลบข้อมูล**)
+- ฐานมีข้อมูลแล้ว → รันเฉพาะไฟล์ upgrade ใน `database/upgrades/` (**ไม่ลบข้อมูล**)
 
 เปิด `http://<เซิร์ฟเวอร์>:8090` → เข้าสู่ระบบ `admin` / `admin1234` → ระบบบังคับให้ตั้งรหัสผ่านใหม่ทันที
 (หรือกำหนด `ADMIN_PASSWORD` ใน `.env` ก่อนติดตั้ง)
@@ -115,7 +115,7 @@ docker compose restart web
 ## 6. ฐานข้อมูลชุดเดียว (เครื่องพัฒนา = ฐานเดียวกับ production)
 
 ตั้งแต่วันที่ 2026-10-19 ใช้ฐานข้อมูลชุดเดียว: ชุดพัฒนาต่อ MariaDB เดียวกันผ่าน `127.0.0.1:DB_PUBLISH_PORT`
-ด้วยค่าใน `.env` และ `frontend/storage/app.key` ต้องเป็นไฟล์เดียวกับใน container
+ด้วยค่าใน `.env` และ `storage/app.key` ต้องเป็นไฟล์เดียวกับใน container
 
 - **ห้ามรัน `migrate.php`** (ล้างข้อมูลจริง; สคริปต์ปฏิเสธเมื่อมีผู้ใช้ เว้นแต่ `--wipe-real-data`)
 - การทดสอบใด ๆ บนเครื่องพัฒนากระทบข้อมูลจริง: สำรองก่อนด้วย `tools/backup.ps1`

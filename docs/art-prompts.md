@@ -6,8 +6,8 @@
 ## ข้อกำหนดไฟล์
 | ประเภท | ขนาด/สัดส่วน | พื้นหลัง | วางที่ | ชื่อไฟล์ |
 |---|---|---|---|---|
-| ตัวละคร | แนวตั้ง **9:16** (เช่น 1080×1920) ครึ่งตัว หัวอยู่ช่วงบน 1/3 | **โปร่งใส (PNG)** หรือ **สีเขียวล้วน #00FF00** (Claude ตัดพื้นหลังให้ได้) | `frontend/public/characters/` | `{id}-{สีหน้า}.png` เช่น `mira-happy.png` |
-| ฉาก | แนวนอน **16:9** (1920×1080) จุดสำคัญอยู่กลางภาพ (มือถือจะครอปกลาง) | ไม่มีตัวคนในฉาก | `frontend/public/backgrounds/` | `{key}.jpg` เช่น `library.jpg` |
+| ตัวละคร | แนวตั้ง **9:16** (เช่น 1080×1920) ครึ่งตัว หัวอยู่ช่วงบน 1/3 | **โปร่งใส (PNG)** หรือ **สีเขียวล้วน #00FF00** (Claude ตัดพื้นหลังให้ได้) | `public/characters/` | `{id}-{สีหน้า}.png` เช่น `mira-happy.png` |
+| ฉาก | แนวนอน **16:9** (1920×1080) จุดสำคัญอยู่กลางภาพ (มือถือจะครอปกลาง) | ไม่มีตัวคนในฉาก | `public/backgrounds/` | `{key}.jpg` เช่น `library.jpg` |
 
 สีหน้า 5 แบบ: `neutral` (ปกติ), `happy` (ยิ้ม), `surprised` (ตกใจ), `sad` (เศร้า), `determined` (มุ่งมั่น)
 ถ้าทำได้ไม่ครบ 5 สีหน้า อย่างน้อยทำ `neutral` 1 ภาพ (ตั้งชื่อ `{id}.png`)
@@ -68,7 +68,7 @@ A brave 17-year-old Thai boy apprentice adventurer, short spiky black hair, warm
 navy blue apprentice mage robe with gold trim over a white shirt, a brown leather belt with pouches, friendly confident smile.
 Semi-realistic anime visual novel character sprite, half body from waist up, ... (style prompt)
 ```
-วางไฟล์ที่ `art-source/characters/` แล้วบอก Claude ให้รัน `tools/process-art.js` (หรือวางใน `frontend/public/characters/` เป็น .webp เอง)
+วางไฟล์ที่ `art-source/characters/` แล้วบอก Claude ให้รัน `tools/process-art.js` (หรือวางใน `public/characters/` เป็น .webp เอง)
 
 ## ฉาก (Background)
 Style prompt ฉาก:
