@@ -1,7 +1,7 @@
 # CLAUDE.md — บริบทโปรเจกต์สำหรับต่อแชท
 
 > ไฟล์นี้เก็บบริบทการสนทนา/การตัดสินใจ เพื่อให้เปิดแชทใหม่แล้วทำงานต่อได้ทันที
-> ประวัติการแก้ไขละเอียดอยู่ใน [CHANGELOG.md](CHANGELOG.md) · ข้อกำหนดระบบอยู่ใน [requiments.md](requiments.md)
+> ประวัติการแก้ไขละเอียดอยู่ใน [CHANGELOG.md](CHANGELOG.md) · ข้อกำหนดระบบอยู่ใน [docs/requiments.md](docs/requiments.md)
 
 ## ข้อตกลงการทำงานกับผู้ใช้ (ต้องทำทุกครั้ง)
 1. สื่อสารเป็นภาษาไทย
@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **ย้านเอก 4 ไฟลเขั้ docs/** — DEPLOY.md, Manual.md, requiments.md, ISSUE-nuxt3-migration.md → docs/ (git mv) · แก้ link ใน README.md, CLAUDE.md, docs/load-test.md · commit + push ตามปกติ
 - 2026-10-29: **ย้าน tests/ → tools/tests/** (ผ้ใช้สั่ง) — สคริปต์ทดสอบ .ts/.mjs/.log ย้ายไป tools/tests/ · .gitignore แก้ตาม (tools/tests/ ยัง ignore)
 - 2026-10-29: **ลบไฟล .php + PHP runtime ออกจาก tests/** — oracle/export .php 7 ไฟล + php82.zip (33MB) + tests/php82/ (require backend/ ท่ีหายแล้ว — รันไม่ได้อีกแล้ว) · tests/ คงเหลือเฉพาะ .ts/.mjs/.log (ไม่ track ใน git)
 - 2026-10-29: **log.md → CHANGELOG.md** (ตามมาตรฐาน markdown) — git mv เก็บประวัติ · หัวข้อ # Changelog · อัปเดตอ้างอิงใน CLAUDE.md · tools/log-entry.php → tools/log-entry.mjs (Node) — **ไฟล .php ทังหมดถอดออกแล้ว**
