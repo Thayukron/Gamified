@@ -40,7 +40,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
   server/services/        auth, password, gemini (BYOK), lessonPlan, lessonSheet, coursePlan, imports, rosterImport, teacherCourses, account, admin, profile, progression, scenarioEngine, grouping, teachingGuide, knowledge, aiGuide, backgroundJob
   server/utils/           db (mysql2 pool), crypto (AES-256-GCM + app.key), http, input
   docs/database/schema.sql  ตารางทังหมด · upgrades/ = ไฟลปรบโครงสราง (ledger schema_migrations) · scenarios/ = JSON เนื้อเรื่อง (init/upgrade ใช้ path นี)
-  scripts/init-db.mjs     สร้างตาราง+admin (เฉพาะ --create-empty) · upgrade-db.mjs = รัน upgrades ตาม ledger · reset-password.mjs = รีเซ็ตรหัสฉุกเฉิน
+  tools/scripts/          สคริปต์ CLI: init-db.mjs (สร้างตาราง+admin เฉพาะ --create-empty) · upgrade-db.mjs (รัน upgrades ตาม ledger) · reset-password.mjs (รีเซ็ตรหัสฉุกเฉิน)
   storage/app.key         คีย์ AES สำหรับ Gemini Key ของครู (gitignored — ต้องสำรองพรอมฐานข้อมูล)
   composables/useApi.ts   $fetch + Bearer token, 401 -> logout
   stores/auth.ts          token ใน localStorage key gsp_token
@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **ย้าย scripts/ → tools/scripts/** (ผ้้ใช้สั่่ง) — สคริปต์ CLI 4 ไฟล · แก้ path สคริปต์ + npm scripts ใน package.json + เอกสาร 3 ไฟล · ทดสอบ upgrade-db.mjs รันผานกบ path ใหม่
 - 2026-10-29: **ย้าย database/ → docs/database/** (ผ้้ใช้สั่่ง) — schema.sql/upgrades/scenarios ย้ายตาม · แก้ path ใน init-db.mjs + upgrade-db.mjs · ทดสอบ upgrade-db.mjs รันผานกบ path ใหม่
 - 2026-10-29: ย้าย op.png (ภาพกำมะลอ ไม่ถูก ref) เข้า docs/ · ลบ start-dev.ps1 (ใช้ npm run dev โดยตรง)
 - 2026-10-29: **ย้านเอก 4 ไฟลเขั้ docs/** — DEPLOY.md, Manual.md, requiments.md, ISSUE-nuxt3-migration.md → docs/ (git mv) · แก้ link ใน README.md, CLAUDE.md, docs/load-test.md · commit + push ตามปกติ

@@ -174,7 +174,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 |---|---|
 | เปิด http://localhost:3100 ไม่ขึ้น | ยังไม่ได้รัน `npm run dev` หรือมีโปรเจกต์อื่นยึดพอร์ต 3100 อยู่ → ตรวจ `Get-NetTCPConnection -LocalPort 3100` แล้ว kill node ตัวเก่า |
 | `npm` : The term 'npm' is not recognized | Node.js ยังไม่ได้ติดตั้ง หรือเปิด PowerShell ก่อนติดตั้ง → ปิดแล้วเปิด PowerShell ใหม่ |
-| `Access denied for user 'arcana'` | รันสคริปต์โดยไม่โหลด `.env` → ใช้ `npm run db:reset-password -- <username>` หรือ `node --env-file-if-exists=.env scripts/...` |
+| `Access denied for user 'arcana'` | รันสคริปต์โดยไม่โหลด `.env` → ใช้ `npm run db:reset-password -- <username>` หรือ `node --env-file-if-exists=.env tools/scripts/...` |
 | ลิงก์ trycloudflare เปิดไม่ได้ / ขึ้น *could not resolve host* | Tunnel หลุด (เปลี่ยนเน็ต/เครื่อง Sleep/ปิดหน้าต่าง) → เปิด Tunnel ใหม่ (ข้อ 5) แล้วส่งลิงก์ใหม่ |
 | ลิงก์ Tunnel ขึ้น *Error 502 / 1033* | ระบบ ARCANA ปิดอยู่ → รัน `npm run dev` ใหม่ (ข้อ 2) |
 | ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษาบล็อก Google AI → ลองจากเน็ตมือถือ (hotspot) |

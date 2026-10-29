@@ -7,13 +7,13 @@ import { fileURLToPath } from 'node:url'
 if (!process.argv.includes('--create-empty')) throw new Error('Use --create-empty to explicitly initialize an empty database')
 const name = process.env.DB_NAME || 'gamified'
 if (!/^[A-Za-z0-9_]+$/.test(name)) throw new Error('Invalid database name')
-const schema = readFileSync(new URL('../docs/database/schema.sql', import.meta.url), 'utf8')
+const schema = readFileSync(new URL('../../docs/database/schema.sql', import.meta.url), 'utf8')
 const start = schema.indexOf('-- แผนกวิชา')
 if (start < 0) throw new Error('Unrecognized schema layout; refusing to execute')
 const tablesOnly = schema.slice(start)
 if (/\b(?:DROP\s+TABLE|DROP\s+DATABASE|TRUNCATE|USE\s+gamified)\b/i.test(tablesOnly)) throw new Error('Destructive schema statement detected')
 const seeds = JSON.parse(readFileSync(new URL('./base-seed.json', import.meta.url), 'utf8'))
-const scenarios = seeds.universal.map(([file, title, description]) => ({ title, description, content: JSON.parse(readFileSync(new URL(`../docs/database/scenarios/${file}.json`, import.meta.url), 'utf8')) }))
+const scenarios = seeds.universal.map(([file, title, description]) => ({ title, description, content: JSON.parse(readFileSync(new URL(`../../docs/database/scenarios/${file}.json`, import.meta.url), 'utf8')) }))
 const db = await createConnection({
   host: process.env.DB_HOST || '127.0.0.1', port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER || 'arcana', password: process.env.DB_PASSWORD || '',
@@ -43,7 +43,7 @@ try {
     }
     const settings = { ai_enabled: '1', ai_central_key_enc: '', ai_central_key_hint: '', ai_central_model: '', institution_name: 'วิทยาลัยการอาชีพศรีสะเกษ', institution_affiliation: 'สำนักงานคณะกรรมการการอาชีวศึกษา กระทรวงศึกษาธิการ' }
     for (const [key, value] of Object.entries(settings)) await db.execute('INSERT INTO settings (setting_key,setting_value) VALUES (?,?)', [key, value])
-    for (const file of readdirSync(fileURLToPath(new URL('../docs/database/upgrades/', import.meta.url))).filter(f => f.endsWith('.sql')).sort()) {
+    for (const file of readdirSync(fileURLToPath(new URL('../../docs/database/upgrades/', import.meta.url))).filter(f => f.endsWith('.sql')).sort()) {
       await db.execute('INSERT INTO schema_migrations (name) VALUES (?)', [file])
     }
     await db.commit()

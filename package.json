@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "db:init": "node --env-file-if-exists=.env scripts/init-db.mjs",
-    "db:upgrade": "node --env-file-if-exists=.env scripts/upgrade-db.mjs",
-    "db:reset-password": "node --env-file-if-exists=.env scripts/reset-password.mjs",
+    "db:init": "node --env-file-if-exists=.env tools/scripts/init-db.mjs",
+    "db:upgrade": "node --env-file-if-exists=.env tools/scripts/upgrade-db.mjs",
+    "db:reset-password": "node --env-file-if-exists=.env tools/scripts/reset-password.mjs",
     "typecheck:server": "nuxt prepare && tsc --noEmit -p tsconfig.server.json",
     "dev": "nuxt dev",
     "build": "nuxt build",

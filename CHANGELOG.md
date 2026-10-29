@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 2026-10-29 — ย้าย scripts/ เข้า tools/scripts/
+
+- ย้ายสคริปต์ CLI 4 ไฟล (init-db.mjs, upgrade-db.mjs, reset-password.mjs, base-seed.json) จาก scripts/ ไป tools/scripts/ ตามคำสั่่งผ้้ใช้
+- แก้ path ในสคริปต์ ../docs/database/ → ../../docs/database/ และ npm scripts ใน package.json (db:init, db:upgrade, db:reset-password)
+- อัปเดตเอกสาร: CLAUDE.md, docs/Manual.md, docs/database/upgrades/README.md
+- ทดสอบ: upgrade-db.mjs รันผานกบ path ใหม่ (idempotent)
+
 ## 2026-10-29 — ย้าย database/ เข้า docs/database/
 
 - ย้ายโฟลเดอร database/ (schema.sql, upgrades/, scenarios/) ไป docs/database/ ตามคำสั่่งผ้้ใช้
