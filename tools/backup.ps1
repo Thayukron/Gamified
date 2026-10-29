@@ -31,9 +31,8 @@ $keyFile = Join-Path $backupDir "app.key-$stamp.key"
     --single-transaction --routines $env:DB_NAME > $sqlFile
 if ($LASTEXITCODE -ne 0) { throw "mariadb-dump failed (exit $LASTEXITCODE)" }
 
-# 2) app.key (Gemini key encryption key) — copy whichever copy exists
-$appKey = Join-Path $root 'frontend\storage\app.key'
-if (-not (Test-Path $appKey)) { $appKey = Join-Path $root 'backend\storage\app.key' }
+# 2) app.key (Gemini key encryption key)
+$appKey = Join-Path $root 'storage\app.key'
 if (Test-Path $appKey) {
     Copy-Item $appKey $keyFile
 } else {

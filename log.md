@@ -1,5 +1,13 @@
 # Change Log
 
+## 2026-10-29 — ลบทังส่วน Docker ออกจากเอกสาร + แก้สคริปตสำรอง
+
+- DEPLOY.md รีดไรตทังไฟล: ถอด 2 container Docker/port 8090/volumes/docker backup ออก → Node 22 + MariaDB service ในเครื่อง (clone, .env, npm install, db:init --create-empty, build + node --env-file=.env .output/server/index.mjs, อัปเดตผาน git + db:upgrade, สำรอง/rollback, คำสั่งบอย)
+- Manual.md รีดไรตทังไฟล: เปิด/ปิดระบบดวย npm run dev (3100) / production (8090), Cloudflare Tunnel ชี้ localhost:3100, แก้ปัญหาไม่มี docker, สรุปคำสั่งบอย, พอรตฐาน 3306
+- tools/backup.ps1 + tools/restore.ps1: แก้ทาง app.key จาก frontend\storage / backend\storage (ไม่มีแล้ว) เป็น storage\app.key ที่ root · ทดสอบ backup.ps1 -Tag doctest ผาน (ได .sql + .key ครบ)
+- start-dev.ps1: แก้คอมเม้นต "production Docker stack"
+- ทดสอบ: grep docker/8090/3320 ใน README/DEPLOY/Manual/tools เหลือเฉพาะข้อความ "ถอด Docker ออกแล้ว" และพอรต production 8090 ทีกำหนดใหม
+
 ## 2026-10-29 — README แก้ขั้่นตอน Docker เป็น Node + MariaDB ในเครื่ อง
 
 - README.md ยั งระบ `docker compose up -d --build` + port 8090 + บัญชี teacher1/student001 (ฐานเดิ ม) → แก้เป็น Node 22 + MariaDB 10.6 service 3306, คำสั่ ง npm (db:init/db:upgrade/dev), port 3100, บัญชี demo ท่ ีอย่ ูในฐานปจั จุ บั น

@@ -1,76 +1,75 @@
 # 📘 คู่มือการรันระบบ ARCANA PROFILE
 
-> เฟส 6 (2026-10-29): ถอด PHP ออกแล้ว — ระบบ Node 22 (Nuxt/Nitro) ตัวเดียวส่งทั้งเว็บและ API (86 endpoints) + MariaDB · สำรอง/กู้คืนใช้ `tools/backup.ps1` / `tools/restore.ps1` · ดูประวัติการย้าย API ใน [docs/migration/](docs/migration/)
-
-
-
-
+> เฟส 6 (2026-10-29): ถอด PHP/Docker ออกแล้ว — ระบบ Node 22 (Nuxt/Nitro) ตัวเดียวส่งทังเว็บและ API (86 endpoints) + MariaDB service ในเครื่อง · สำรอง/กู้คืนใช้ `tools/backup.ps1` / `tools/restore.ps1` · ดูประวัติการย้าย API ใน [docs/migration/](docs/migration/)
 
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
 (รายละเอียดการติดตั้งบนเซิร์ฟเวอร์ใหม่ดูที่ [DEPLOY.md](DEPLOY.md))
 
 > ทุกคำสั่งในคู่มือนี้พิมพ์ใน **PowerShell** หรือ **Terminal ของ VS Code**
-> ที่โฟลเดอร์โปรเจกต์ `D:\เอกสารเทอม 1 ปี 69\VibeCode69\Gamified`
+> ที่โฟลเดอร์โปรเจกต์ `D:\Users\dev\Documents\GitHub\Gamified`
 >
 > ```powershell
-> cd "D:\เอกสารเทอม 1 ปี 69\VibeCode69\Gamified"
+> cd "D:\Users\dev\Documents\GitHub\Gamified"
 > ```
 
 ---
 
 ## 1. ภาพรวม: ระบบประกอบด้วยอะไร 🧩
 
-ระบบทั้งหมดรันใน **Docker** 2 ส่วน (เปิด/ปิดพร้อมกันด้วยคำสั่งเดียว)
+ระบบรันด้วย **Node 22** + **MariaDB service ในเครื่อง** (เปิด/ปิดแยกกัน)
 
 | ส่วน | หน้าที่ | ที่อยู่ |
 |---|---|---|
-| `web` | หน้าเว็บ + REST API (Node 22 / Nuxt-Nitro) | http://localhost:8090 |
-| `db` | ฐานข้อมูล MariaDB (**ข้อมูลจริงชุดเดียวของระบบ**) | `127.0.0.1:3320` (เฉพาะเครื่องนี้) |
+| แอป (Node) | หน้าเว็บ + REST API (Nuxt/Nitro) | http://localhost:3100 (dev) / 8090 (production) |
+| ฐานข้อมูล | MariaDB service ในเครื่อง (**ข้อมูลจริงชุดเดียวของระบบ**) | `127.0.0.1:3306` |
 
 - ค่ารหัสผ่านฐานข้อมูลและพอร์ตอยู่ในไฟล์ `.env` (ห้ามส่งไฟล์นี้ให้ใคร / ไม่ขึ้น GitHub)
-- ข้อมูลอยู่ใน Docker volume — ปิดเครื่อง/ปิด Docker ข้อมูลไม่หาย
+- ข้อมูลอยู่ในฐานข้อมูล MariaDB — ปิดเครื่อง/ปิดแอป ข้อมูลไม่หาย
+- `storage/app.key` = กุญแจเข้ารหัส API Key ของครู — ต้องสำรองพร้อมฐานข้อมูล
 
 ---
 
 ## 2. เปิดระบบ ▶️
 
-1. เปิดโปรแกรม **Docker Desktop** แล้วรอจนมุมล่างซ้ายขึ้นว่า *Engine running* (สีเขียว)
+1. ตรวจว่า MariaDB service รันอยู่ (ปกติรันเองตอนเปิดเครื่อง):
+
+   ```powershell
+   Get-Service MariaDB | Select-Object Status
+   ```
+
+   ถ้าเป็น `Stopped` ให้รัน `Start-Service MariaDB`
 2. เปิด PowerShell ที่โฟลเดอร์โปรเจกต์ แล้วพิมพ์
 
    ```powershell
-   docker compose up -d
+   npm run dev
    ```
 
-3. ตรวจว่าทำงานครบ 2 ตัว (คอลัมน์ STATUS เป็น `Up`)
+3. เปิดเบราว์เซอร์ไปที่ **http://localhost:3100**
 
-   ```powershell
-   docker compose ps
-   ```
-
-4. เปิดเบราว์เซอร์ไปที่ **http://localhost:8090**
-
-> 💡 ตั้งค่า Docker Desktop → Settings → General → ✅ *Start Docker Desktop when you sign in*
-> แล้วระบบจะเปิดเองทุกครั้งที่เปิดเครื่อง (container ตั้ง `restart: unless-stopped` ไว้แล้ว)
+> 💡 ถ้าต้องการรันแบบ production (เร็วขึ้น เหมาะเปิดทิ้งไว้):
+> ```powershell
+> npm run build
+> $env:PORT = '8090'
+> node --env-file=.env .output/server/index.mjs
+> ```
+> แล้วเปิด http://localhost:8090
 
 ## 3. ปิดระบบ ⏹️
 
-```powershell
-docker compose stop
-```
+กด `Ctrl + C` ในหน้าต่างที่รันแอปอยู่ (หรือปิดหน้าต่าง)
 
-เปิดใหม่ด้วย `docker compose up -d` เหมือนเดิม
-
-> ⚠️ **ห้ามใช้** `docker compose down -v` — ตัว `-v` จะ **ลบฐานข้อมูลทั้งหมด**
-> (`docker compose down` แบบไม่มี `-v` ยังปลอดภัย ข้อมูลไม่หาย)
+> ⚠️ **ห้ามรัน** `npm run db:init -- --create-empty` บนฐานที่มีข้อมูล — จะล้างฐานข้อมูลทั้งระบบ
 
 ## 4. อัปเดตเมื่อโค้ดมีการแก้ไข 🔄
 
 ```powershell
 git pull
-docker compose up -d --build
+npm install
+npm run db:upgrade    # อัปเกรดโครงสร้างฐานข้อมูล (ไม่ลบข้อมูล) — รันเฉพาะเมื่อมี upgrades ใหม่
+npm run build         # ถ้ารันแบบ production
 ```
 
-ระบบจะอัปเกรดโครงสร้างฐานข้อมูลให้เองโดยไม่ลบข้อมูล (ใช้เวลา 1–3 นาที)
+แล้วเปิดระบบใหม่ตามข้อ 2
 
 ---
 
@@ -84,7 +83,7 @@ docker compose up -d --build
 เครื่องนี้ติดตั้ง `cloudflared` ไว้แล้ว เปิด PowerShell **หน้าต่างใหม่** แล้วพิมพ์
 
 ```powershell
-cloudflared tunnel --url http://localhost:8090
+cloudflared tunnel --url http://localhost:3100
 ```
 
 รอประมาณ 10–20 วินาที จะมีกล่องข้อความแบบนี้
@@ -102,40 +101,22 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 > ⚠️ ทุกครั้งที่เปิดใหม่จะได้ **ลิงก์ใหม่** (ลิงก์เก่าใช้ไม่ได้) และลิงก์อาจหลุดถ้าเปลี่ยน Wi-Fi/เครื่อง Sleep
 > → เปิดใหม่แล้วส่งลิงก์ใหม่ให้นักเรียน
 
-#### ทางเลือก: รัน Quick Tunnel เบื้องหลังด้วย Docker (ปิดหน้าต่างได้)
-
-```powershell
-# เปิด (รันเบื้องหลัง)
-docker run -d --name arcana-quick-tunnel cloudflare/cloudflared:latest tunnel --no-autoupdate --url http://host.docker.internal:8090
-
-# ดูลิงก์ (รอ 10–20 วินาทีหลังเปิด)
-docker logs arcana-quick-tunnel 2>&1 | Select-String "https://.*trycloudflare.com"
-
-# ปิด
-docker rm -f arcana-quick-tunnel
-```
-
-ถ้าขึ้นว่าชื่อ `arcana-quick-tunnel` ถูกใช้แล้ว ให้สั่งปิด (`docker rm -f …`) ก่อนแล้วค่อยเปิดใหม่
-
 ### วิธีที่ 2: Named Tunnel — ลิงก์ถาวร ใช้โดเมนของตัวเอง
 
 เหมาะกับใช้งานจริงระยะยาว ลิงก์ไม่เปลี่ยน (ต้องมีโดเมนอยู่ใน Cloudflare)
-
-ถ้ามี Tunnel อยู่แล้ว (เช่นของโปรเจกต์ btech-sice) เพิ่มลิงก์ให้ ARCANA ได้เลย:
 
 1. เข้า https://one.dash.cloudflare.com → **Networks → Tunnels** → เลือก Tunnel ที่มีอยู่ → แท็บ **Public Hostname** → **Add a public hostname**
 2. กรอก
    - **Subdomain:** เช่น `arcana` (จะได้ `arcana.โดเมนของคุณ`)
    - **Domain:** เลือกโดเมน
-   - **Service:** Type `HTTP` · URL `host.docker.internal:8090`
-     (ถ้า Tunnel นั้นรันด้วย `cloudflared` บนเครื่องโดยตรง ไม่ใช่ใน Docker ให้ใช้ `localhost:8090`)
-3. กด **Save** — ใช้งานได้ภายในไม่กี่วินาที ไม่ต้องรีสตาร์ทอะไร
+   - **Service:** Type `HTTP` · URL `localhost:3100` (หรือ `localhost:8090` ถ้ารันแบบ production)
+3. กด **Save** — ใช้งานได้ในไม่กี่วินาที ไม่ต้องรีสตาร์ทอะไร
 
 ตราบใดที่ Tunnel ตัวนั้นทำงานและระบบ ARCANA เปิดอยู่ ลิงก์จะใช้ได้ตลอด
 
 ### ✅ เช็กลิสต์ก่อนส่งลิงก์ให้นักเรียน
 
-- [ ] เปลี่ยนรหัสผ่าน `admin` และบัญชีครูตัวอย่าง (`teacher1` ฯลฯ) จากรหัสตัวอย่างแล้ว — เมนู **บัญชีของฉัน**
+- [ ] เปลี่ยนรหัสผ่าน `admin` และบัญชีครูดโม (`teacher-demo`) จากรหัสตัวอย่างแล้ว — เมนู **บัญชีของฉัน**
 - [ ] มีบัญชีนักศึกษาแล้ว — แอดมินนำเข้าทั้งวิทยาลัย (`/admin/import` → นักศึกษา) **หรือ** ครูนำเข้าเฉพาะวิชาตนเอง (รายวิชา → รายชื่อ / แก้ไขวิชา → แท็บ “นำเข้าจากไฟล์ Excel/CSV”) · นักศึกษาเข้าครั้งแรกด้วย **รหัสนักศึกษา** เป็นทั้งชื่อผู้ใช้และรหัสผ่าน แล้วระบบบังคับตั้งรหัสใหม่
 - [ ] สำรองฐานข้อมูลก่อน (ข้อ 6)
 - [ ] ตั้งค่าเครื่องไม่ให้ Sleep ระหว่างใช้งาน (Settings → System → Power)
@@ -149,26 +130,27 @@ docker rm -f arcana-quick-tunnel
 |---|---|
 | เปลี่ยนภาคเรียนปัจจุบัน | แอดมิน → **ภาพรวมระบบ** → การ์ด “ภาคเรียนปัจจุบัน” (ไม่ต้องแก้ไฟล์ `.env`) |
 | เลื่อนชั้นทั้งกลุ่ม (ใช้รายชื่อเดิม) | แอดมิน → **นักศึกษาและกลุ่มเรียน** → “เลื่อนชั้น / เปลี่ยนชื่อกลุ่ม” เช่น ปวส.1/1 → ปวส.2/1 |
-| สำเร็จการศึกษา / ออกกลางคัน | แอดมิน → **นักศึกษาและกลุ่มเรียน** → ทั้งกลุ่ม หรือกดชื่อกลุ่มแล้วเลือกรายคน (ข้อมูลไม่ถูกลบ เปลี่ยนกลับได้) |
+| สำเร็จการศึกษา / ออกกลางคัน | แอดมิน → **นักศึกษาและกลุ่มเรียน** → ทั้งกลุ่ม หรือกดชื่อกลุ่มแล้วเลือกรายคน (ข้อมูลถูกลบ เปลี่ยนกลับได้) |
 | สร้างรายวิชาของภาคเรียนใหม่ | ครู → **สร้างรายวิชา** (เลือกภาคเรียน/ปีการศึกษาได้ ค่าเริ่มต้น = ภาคเรียนปัจจุบัน) |
-| นำนักเรียนออกจากรายวิชา | ครู → รายวิชา → **รายชื่อ / แก้ไขวิชา** → ติ๊กเลือกแล้ว “นำที่เลือกออก” หรือ “นำออกทั้งกลุ่ม” |
+| นำนักเรียนออกจากรายวิชา | ครู → รายวิชา → **รายชื่อ / แก้ไขวิชา** → ตีกเลือกแล้ว “นำที่เลือกออก” หรือ “นำออกทั้งกลุ่ม” |
 
 > ผลโปรไฟล์ผู้เรียนใช้ผลล่าสุดต่อข้ามภาคเรียน — เปลี่ยนภาคแล้วแดชบอร์ดไม่หาย ผู้เรียนเล่นเควสต์ซ้ำในภาคใหม่เพื่ออัปเดตได้
 
 ## 6. สำรองและกู้คืนข้อมูล 💾
 
 ควรสำรองก่อนอัปเดตระบบ ก่อนนำเข้าข้อมูลชุดใหญ่ และเป็นประจำ (ไฟล์เก็บในโฟลเดอร์ `backups\` ซึ่งไม่ขึ้น GitHub)
+
 ```powershell
-# สำรอง (ไดไฟล 2 ตว: ฐานขอมูล .sql + app.key — ตองเกบพรอมกกัน)
+# สำรอง (ได้ไฟล์ 2 ตัว: ฐานข้อมูล .sql + app.key — ต้องเก็บพร้อมกัน)
 .\tools\backup.ps1 -Tag phase6
 ```
 
 ```powershell
-# กูคืน (⚠️ เขียนทับขอมูลปจจุบันทังหมด — แกชื่อไฟลใหตรง, ระบบถามยืนยันกอน)
+# กู้คืน (⚠️ เขียนทับข้อมูลปัจจุบันทั้งหมด — แก้ชื่อไฟล์ให้ตรง, ระบบถามยืนยันก่อน)
 .\tools\restore.ps1 -BackupFile backups\gamified-<stamp>.sql
 ```
 
-> 🔑 สคริปตสำรองไฟล `app.key` (กุนแจเข้ารหัส API Key ของครู) พรอมฐานขอมูลใหอัตโนมัติ — ถ้ายายเครื่องใหมตองกูคืน 2 ไฟลพรอมกกัน (ดู [DEPLOY.md](DEPLOY.md))
+> 🔑 สคริปต์สำรองไฟล์ `app.key` (กุญแจเข้ารหัส API Key ของครู) พร้อมฐานข้อมูลให้อัตโนมัติ — ถ้าย้ายเครื่องใหม่ต้องกู้คืน 2 ไฟล์พร้อมกัน (ดู [DEPLOY.md](DEPLOY.md))
 
 ## 7. ดูข้อมูลในฐานข้อมูลโดยตรง 🗄️
 
@@ -177,12 +159,12 @@ docker rm -f arcana-quick-tunnel
 | ค่า | |
 |---|---|
 | Host | `127.0.0.1` |
-| Port | `3320` |
+| Port | `3306` |
 | User | `arcana` (หรือ `root`) |
-| Password | ค่า `DB_PASSWORD` (หรือ `DB_ROOT_PASSWORD`) ในไฟล์ `.env` |
+| Password | ค่า `DB_PASSWORD` ในไฟล์ `.env` |
 | Database | `gamified` |
 
-> ระบบมีฐานข้อมูล **ชุดเดียว** — พอร์ตอื่น (3306, 3308, 3310) เป็นของโปรแกรม/โปรเจกต์อื่น ไม่ใช่ของ ARCANA
+> ระบบมีฐานข้อมูล **ชุดเดียว** — พอร์ตอื่น (3308, 3310, 3320 ฯลฯ) เป็นของโปรแกรม/โปรเจกต์อื่น ไม่ใช่ของ ARCANA
 
 ---
 
@@ -190,25 +172,25 @@ docker rm -f arcana-quick-tunnel
 
 | อาการ | สาเหตุ / วิธีแก้ |
 |---|---|
-| เปิด http://localhost:8090 ไม่ขึ้น | Docker Desktop ยังไม่เปิด หรือยังไม่ได้ `docker compose up -d` → ตรวจด้วย `docker compose ps` |
-| `docker` : The term 'docker' is not recognized | Docker Desktop ยังไม่ได้ติดตั้ง/เปิด หรือเปิด PowerShell ก่อนติดตั้ง → ปิดแล้วเปิด PowerShell ใหม่ |
+| เปิด http://localhost:3100 ไม่ขึ้น | ยังไม่ได้รัน `npm run dev` หรือมีโปรเจกต์อื่นยึดพอร์ต 3100 อยู่ → ตรวจ `Get-NetTCPConnection -LocalPort 3100` แล้ว kill node ตัวเก่า |
+| `npm` : The term 'npm' is not recognized | Node.js ยังไม่ได้ติดตั้ง หรือเปิด PowerShell ก่อนติดตั้ง → ปิดแล้วเปิด PowerShell ใหม่ |
+| `Access denied for user 'arcana'` | รันสคริปต์โดยไม่โหลด `.env` → ใช้ `npm run db:reset-password -- <username>` หรือ `node --env-file-if-exists=.env scripts/...` |
 | ลิงก์ trycloudflare เปิดไม่ได้ / ขึ้น *could not resolve host* | Tunnel หลุด (เปลี่ยนเน็ต/เครื่อง Sleep/ปิดหน้าต่าง) → เปิด Tunnel ใหม่ (ข้อ 5) แล้วส่งลิงก์ใหม่ |
-| ลิงก์ Tunnel ขึ้น *Error 502 / 1033* | ระบบ ARCANA ปิดอยู่ → `docker compose up -d` |
-| ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษา (UniNet) บล็อก `generativelanguage.googleapis.com` → ให้เครื่องนี้ใช้ฮอตสปอตมือถือ หรือขอผู้ดูแลเครือข่ายเปิดโดเมนนี้ |
+| ลิงก์ Tunnel ขึ้น *Error 502 / 1033* | ระบบ ARCANA ปิดอยู่ → รัน `npm run dev` ใหม่ (ข้อ 2) |
+| ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษาบล็อก Google AI → ลองจากเน็ตมือถือ (hotspot) |
 | AI ขึ้น “เกินโควตา” / “Google ไม่ว่าง” | รอ 1–2 นาทีแล้วกดใหม่ (โควตาของ Key ครูแต่ละคน) — ไกด์แบบไม่ใช้ AI ใช้ได้ตามปกติ |
-| ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `node --env-file-if-exists=.env scripts/reset-password.mjs admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
-| พอร์ต 8090 ถูกโปรแกรมอื่นใช้ | แก้ `APP_PORT` ในไฟล์ `.env` เป็นเลขอื่น (เช่น 8091) แล้ว `docker compose up -d` |
+| ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `npm run db:reset-password -- admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
+| พอร์ต 3100 ถูกรายโปรเจกต์อื่นใช้ | แก้ `devServer.port` ใน `nuxt.config.ts` เป็นเลขอื่น (เช่น 3110) แล้วรันใหม่ |
 
 ## 9. (สำหรับนักพัฒนา) โหมดแก้โค้ด 👩‍💻
 
-ใช้เฉพาะตอนแก้โค้ดแล้วอยากเห็นผลทันทีโดยไม่ build Docker ใหม่ — ใช้ฐานข้อมูลชุดเดียวกับ Docker
+ใช้เฉพาะตอนแก้โค้ดแล้วอยากเห็นผลทันที — ใช้ฐานข้อมูลชุดเดียวกับ production
 
 ```powershell
 ./start-dev.ps1
 ```
-- หนาเว็บ: http://localhost:3100 (API อยู /api ของเว็บตัวเดยว)
-- แกเสร็จแลวตอง `docker compose up -d --build` เพื่oให http://localhost:8090 (และลิงค Tunnel) ไดโคดใหม
-- ⚠️ ฐานขอมูลชุดเดียว — การทดสอบใด ๆ กระทบขอมูลจริง: สำรองกอนดวย `tools/backup.ps1`
+- หน้าเว็บ: http://localhost:3100 (API อยู่ /api ของเว็บตัวเดียว)
+- ⚠️ ฐานข้อมูลชุดเดียว — การทดสอบใด ๆ กระทบข้อมูลจริง: สำรองก่อนด้วย `tools/backup.ps1`
 
 ---
 
@@ -216,10 +198,10 @@ docker rm -f arcana-quick-tunnel
 
 | ต้องการ | คำสั่ง |
 |---|---|
-| เปิดระบบ | `docker compose up -d` |
-| ปิดระบบ | `docker compose stop` |
-| ดูสถานะ | `docker compose ps` |
-| อัปเดตโค้ดใหม่ | `git pull` แล้ว `docker compose up -d --build` |
-| เปิดลิงก์ภายนอก | `cloudflared tunnel --url http://localhost:8090` (ปิดด้วย `Ctrl + C`) |
-| ดู log เมื่อมีปัญหา | `docker compose logs --tail 50 web` |
-| สำรองข้อมูล | ดูข้อ 6 |
+| เปิดระบบ (dev) | `npm run dev` |
+| เปิดระบบ (production) | `npm run build` แล้ว `$env:PORT='8090'; node --env-file=.env .output/server/index.mjs` |
+| ปิดระบบ | `Ctrl + C` ในหน้าต่างที่รันแอป |
+| อัปเดตโค้ดใหม่ | `git pull` แล้ว `npm install` แล้วรันใหม่ |
+| เปิดลิงก์ภายนอก | `cloudflared tunnel --url http://localhost:3100` (ปิดด้วย `Ctrl + C`) |
+| สำรองข้อมูล | `.\tools\backup.ps1` (ดูข้อ 6) |
+| รีเซ็ตรหัสฉุกเฉิน | `npm run db:reset-password -- <username>` |
