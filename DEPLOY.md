@@ -1,5 +1,7 @@
 # 🚀 การติดตั้งและ Deploy ด้วย Docker
 
+> เฟส 4: เพิ่ม staff APIs รวม 56/86 endpoints แล้ว ใช้ Node + MariaDB ในเครื่องโดยตรง ดู [สถานะและการทดลอง](docs/migration/phase4-staff.md) ยังไม่ถอด PHP ทั้งระบบจนกว่า AI/plans/jobs และ deployment จะย้ายครบ
+
 > เฟส 3: auth/account/student ย้ายเป็น Nitro รวม 18/86 endpoints แล้ว ดู [สถานะและวิธีทดลอง](docs/migration/phase3-game.md) ใช้ MariaDB ในเครื่อง ไม่ต้อง Docker สำหรับส่วนที่ย้ายแล้ว
 
 > งานย้าย Nuxt 3 (2026-10-29): เป้าหมายใหม่เป็น Node.js + MariaDB service โดยตรง เฟส 2 รัน API auth/account ได้แล้วด้วยฐานใหม่ในเครื่อง port 3306 ดู [วิธีรันแบบไม่ใช้ Docker](docs/migration/phase2-foundation.md) ระบบ Nuxt ยังย้ายไม่ครบทุก API จึงยังไม่ใช่ replacement สำหรับ production ทั้งระบบ ขั้นตอนด้านล่างสำหรับ PHP deployment เดิม

@@ -7,7 +7,7 @@
 1. สื่อสารเป็นภาษาไทย
 2. ทำทีละเฟส → **รันให้ผู้ใช้ดูก่อน** → รอผู้ใช้ตอบรับ แล้วค่อยทำเฟสต่อไป
 3. ทุกครั้งที่แก้ไข: บันทึกใน `log.md` + อัปเดตสถานะใน `CLAUDE.md` นี้
-4. ทุกครั้งที่แก้ไข: `git commit` และ `git push` ไปที่ `origin main` (https://github.com/Thayukron/Gamified)
+4. ทุกครั้งที่แก้ไข: `git commit` ในเครื่องเท่านั้น — ผู้ใช้สั่ง 2026-10-29 ว่าไม่ต้อง push เพราะไม่มีสิทธิ์ repository
 
 ## การตัดสินใจสำคัญของผู้ใช้
 - **AI = Gemini, BYOK รายครู** (ผู้ใช้กำหนด): ห้ามให้ระบบกลางจ่ายโทเคนโดยอัตโนมัติ · เรียก AI เฉพาะเมื่อครูกดปุ่ม + cache · ส่งเฉพาะสถิติรวม ไม่ส่งชื่อนักเรียน · ไม่ hardcode ชื่อรุ่น Gemini (เลือกจาก models.list)
@@ -30,6 +30,8 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
 ฐานใหม่ในเครื่องมี `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด; เฟส 3 เพิ่ม `student-demo/student1234` สำหรับตรวจรับเกม โดยไม่เติมผล/รางวัลล่วงหน้า บัญชี teacher/student อื่นในเอกสารเก่าเป็นของฐานเดิม
+
+เฟส 4 เพิ่ม `teacher-demo/teacher1234` และรายวิชา `DEMO-TEACHER` ที่ลงทะเบียน student-demo แล้ว สำหรับตรวจรับครู ไม่แก้บัญชี/รหัส/ผลของผู้ใช้เดิม
 
 ## โครงสร้างโค้ด
 ```
@@ -91,6 +93,7 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: Nuxt migration เฟส 4 เสร็จ — เพิ่ม 38 staff routes รวม 56/86 (courses/roster/import/dashboard/guide/groups/report/admin/term/institution/status), เก็บ lookup ของ routes ที่ย้ายใน shared/data/migrated-api.json ใช้ routing/method guard ร่วมกัน; rules/MT19937/knowledge เทียบ PHP 251 fixtures ผ่าน, live staff 262 requests/56 comparisons ผ่านครบ38routesรวมrollback, regression game78/21และsmoke15ผ่าน, build/typecheckผ่าน; teacher-demo + DEMO-TEACHER สำหรับ preview; AI/plans/jobs รอเฟส5; ผู้ใช้สั่งไม่ push ให้ commit local เท่านั้น; tests ยัง ignore ดู docs/migration/phase4-staff.md
 - 2026-10-29: Nuxt migration เฟส 3 เสร็จ — ย้าย student API 9 routes รวม 18/86, engine/progression/profiles และ completion/progress transaction ล็อก user ป้องกันรางวัลซ้ำ/เปิด session ที่จบแล้ว; frontend ส่ง auth/account/student เข้า Nitro ส่วน staff/AI ยัง PHP; build/typecheck ผ่าน, 19 local tests, engine parity PHP 8.2 จำนวน 158 fixtures และ live DB 78 requests/21 exact PHP comparisons ผ่าน; tests/runtime oracle ยังคง ignore; เพิ่ม student-demo สำหรับ preview; รอตรวจรับก่อนเฟส 4 ดู `docs/migration/phase3-game.md`
 - 2026-10-29: Nuxt migration เฟส 2 เสร็จ implementation/verification — 9 endpoints (health/auth/account), pool/transaction, guards, ownership/settings helpers, safe fresh installer Node และ base seeds; ผู้ใช้อนุญาตสร้างฐานใหม่บน MariaDB local 3306 แล้ว สำรองก่อน live tests; build/typecheck ผ่าน, tests 14 + HTTP 15 + DB/HTTP 28 requests ผ่าน; tests ถูก ignore ตามผู้ใช้, `main.css` formatting เดิมคงค้างแต่แก้ช่องว่าง arbitrary classes 2 จุดที่ทำ build พัง; รอตรวจรับก่อนเฟส 3 ดู `docs/migration/phase2-foundation.md`
 - 2026-10-29: ย้าย Nuxt 3 เฟส 1 สำรวจ/วางแผนแล้ว (`docs/migration/phase1-inventory.md`, API mapping/JSON 86 routes, generator `tools/migration-inventory.mjs`) — รอตรวจรับก่อนเฟส 2; ผู้ใช้กำหนดให้ลดงาน Docker และเตรียมถอด Docker ออก ใช้ Node.js/MariaDB service โดยตรงในเป้าหมายสุดท้าย ยังไม่เปลี่ยน DB/runtime

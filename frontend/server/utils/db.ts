@@ -5,6 +5,7 @@ export type SqlValue = string | number | boolean | null | Date | Buffer
 export interface SqlClient {
   rows<T>(sql: string, values?: SqlValue[]): Promise<T[]>
   execute(sql: string, values?: SqlValue[]): Promise<void>
+  change?(sql: string, values?: SqlValue[]): Promise<{ affected: number; id: number }>
 }
 
 function client(connection: Pool | PoolConnection): SqlClient {
@@ -15,6 +16,10 @@ function client(connection: Pool | PoolConnection): SqlClient {
     },
     async execute(sql: string, values: SqlValue[] = []) {
       await connection.execute<ResultSetHeader>(sql, values)
+    },
+    async change(sql: string, values: SqlValue[] = []) {
+      const [result] = await connection.execute<ResultSetHeader>(sql, values)
+      return { affected: result.affectedRows, id: result.insertId }
     },
   }
 }
@@ -32,7 +37,7 @@ function getPool() {
       database: process.env.DB_NAME || config.db.name,
       connectionLimit: Number(config.db.connectionLimit),
       waitForConnections: true, queueLimit: 100, connectTimeout: 10000,
-      charset: 'utf8mb4_unicode_ci', dateStrings: true, timezone: '+07:00', multipleStatements: false,
+      charset: 'utf8mb4_unicode_ci', dateStrings: true, timezone: '+07:00', multipleStatements: false, flags: ['-FOUND_ROWS'],
     })
     // Match the application's Bangkok dates even after moving MariaDB out of Docker.
     pool.on('connection', connection => { connection.query("SET time_zone = '+07:00'") })

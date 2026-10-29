@@ -1,0 +1,226 @@
+[
+  {
+    "method": "GET",
+    "path": "/health"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/login"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/logout"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/me"
+  },
+  {
+    "method": "GET",
+    "path": "/student/quests"
+  },
+  {
+    "method": "GET",
+    "path": "/student/quests/{id}"
+  },
+  {
+    "method": "PUT",
+    "path": "/student/quests/{id}/progress"
+  },
+  {
+    "method": "POST",
+    "path": "/student/quests/{id}/complete"
+  },
+  {
+    "method": "GET",
+    "path": "/student/results"
+  },
+  {
+    "method": "GET",
+    "path": "/student/results/{id}"
+  },
+  {
+    "method": "GET",
+    "path": "/student/profile"
+  },
+  {
+    "method": "GET",
+    "path": "/student/player"
+  },
+  {
+    "method": "PUT",
+    "path": "/student/player/avatar"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/meta"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/courses/{id}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/teacher/courses/{id}"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/students"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/students"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/students/remove"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/import/preview"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/import/commit"
+  },
+  {
+    "method": "DELETE",
+    "path": "/teacher/courses/{id}/students/{sid}"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/students"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/students/{sid}/reset-password"
+  },
+  {
+    "method": "GET",
+    "path": "/me/profile"
+  },
+  {
+    "method": "PUT",
+    "path": "/me/profile"
+  },
+  {
+    "method": "PUT",
+    "path": "/me/password"
+  },
+  {
+    "method": "PUT",
+    "path": "/me/username"
+  },
+  {
+    "method": "POST",
+    "path": "/auth/forgot"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/dashboard"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/guide"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/courses/{id}/context"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/groups/preview"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/groups"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/courses/{id}/groups"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/report"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/term"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/term"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/class-groups"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/class-groups/members"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/class-groups/rename"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/students/status"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/institution"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/institution"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/import/preview"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/import/commit"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/overview"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/users"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/users"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/users/{id}/reset-password"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/users/{id}"
+  },
+  {
+    "method": "GET",
+    "path": "/admin/reset-requests"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/reset-requests/{id}/dismiss"
+  },
+  {
+    "method": "DELETE",
+    "path": "/admin/courses/{id}"
+  }
+]

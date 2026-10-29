@@ -1,5 +1,14 @@
 # Change Log
 
+## 2026-10-29 — Nuxt migration เฟส 4: ครูและแอดมิน
+
+- เพิ่ม 38 staff endpoints รวม 56/86 พร้อม services รายวิชา รายชื่อ imports dashboard guide grouping report และ admin/status/settings
+- ย้าย Knowledge เป็น JSON, grouping ใช้ MT19937 ต่อ call ให้ตรง PHP seed; report อ่าน cache/stale โดยไม่เรียก AI; transaction ครอบงานเขียนและรักษาผลประเมินหลังลบ enrollment/course
+- เพิ่ม shared migrated-api manifest สำหรับ frontend routing และ 405/CORS guards; AI/plans/jobs ยังรอเฟส 5
+- สำรองก่อน live writes; 21 tests ผ่าน (staff parity251 fixtures), live staff262 requests/56 PHP comparisons ครบ38routesรวมrollback/role/reset/cache; regressiongame78/21 และ HTTPsmoke15ผ่าน, build/typecheckผ่าน
+- คืนค่า settings และลบบัญชีทดสอบตาม prefix; เพิ่ม teacher-demo/teacher1234 + DEMO-TEACHER กับ student-demo สำหรับตรวจรับ
+- อัปเดตข้อตกลงตามผู้ใช้: commit local เท่านั้น ไม่ push; test files ยัง ignore; main.css formatting ที่ค้างไม่รวม commit
+
 ## 2026-10-29 — Nuxt migration เฟส 3: เกม ผลประเมิน และรางวัล
 
 - เพิ่ม student API 9 endpoints และ services engine/progression/profile/game เทียบ PHP; frontend ส่ง auth/account/student ไป Nitro ส่วนที่ยังไม่ย้ายคง legacy API

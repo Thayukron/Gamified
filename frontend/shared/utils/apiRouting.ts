@@ -1,10 +1,12 @@
-const migratedAccountPaths = new Set([
-  '/health', '/auth/login', '/auth/logout', '/auth/me', '/auth/forgot',
-  '/me/profile', '/me/password', '/me/username',
-])
+import routes from '../data/migrated-api.json'
 
-// Incremental cutover: migrated auth/student APIs are native; staff/AI stay on PHP until migrated.
-export function apiBaseFor(path: string, legacyBase: string) {
+const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const patterns = routes.map(route => ({ method: route.method, pattern: new RegExp('^' + route.path.split('/').map(segment => /^\{\w+\}$/.test(segment) ? '[^/]+' : escape(segment)).join('/') + '$') }))
+export function migratedMethods(path: string) {
   const pathname = path.split('?')[0]!.replace(/\/$/, '')
-  return migratedAccountPaths.has(pathname) || pathname.startsWith('/student/') ? '/api' : legacyBase
+  const matches = patterns.filter(route => route.pattern.test(pathname)).map(route => route.method)
+  return matches.length ? matches : undefined
+}
+export function apiBaseFor(path: string, legacyBase: string) {
+  return migratedMethods(path) ? '/api' : legacyBase
 }

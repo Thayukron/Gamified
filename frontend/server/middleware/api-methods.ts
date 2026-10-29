@@ -1,22 +1,10 @@
 import { defineEventHandler, getHeader, getRequestURL, setHeader, setResponseStatus } from 'h3'
+import { migratedMethods } from '../../shared/utils/apiRouting'
 
 // Limit compatibility handling to migrated routes; never intercept the SPA or future routes.
-const methods: Record<string, string[]> = {
-  '/api/health': ['GET'], '/api/auth/login': ['POST'], '/api/auth/logout': ['POST'],
-  '/api/auth/me': ['GET'], '/api/auth/forgot': ['POST'],
-  '/api/me/profile': ['GET', 'PUT'], '/api/me/password': ['PUT'], '/api/me/username': ['PUT'],
-  '/api/student/quests': ['GET'], '/api/student/results': ['GET'],
-  '/api/student/profile': ['GET'], '/api/student/player': ['GET'], '/api/student/player/avatar': ['PUT'],
-}
-const dynamicMethods: [RegExp, string[]][] = [
-  [/^\/api\/student\/quests\/[^/]+$/, ['GET']],
-  [/^\/api\/student\/quests\/[^/]+\/progress$/, ['PUT']],
-  [/^\/api\/student\/quests\/[^/]+\/complete$/, ['POST']],
-  [/^\/api\/student\/results\/[^/]+$/, ['GET']],
-]
 export default defineEventHandler(event => {
   const path = getRequestURL(event).pathname.replace(/\/$/, '')
-  const allowed = methods[path] ?? dynamicMethods.find(([pattern]) => pattern.test(path))?.[1]
+  const allowed = path.startsWith('/api/') ? migratedMethods(path.slice(4)) : undefined
   if (allowed) {
     const origin = getHeader(event, 'origin') || ''
     const origins = useRuntimeConfig(event).corsOrigins.split(',').map((value: string) => value.trim())
