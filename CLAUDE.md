@@ -71,7 +71,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - แก้ `tailwind.config.js` แล้วต้อง restart nuxt dev · ถ้า port 3100 ถูกยึดโดย nuxt ตัวเก่า ให้ kill node ที่ commandline มี `nuxt` + `Gamified`
 
 ### รูปแบบโค้ด (Nitro)
-- Route handler = `export default` ใน `server/api/**` · guard auth/role ด้วย `authenticated(event, roles)` (utils/auth) · error ทอย `ApiError(code, 'ข้อความไทย')` (utils/errors) · route ฝั่่งครู/แอดมินใช้ `staffHandler(roles, handler)` (utils/staffHandler)
+- Route handler = `export default` ใน `server/api/**` · guard auth/role ด้วย `authenticated(event, roles)` (utils/auth) · error ทอย `ApiError(code, 'ข้อความไทย')` (utils/errors) · route ฝั่งครู/แอดมินใช้ `staffHandler(roles, handler)` (utils/staffHandler)
 - คะแนนเก็บเป็นคอลัมน์แยกใน `assessment_results` (vark_v/a/r/k, riasec_r..c, mindset_growth/fixed) เพื่อ query สถิติง่าย
 - Save state อยู่ในตาราง `game_sessions` (1 แถวต่อ user+scenario)
 - เนื้อเรื่องเก็บเป็น JSON ใน `scenarios.content` (type ใน `utils/game.ts`; มี `meta`, `characters`, scene `cast`, `layout`, `timer`, `minigame`, choice `reply`/`reward`/`icon`/`x,y`) เดิม: `{start, scenes:{id:{background,bgm,effect,dialogue:[str|{speaker,text,effect}],choices:[{text,tags:{vark_v:1,...},next}],next,end}}}`
@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **ย้าน tests/ → tools/tests/** (ผ้ใช้สั่ง) — สคริปต์ทดสอบ .ts/.mjs/.log ย้ายไป tools/tests/ · .gitignore แก้ตาม (tools/tests/ ยัง ignore)
 - 2026-10-29: **ลบไฟล .php + PHP runtime ออกจาก tests/** — oracle/export .php 7 ไฟล + php82.zip (33MB) + tests/php82/ (require backend/ ท่ีหายแล้ว — รันไม่ได้อีกแล้ว) · tests/ คงเหลือเฉพาะ .ts/.mjs/.log (ไม่ track ใน git)
 - 2026-10-29: **log.md → CHANGELOG.md** (ตามมาตรฐาน markdown) — git mv เก็บประวัติ · หัวข้อ # Changelog · อัปเดตอ้างอิงใน CLAUDE.md · tools/log-entry.php → tools/log-entry.mjs (Node) — **ไฟล .php ทังหมดถอดออกแล้ว**
 - 2026-10-29: **ลบ Docker ออกจากเอกสารทังหมด** — DEPLOY.md/Manual.md รีดไรตเป็น Node 22 + MariaDB service ในเครื่อง (dev 3100 / production 8090, Cloudflare Tunnel ชี้ 3100) · tools/backup.ps1 + restore.ps1 แก้ทาง app.key เป็น storage\app.key (root) ทดสอบ backup ผาน · remote เปลี่ยนเป็น rungrot-muangchalerm/gamefile (push main+dev) · แก้ reset-password.mjs + README.md (Node) · ถัดไป: ทดสอบ Gemini key จรง

@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 2026-10-29 — ย้าย tests/ → tools/tests/
+
+- ย้ายโฟลเดอร tests/ (สคริปต์ทดสอบ .ts/.mjs/.log) ไปเก็บใน tools/tests/ ตามคำสั่งผ้ใช้
+- แก้ .gitignore: tests/ → tools/tests/ (ยัง ignore ตามเดิ่่ม)
+
 ## 2026-10-29 — ลบไฟล .php + PHP runtime ออกจาก tests/
 
 - ลบ oracle/export .php 7 ไฟล (require backend/ ท่ีหายแล้ว — รันไม่ได้อีกแล้ว)
