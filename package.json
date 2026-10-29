@@ -8,6 +8,7 @@
     "db:reset-password": "node --env-file-if-exists=.env tools/scripts/reset-password.mjs",
     "typecheck:server": "nuxt prepare && tsc --noEmit -p tsconfig.server.json",
     "dev": "nuxt dev",
+    "start": "node --env-file=.env .output/server/index.mjs",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",

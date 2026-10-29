@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **พอร์ตจาก env + PM2** — npm start โหลด .env, ecosystem.config.cjs กำหนด cwd/โหลด .env; dev ใช้ DEV_PORT → PORT → 3100, production ใช้ PORT; คู่มือรัน Windows/Linux อัปเดตแล้ว; build + health บนพอร์ตจาก env 2 ค่าผ่านโดยไม่ build ซ้ำ (ยังไม่ได้รัน Linux/PM2 จริง)
 - 2026-10-29: **เอกสาร API ใช้โฟลเดอร์เฉพาะ** — ย้าย docs/dev/api.md → docs/dev/api/README.md และแก้ลิงก์เข้า/ออกครบ; ตรวจลิงก์ relative ผ่าน
 - 2026-10-29: **จัดเอกสารแบบ README สั้น + ลิงก์รายละเอียด** — เพิ่ม docs/README.md เป็นสารบัญ, ย้ายตาราง API ไป docs/dev/api.md, แก้ quick start ให้ใช้ --create-empty เฉพาะฐานว่างและระบุว่าไม่สร้าง demo อัตโนมัติ; ตรวจลิงก์และ diff เท่านั้น ไม่เปลี่ยนฐานข้อมูล
 - 2026-10-29: **จัดกลุ่มโฟลเดอร์เอกสารใน docs/** (ผู้ใช้สั่ง) — dev/: DEPLOY/Manual/load-test/requiments · design/: design-gemini/art-prompts · academic/: ตัวอย่าง 10 ไฟล์ + op.png · presentation/: PDF 2 ไฟล์ + src/ · ลบ docs/name/ · เหลือ root เดียว knowled.md · แก้ live refs (README/CLAUDE/progression.ts)

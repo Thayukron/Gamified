@@ -5,12 +5,11 @@
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
 (รายละเอียดการติดตั้งบนเซิร์ฟเวอร์ใหม่ดูที่ [DEPLOY.md](DEPLOY.md))
 
-> ทุกคำสั่งในคู่มือนี้พิมพ์ใน **PowerShell** หรือ **Terminal ของ VS Code**
-> ที่โฟลเดอร์โปรเจกต์ `D:\Users\dev\Documents\GitHub\Gamified`
->
-> ```powershell
-> cd "D:\Users\dev\Documents\GitHub\Gamified"
-> ```
+คำสั่ง `npm` และ `pm2` ในคู่มือนี้ใช้ได้ทั้ง Windows และ Linux โดยรันจากโฟลเดอร์โปรเจกต์ ส่วนคำสั่งจัดการ service และสคริปต์ `.ps1` เป็นตัวอย่างสำหรับ Windows; Linux ดู [คู่มือ Deploy](DEPLOY.md)
+
+ตั้ง `PORT=8090` สำหรับ production และ `DEV_PORT=3100` สำหรับ development ใน `.env` เปลี่ยนค่าแล้วเปิดโปรเซสใหม่ และปรับ URL / Cloudflare Tunnel ให้ตรงกับพอร์ต
+
+รันเบื้องหลังด้วย PM2: `pm2 start ecosystem.config.cjs` (หลัง `npm run build`) รายละเอียดอยู่ใน [คู่มือ Deploy](DEPLOY.md)
 
 ---
 
@@ -49,8 +48,7 @@
 > 💡 ถ้าต้องการรันแบบ production (เร็วขึ้น เหมาะเปิดทิ้งไว้):
 > ```powershell
 > npm run build
-> $env:PORT = '8090'
-> node --env-file=.env .output/server/index.mjs
+> npm start
 > ```
 > แล้วเปิด http://localhost:8090
 
@@ -58,7 +56,7 @@
 
 กด `Ctrl + C` ในหน้าต่างที่รันแอปอยู่ (หรือปิดหน้าต่าง)
 
-> ⚠️ **ห้ามรัน** `npm run db:init -- --create-empty` บนฐานที่มีข้อมูล — จะล้างฐานข้อมูลทั้งระบบ
+> ใช้ `npm run db:init -- --create-empty` เฉพาะติดตั้งใหม่ สคริปต์ปฏิเสธฐานที่มีตารางอยู่แล้ว
 
 ## 4. อัปเดตเมื่อโค้ดมีการแก้ไข 🔄
 
@@ -180,7 +178,7 @@ https://xxxx-xxxx-xxxx.trycloudflare.com
 | ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษาบล็อก Google AI → ลองจากเน็ตมือถือ (hotspot) |
 | AI ขึ้น “เกินโควตา” / “Google ไม่ว่าง” | รอ 1–2 นาทีแล้วกดใหม่ (โควตาของ Key ครูแต่ละคน) — ไกด์แบบไม่ใช้ AI ใช้ได้ตามปกติ |
 | ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `npm run db:reset-password -- admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
-| พอร์ต 3100 ถูกรายโปรเจกต์อื่นใช้ | แก้ `devServer.port` ใน `nuxt.config.ts` เป็นเลขอื่น (เช่น 3110) แล้วรันใหม่ |
+| พอร์ต 3100 ถูกรายโปรเจกต์อื่นใช้ | แก้ `DEV_PORT` ใน `.env` เป็นเลขอื่น (เช่น 3110) แล้วรันใหม่ |
 
 ## 9. (สำหรับนักพัฒนา) โหมดแก้โค้ด 👩‍💻
 
@@ -199,7 +197,7 @@ npm run dev
 | ต้องการ | คำสั่ง |
 |---|---|
 | เปิดระบบ (dev) | `npm run dev` |
-| เปิดระบบ (production) | `npm run build` แล้ว `$env:PORT='8090'; node --env-file=.env .output/server/index.mjs` |
+| เปิดระบบ (production) | `npm run build` แล้ว `npm start` |
 | ปิดระบบ | `Ctrl + C` ในหน้าต่างที่รันแอป |
 | อัปเดตโค้ดใหม่ | `git pull` แล้ว `npm install` แล้วรันใหม่ |
 | เปิดลิงก์ภายนอก | `cloudflared tunnel --url http://localhost:3100` (ปิดด้วย `Ctrl + C`) |

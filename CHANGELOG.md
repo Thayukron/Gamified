@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-29 — รันข้ามระบบปฏิบัติการและอ่านพอร์ตจาก .env
+
+- เพิ่ม npm start ที่โหลด .env และ ecosystem.config.cjs สำหรับ PM2
+- โหมดพัฒนาใช้ DEV_PORT แล้ว fallback PORT / 3100; production ใช้ PORT
+- เพิ่มค่าตัวอย่างและปรับ README / คู่มือ Deploy / Manual ให้ใช้คำสั่งรันข้ามระบบปฏิบัติการ
+- ตรวจ npm run build ผ่าน, ลำดับ DEV_PORT/PORT/default ผ่าน, production /api/health ผ่านบนพอร์ตจากไฟล์ .env ทดสอบ 2 ค่าโดยไม่ build ซ้ำ; ยังไม่ได้ทดสอบบน Linux หรือ PM2 จริง
+
+
 ## 2026-10-29 — ย้ายเอกสาร API เข้าโฟลเดอร์เฉพาะ
 
 - ย้าย docs/dev/api.md เป็น docs/dev/api/README.md เพื่อรองรับเอกสาร API เพิ่มเติม
