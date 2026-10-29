@@ -45,7 +45,7 @@ npm start
 
 ---
 
-### ตั้งพอร์ตและรันด้วย PM2 (Windows / Linux)
+### ตั้งพอร์ต (Windows / Linux)
 
 คำสั่งเริ่มระบบใช้เหมือนกันทั้งสองระบบปฏิบัติการ โดยรันจากโฟลเดอร์โปรเจกต์ และตั้งค่าใน `.env`:
 
@@ -54,30 +54,11 @@ PORT=8090
 DEV_PORT=3100
 ```
 
-- `npm start` และ PM2 อ่าน `PORT` จาก `.env` ตอนเริ่มโปรเซส
+- `npm start` อ่าน `PORT` จาก `.env` ตอนเริ่มโปรเซส
 - `npm run dev` อ่าน `DEV_PORT` ถ้าไม่กำหนดจะใช้ `PORT` และสุดท้ายใช้ 3100
 - ตัวเลข URL ในคู่มือเป็นตัวอย่างตามค่าข้างต้น ถ้าเปลี่ยนพอร์ตให้ปรับ URL และ Tunnel ตามด้วย
 - Environment ของเครื่องมีลำดับความสำคัญเหนือ `.env` หากตั้ง `PORT` ไว้ภายนอก ต้องแก้ค่านั้นด้วย
 - เปลี่ยนพอร์ตแล้วรีสตาร์ตได้เลย ไม่ต้อง build ใหม่; เปลี่ยนโค้ดต้อง build ใหม่
-
-ติดตั้ง PM2 และเริ่มแอป:
-
-```sh
-npm install -g pm2
-npm run build
-pm2 start ecosystem.config.cjs
-pm2 save
-```
-
-ไฟล์ `ecosystem.config.cjs` กำหนดโฟลเดอร์ทำงานและโหลด `.env` ให้ Node โดยตรง ใช้โปรเซสเดียวสำหรับเว็บและ API
-
-```sh
-pm2 restart ecosystem.config.cjs --update-env
-pm2 logs arcana
-pm2 stop arcana
-```
-
-บน Linux หากต้องการให้เริ่มหลังเปิดเครื่อง ใช้ `pm2 startup` แล้วทำตามคำสั่งที่ PM2 แสดง จากนั้น `pm2 save` ส่วน Windows ต้องตั้ง service หรือ Task Scheduler แยกตามเครื่อง
 
 ## 2. อัปเดตเวอรชันใหม (deploy ผาน git)
 
@@ -87,7 +68,7 @@ git pull
 npm install
 npm run db:upgrade    # รัน upgrades ตาม ledger (ไมลบขอมูล)
 npm run build
-# รีสตารทกระบวนการ node (เชน pm2 restart / systemd restart)
+# รีสตาร์ตแอปด้วยวิธีที่ตั้งไว้บนเซิร์ฟเวอร์
 ```
 
 - ขอมูลอยในฐานขอมูล MariaDB — **ไมหายเมื่อ build ใหม**

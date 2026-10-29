@@ -49,7 +49,7 @@ npm run build
 npm start
 ```
 
-หากใช้ PM2 ให้รัน `pm2 start ecosystem.config.cjs` หลัง build โดย config จะโหลด `.env` ให้เอง ส่วนโหมดพัฒนาใช้ `DEV_PORT=3100` ดูรายละเอียดใน [คู่มือ Deploy](docs/dev/DEPLOY.md)
+คำสั่ง `npm start` โหลด `.env` ให้อัตโนมัติ ส่วนโหมดพัฒนาใช้ `DEV_PORT=3100` ดูรายละเอียดใน [คู่มือ Deploy](docs/dev/DEPLOY.md)
 
 ## เอกสารเพิ่มเติม
 

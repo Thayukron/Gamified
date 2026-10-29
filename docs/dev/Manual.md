@@ -5,11 +5,9 @@
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
 (รายละเอียดการติดตั้งบนเซิร์ฟเวอร์ใหม่ดูที่ [DEPLOY.md](DEPLOY.md))
 
-คำสั่ง `npm` และ `pm2` ในคู่มือนี้ใช้ได้ทั้ง Windows และ Linux โดยรันจากโฟลเดอร์โปรเจกต์ ส่วนคำสั่งจัดการ service และสคริปต์ `.ps1` เป็นตัวอย่างสำหรับ Windows; Linux ดู [คู่มือ Deploy](DEPLOY.md)
+คำสั่ง `npm` ในคู่มือนี้ใช้ได้ทั้ง Windows และ Linux โดยรันจากโฟลเดอร์โปรเจกต์ ส่วนคำสั่งจัดการ service และสคริปต์ `.ps1` เป็นตัวอย่างสำหรับ Windows; Linux ดู [คู่มือ Deploy](DEPLOY.md)
 
 ตั้ง `PORT=8090` สำหรับ production และ `DEV_PORT=3100` สำหรับ development ใน `.env` เปลี่ยนค่าแล้วเปิดโปรเซสใหม่ และปรับ URL / Cloudflare Tunnel ให้ตรงกับพอร์ต
-
-รันเบื้องหลังด้วย PM2: `pm2 start ecosystem.config.cjs` (หลัง `npm run build`) รายละเอียดอยู่ใน [คู่มือ Deploy](DEPLOY.md)
 
 ---
 
