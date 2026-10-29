@@ -1,7 +1,7 @@
 # 🚀 การติดตังและ Deploy (Node + MariaDB)
 
 > เฟส 6 (2026-10-29): ถอด PHP/Docker ออกทังหมด — ระบบรันดวย Node 22 (Nuxt/Nitro) ตัวเดียว
-> ทังเว็บและ API (86 endpoints) + MariaDB service ในเครื่อง · ดูประวัติการย้าย API ใน [docs/migration/](docs/migration/)
+> ทังเว็บและ API (86 endpoints) + MariaDB service ในเครื่อง · ดูประวัติการย้าย API ใน [docs/dev/migration/](dev/migration/)
 
 ระบบมี 2 ส่วนทำงานร่วมกกัน:
 

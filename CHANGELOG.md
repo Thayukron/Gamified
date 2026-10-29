@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 2026-10-29 — ย้าย docs/migration/ + ISSUE เข้า docs/dev/
+
+- ย้าย docs/migration/ (7 ไฟล) และ ISSUE-nuxt3-migration.md เข้า docs/dev/ ตามคำสั่่งผ้้ใช้
+- แก link ท่ีใช้อยู่: docs/Manual.md, docs/DEPLOY.md, link ภายใน ISSUE (7 links), CLAUDE.md · ไม่แกบรรทัดประวัติใน CHANGELOG/สถานะเก่า
+
 ## 2026-10-29 — ย้าย scripts/ เข้า tools/scripts/
 
 - ย้ายสคริปต์ CLI 4 ไฟล (init-db.mjs, upgrade-db.mjs, reset-password.mjs, base-seed.json) จาก scripts/ ไป tools/scripts/ ตามคำสั่่งผ้้ใช้

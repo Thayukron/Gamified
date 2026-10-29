@@ -58,15 +58,15 @@
 
 ### ความคืบหน้า
 
-- [x] เฟส 1 สำรวจและวางแผน: [รายละเอียด](docs/migration/phase1-inventory.md), [API mapping 86 endpoints](docs/migration/api-map.md), [inventory JSON](docs/migration/api-inventory.json)
+- [x] เฟส 1 สำรวจและวางแผน: [รายละเอียด](migration/phase1-inventory.md), [API mapping 86 endpoints](migration/api-map.md), [inventory JSON](migration/api-inventory.json)
 - [x] ตรวจรับเฟส 1 ก่อนเริ่มเฟส 2
-- [x] เฟส 2 ระบบพื้นฐาน: [รายละเอียดและวิธีรัน](docs/migration/phase2-foundation.md) — 9 endpoints, build/typecheck ผ่าน, service 14 กรณี, HTTP smoke 15 กรณี, live MariaDB/HTTP 28 requests ผ่าน
+- [x] เฟส 2 ระบบพื้นฐาน: [รายละเอียดและวิธีรัน](migration/phase2-foundation.md) — 9 endpoints, build/typecheck ผ่าน, service 14 กรณี, HTTP smoke 15 กรณี, live MariaDB/HTTP 28 requests ผ่าน
 - [x] ตรวจรับเฟส 2 ก่อนเริ่มเฟส 3
-- [x] เฟส 3 เกมและผลประเมิน — [รายละเอียด](docs/migration/phase3-game.md), เพิ่ม 9 endpoints รวม 18/86, engine parity 158 fixtures, live 78 requests/21 exact PHP comparisons ผ่าน
+- [x] เฟส 3 เกมและผลประเมิน — [รายละเอียด](migration/phase3-game.md), เพิ่ม 9 endpoints รวม 18/86, engine parity 158 fixtures, live 78 requests/21 exact PHP comparisons ผ่าน
 - [x] ตรวจรับเฟส 3 ก่อนเริ่มเฟส 4
-- [x] เฟส 4 ครูและแอดมิน — [รายละเอียด](docs/migration/phase4-staff.md), เพิ่ม 38 routes รวม 56/86; staff parity 251 fixtures, live 262 requests/56 PHP comparisons ผ่าน
+- [x] เฟส 4 ครูและแอดมิน — [รายละเอียด](migration/phase4-staff.md), เพิ่ม 38 routes รวม 56/86; staff parity 251 fixtures, live 262 requests/56 PHP comparisons ผ่าน
 - [x] ตรวจรับเฟส 4 ก่อนเริ่มเฟส 5
-- [x] เฟส 5 แผนการสอนและ AI — [รายละเอียด](docs/migration/phase5-ai-plans-jobs.md), เพิ่ม 30 routes รวม 86/86; รอตรวจรับด้วย Gemini key จริง
+- [x] เฟส 5 แผนการสอนและ AI — [รายละเอียด](migration/phase5-ai-plans-jobs.md), เพิ่ม 30 routes รวม 86/86; รอตรวจรับด้วย Gemini key จริง
 - [ ] ตรวจรับเฟส 5 ก่อนเริ่มเฟส 6 รวมคุณภาพเอกสารจาก Gemini จริง
 - [ ] เฟส 6 เปลี่ยนระบบจริง
 

@@ -1,6 +1,6 @@
 # 📘 คู่มือการรันระบบ ARCANA PROFILE
 
-> เฟส 6 (2026-10-29): ถอด PHP/Docker ออกแล้ว — ระบบ Node 22 (Nuxt/Nitro) ตัวเดียวส่งทังเว็บและ API (86 endpoints) + MariaDB service ในเครื่อง · สำรอง/กู้คืนใช้ `tools/backup.ps1` / `tools/restore.ps1` · ดูประวัติการย้าย API ใน [docs/migration/](docs/migration/)
+> เฟส 6 (2026-10-29): ถอด PHP/Docker ออกแล้ว — ระบบ Node 22 (Nuxt/Nitro) ตัวเดียวส่งทังเว็บและ API (86 endpoints) + MariaDB service ในเครื่อง · สำรอง/กู้คืนใช้ `tools/backup.ps1` / `tools/restore.ps1` · ดูประวัติการย้าย API ใน [docs/dev/migration/](dev/migration/)
 
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
 (รายละเอียดการติดตั้งบนเซิร์ฟเวอร์ใหม่ดูที่ [DEPLOY.md](DEPLOY.md))
