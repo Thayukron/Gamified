@@ -40,6 +40,8 @@ API อยู่ใต้ `/api` บน origin เดียวกับหน้
 | GET | /api/teacher/courses/{id}/report | teacher (เฉพาะวิชาที่สอน), admin |
 | GET/PUT | /api/admin/institution | admin |
 | POST | /api/admin/import/preview · /api/admin/import/commit | admin (นำเข้าแผนก/ครู/นักศึกษา/รายวิชา/การลงทะเบียน) |
+| POST | /api/admin/departments | admin — เพิ่มแผนก ({ code, name }) |
+| PUT/DELETE | /api/admin/departments/{id} | admin — แก้ไข/ลบแผนก (ผู้ใช้และรายวิชายังคงอยู่ เปลี่ยนเป็นไม่ระบุแผนก) |
 | GET | /api/admin/overview · /api/admin/users?q=&role= | admin |
 | POST | /api/admin/users/{id}/reset-password | admin (รีเซ็ตเป็นชื่อผู้ใช้/รหัสนักศึกษา) |
 | DELETE | /api/admin/courses/{id} | admin |
@@ -49,3 +51,22 @@ API อยู่ใต้ `/api` บน origin เดียวกับหน้
 | POST | /api/teacher/courses/{id}/students/{sid}/reset-password | teacher (ผู้เรียนในวิชาที่สอน), admin |
 
 รายการ route และประวัติการย้ายระบบดูที่ [API mapping](../migration/api-map.md) ส่วน implementation ปัจจุบันอยู่ใน `server/api/`
+
+## จัดการแผนกวิชา (admin)
+
+ต้องเข้าสู่ระบบด้วยบัญชี admin และตั้งรหัสผ่านใหม่เรียบร้อยแล้ว ใช้ `Authorization: Bearer <token>` เช่นเดียวกับ API ที่ต้องเข้าสู่ระบบอื่น
+
+POST `/api/admin/departments` และ PUT `/api/admin/departments/{id}` รับ JSON:
+
+```json
+{ "code": "IT", "name": "เทคโนโลยีสารสนเทศ" }
+```
+
+- รหัสแปลงเป็นตัวพิมพ์ใหญ่ ยาว 1–20 ตัว ใช้ A–Z, 0–9, จุด, ขีดล่าง และขีดกลางได้ ต้องไม่ซ้ำ
+- ชื่อยุบช่องว่าง ต้องไม่ว่างและไม่เกิน 150 ตัวอักษร Unicode
+- เพิ่มสำเร็จคืน `{ id, message }`; แก้ไขคืน `{ ok: true, message }`; DELETE คืน `{ ok: true }`
+- ข้อมูลผิดตอบ 422, รหัสซ้ำ 409, ไม่พบแผนก 404, ไม่เข้าสู่ระบบ 401, ไม่มีสิทธิ์ 403
+- ลบแผนกแล้วผู้ใช้และรายวิชาเดิมยังอยู่ โดย `department_id` เป็น NULL ผ่าน foreign keys
+- GET `/api/admin/overview` มี `departments[].courses` เพิ่มจากจำนวนนักศึกษาและครูเดิม
+
+Route inventory ปัจจุบันมี 89 รายการ (รวม API แผนก 3 รายการ) ส่วนเอกสารประวัติ migration เดิมอาจยังบันทึก 86 รายการตามช่วงเวลาที่จัดทำ

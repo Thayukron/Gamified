@@ -34,7 +34,7 @@ export async function saveTerm(db: SqlClient, body: StaffRecord) {
 }
 export async function overview(db: SqlClient) {
   const counts = Object.fromEntries((await db.rows<{ role: string; n: number }>('SELECT role, COUNT(*) n FROM users WHERE is_active = 1 GROUP BY role')).map(row => [row.role, Number(row.n)]))
-  const departments = await db.rows<StaffRecord>("SELECT d.id,d.code,d.name,(SELECT COUNT(*) FROM users u WHERE u.department_id=d.id AND u.role='student') AS students,(SELECT COUNT(*) FROM users u WHERE u.department_id=d.id AND u.role='teacher') AS teachers FROM departments d ORDER BY d.code")
+  const departments = await db.rows<StaffRecord>("SELECT d.id,d.code,d.name,(SELECT COUNT(*) FROM users u WHERE u.department_id=d.id AND u.role='student') AS students,(SELECT COUNT(*) FROM users u WHERE u.department_id=d.id AND u.role='teacher') AS teachers,(SELECT COUNT(*) FROM courses c WHERE c.department_id=d.id) AS courses FROM departments d ORDER BY d.code")
   const courses = await db.rows<StaffRecord>('SELECT c.id,c.code,c.name,c.section,c.semester,c.academic_year,d.name AS department_name,u.full_name AS teacher_name,u.username AS teacher_username,(SELECT COUNT(*) FROM enrollments e WHERE e.course_id=c.id) AS enrolled FROM courses c LEFT JOIN departments d ON d.id=c.department_id LEFT JOIN users u ON u.id=c.teacher_id ORDER BY c.academic_year DESC,c.semester DESC,c.code,c.section')
   return { counts: { students: counts.student ?? 0, teachers: counts.teacher ?? 0, departments: departments.length, courses: courses.length }, departments, courses }
 }
@@ -112,4 +112,40 @@ export async function setStatus(db: SqlClient, body: StaffRecord) {
   await db.execute(`UPDATE users SET student_status=?,is_active=? WHERE id IN (${marks(targetIds)})`, [status, active, ...targetIds])
   if (!active) await db.execute(`DELETE FROM auth_tokens WHERE user_id IN (${marks(targetIds)})`, targetIds)
   return { changed: targets.length, message: `เปลี่ยนสถานะเป็น “${STATUS_TH[status]}” ${targets.length} คนแล้ว` }
+}
+
+// Keep validation untruncated so oversized input cannot silently become valid.
+async function departmentInput(db: SqlClient, body: StaffRecord, id = 0) {
+  const code = text(body.code).toUpperCase(), name = clean(body.name)
+  if (!/^[A-Z0-9._-]{1,20}$/.test(code)) throw new ApiError(422, 'รหัสแผนกต้องเป็นตัวอักษรอังกฤษ/ตัวเลข ไม่เกิน 20 ตัว (เช่น IT, ACC)')
+  if (!name || charLength(name) > 150) throw new ApiError(422, 'กรุณากรอกชื่อแผนกวิชา (ไม่เกิน 150 ตัวอักษร)')
+  const other = (await db.rows<{ name: string }>('SELECT name FROM departments WHERE code=? AND id<>?', [code, id]))[0]
+  if (other) throw new ApiError(409, `รหัสแผนก ${code} ถูกใช้แล้ว (${other.name})`)
+  return { code, name }
+}
+async function departmentWrite(db: SqlClient, sql: string, values: SqlValue[], code: string) {
+  try { return await write(db, sql, values) }
+  catch (error) {
+    // The unique index also covers simultaneous requests that pass the precheck.
+    if ((error as { code?: string; errno?: number })?.code === 'ER_DUP_ENTRY' || (error as { errno?: number })?.errno === 1062) {
+      throw new ApiError(409, `รหัสแผนก ${code} ถูกใช้แล้ว`)
+    }
+    throw error
+  }
+}
+export async function createDepartment(db: SqlClient, body: StaffRecord) {
+  const { code, name } = await departmentInput(db, body)
+  const result = await departmentWrite(db, 'INSERT INTO departments (code,name) VALUES (?,?)', [code, name], code)
+  return { id: result.id, message: `เพิ่มแผนก ${code} ${name} แล้ว` }
+}
+export async function updateDepartment(db: SqlClient, id: number, body: StaffRecord) {
+  if (!(await db.rows('SELECT id FROM departments WHERE id=? FOR UPDATE', [id])).length) throw new ApiError(404, 'ไม่พบแผนกวิชา')
+  const { code, name } = await departmentInput(db, body, id)
+  await departmentWrite(db, 'UPDATE departments SET code=?,name=? WHERE id=?', [code, name, id], code)
+  return { ok: true, message: `บันทึกแผนก ${code} ${name} แล้ว` }
+}
+export async function deleteDepartment(db: SqlClient, id: number) {
+  // Existing foreign keys set users/courses.department_id to NULL; never delete their rows.
+  if (!(await write(db, 'DELETE FROM departments WHERE id=?', [id])).affected) throw new ApiError(404, 'ไม่พบแผนกวิชา')
+  return { ok: true }
 }

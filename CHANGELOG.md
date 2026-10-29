@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-29 — ย้ายการจัดการแผนกจาก upstream main มา dev
+
+- นำการเพิ่ม/แก้ไข/ลบแผนกจาก upstream c165a6a มาเป็น Nitro API 3 routes (admin เท่านั้น), เพิ่ม departments[].courses ใน overview และ dialog จัดการแผนกใน /admin/data
+- validate รหัส/ชื่อแบบไม่ตัดทอน, รหัสซ้ำตอบ 409 รวมกรณีคำขอพร้อมกัน, ไม่พบตอบ 404; ใช้ transaction/auth และ FK SET NULL เดิม ไม่เปลี่ยน schema
+- กันกดบันทึกซ้ำและ refresh overview/ผู้ใช้หลังเปลี่ยนแผนก; ย้าย ROADMA.md มา dev และอัปเดต API docs/inventory เป็น 89 routes
+- ทดสอบ: service/validation/auth/route map 13 กรณีและ logic UI ผ่าน, typecheck/build ผ่าน, production health + HTTP auth/method 5 กรณีผ่าน
+- ใช้ฐานจำลองสำหรับ CRUD; ไม่ทดสอบ MariaDB จริงหรือ browser E2E และไม่ deploy/เปลี่ยนข้อมูลผู้ใช้จริง
+
+
 ## 2026-10-29 — ใช้ PORT ตัวเดียวทุกโหมด
 
 - ยกเลิก DEV_PORT ให้ npm run dev และ npm start อ่าน PORT จาก .env ตัวเดียวกัน

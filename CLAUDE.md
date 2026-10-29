@@ -24,7 +24,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | ส่วน | รายละเอียด |
 |---|---|
 | DB | **ปัจจุบัน (2026-10-29): MariaDB 10.6.26 service ในเครื่อง `127.0.0.1:3306` ฐาน `gamified` ใหม่ตามคำสั่งผู้ใช้** · credentials ใน `.env` (gitignored) · เดิม Docker 3320 ไม่ใช้เป็น DB ของงานย้ายรอบนี้ · ไม่ได้กู้ข้อมูลเดิม |
-| API | Nitro `/api` ครบ 86 routes เดียว (PHP ถอดออกแล้ว 2026-10-29 เฟส 6 — โฟลเดอร์ `backend/` ลบแล้ว) |
+| API | Nitro `/api` ครบ 89 routes เดียว (PHP ถอดออกแล้ว 2026-10-29 เฟส 6 — โฟลเดอร์ `backend/` ลบแล้ว) |
 | Frontend | Nuxt 3.21 production preview **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · API same origin `/api` |
 | สคริปต์ | `npm run dev` (3100) · สำรอง/กู้คืน `tools/backup.ps1` / `tools/restore.ps1` · รัน Node โดยตรงตาม docs/dev/migration/phase5-ai-plans-jobs.md |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
@@ -35,8 +35,8 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 
 ## โครงสร้างโค้ด
 ```
-  (Nuxt 3, ssr:false SPA + Nitro API ครบ 86 routes, Pinia, Tailwind, ฟอนต์ Prompt)
-  server/api/             route handlers (auth, student, teacher, admin, me, jobs) — 86 endpoints เดียว
+  (Nuxt 3, ssr:false SPA + Nitro API ครบ 89 routes, Pinia, Tailwind, ฟอนต์ Prompt)
+  server/api/             route handlers (auth, student, teacher, admin, me, jobs) — 89 endpoints เดียว
   server/services/        auth, password, gemini (BYOK), lessonPlan, lessonSheet, coursePlan, imports, rosterImport, teacherCourses, account, admin, profile, progression, scenarioEngine, grouping, teachingGuide, knowledge, aiGuide, backgroundJob
   server/utils/           db (mysql2 pool), crypto (AES-256-GCM + app.key), http, input
   docs/database/schema.sql  ตารางทังหมด · upgrades/ = ไฟลปรบโครงสราง (ledger schema_migrations) · scenarios/ = JSON เนื้อเรื่อง (init/upgrade ใช้ path นี)
@@ -88,6 +88,7 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-10-29: **ย้ายอัปเดตแผนกจาก main c165a6a มา dev** — Nitro CRUD แผนก 3 routes + overview courses + UI จัดการแผนก, รวม inventory 89 routes; แผน ROADMA.md ย้ายมา dev แล้ว; tests 13 + logic UI + typecheck/build + production health/HTTP 5 checks ผ่าน; ไม่เปลี่ยน DB จริง/ยังไม่ browser E2E/deploy; origin ตอนนี้ชี้ Thayukron/Gamified ตามคำสั่งผู้ใช้ ไม่ push เอง
 - 2026-10-29: **ใช้ PORT เดียวทุกโหมดตามผู้ใช้** — ยกเลิก DEV_PORT ในโค้ดและคู่มือ; dev และ production ใช้ PORT ตัวเดียวกัน
 - 2026-10-29: **ถอด PM2 ตามผู้ใช้** — ลบ ecosystem.config.cjs และคำแนะนำในคู่มือปัจจุบัน; ใช้ npm start โหลด .env ต่อไป
 - 2026-10-29: **พอร์ตจาก env + PM2** — npm start โหลด .env, ecosystem.config.cjs กำหนด cwd/โหลด .env; dev ใช้ DEV_PORT → PORT → 3100, production ใช้ PORT; คู่มือรัน Windows/Linux อัปเดตแล้ว; build + health บนพอร์ตจาก env 2 ค่าผ่านโดยไม่ build ซ้ำ (ยังไม่ได้รัน Linux/PM2 จริง)

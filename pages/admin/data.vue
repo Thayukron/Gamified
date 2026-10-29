@@ -71,6 +71,51 @@ async function saveAdd() {
   }
 }
 
+// departments: add / edit (one dialog) and delete
+const dept = ref<any>(null)
+const deptErr = ref('')
+const deptBusy = ref(false)
+function closeDept() { if (!deptBusy.value) dept.value = null }
+function openDept(d?: any) {
+  if (deptBusy.value) return
+  deptErr.value = ''
+  dept.value = d ? { id: d.id, code: d.code, name: d.name } : { id: null, code: '', name: '' }
+}
+async function saveDept() {
+  if (deptBusy.value || !dept.value) return
+  deptBusy.value = true
+  deptErr.value = ''
+  try {
+    const { id, ...body } = dept.value
+    const r = await api<any>(id ? `/admin/departments/${id}` : '/admin/departments', { method: id ? 'PUT' : 'POST', body })
+    msg.value = { ok: true, text: r.message }
+    dept.value = null
+    await Promise.all([load(), search()])
+  } catch (e) {
+    deptErr.value = apiErrorMessage(e)
+  } finally {
+    deptBusy.value = false
+  }
+}
+async function removeDept(d: any) {
+  if (deptBusy.value || !d) return
+  const used = Number(d.students) + Number(d.teachers) + Number(d.courses)
+  const note = used ? `\nผู้ใช้ ${Number(d.students) + Number(d.teachers)} คน และรายวิชา ${d.courses} รายการของแผนกนี้จะเปลี่ยนเป็น “ไม่ระบุแผนก” (ข้อมูลอื่นไม่ถูกลบ)` : ''
+  if (!confirm(`ลบแผนกวิชา ${d.code} ${d.name}?${note}`)) return
+  deptBusy.value = true
+  deptErr.value = ''
+  try {
+    await api(`/admin/departments/${d.id}`, { method: 'DELETE' })
+    msg.value = { ok: true, text: `ลบแผนก ${d.code} แล้ว` }
+    dept.value = null
+    await Promise.all([load(), search()])
+  } catch (e) {
+    deptErr.value = apiErrorMessage(e)
+  } finally {
+    deptBusy.value = false
+  }
+}
+
 const courses = computed(() => {
   const f = courseFilter.value.trim().toLowerCase()
   const list = data.value?.courses ?? []
@@ -139,12 +184,20 @@ async function removeCourse(c: any) {
       </div>
 
       <section class="card">
-        <h2 class="text-lg font-medium text-slate-50">แผนกวิชา</h2>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <h2 class="text-lg font-medium text-slate-50">แผนกวิชา ({{ data.departments.length }})</h2>
+          <button class="btn-ghost !py-1.5 text-sm" data-testid="add-dept" @click="openDept()"><AppIcon name="plus" :size="16" /> เพิ่มแผนกวิชา</button>
+        </div>
+        <p class="mt-1 text-xs text-slate-500">กด “แก้ไข” เพื่อเปลี่ยนรหัสหรือชื่อแผนก — ผู้ใช้และรายวิชาที่อยู่ในแผนกจะเปลี่ยนตามโดยอัตโนมัติ</p>
         <div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <div v-for="d in data.departments" :key="d.id" class="rounded-xl bg-white/5 px-3 py-2 ring-1 ring-white/10">
-            <p class="text-slate-100"><span class="font-display text-rune-300">{{ d.code }}</span> {{ d.name }}</p>
-            <p class="text-xs text-slate-400">นักศึกษา {{ d.students }} · ครู {{ d.teachers }}</p>
+          <div v-for="d in data.departments" :key="d.id" class="flex items-start gap-2 rounded-xl bg-white/5 px-3 py-2 ring-1 ring-white/10" :data-testid="`dept-${d.code}`">
+            <div class="min-w-0 flex-1">
+              <p class="text-slate-100"><span class="font-display text-rune-300">{{ d.code }}</span> {{ d.name }}</p>
+              <p class="text-xs text-slate-400">นักศึกษา {{ d.students }} · ครู {{ d.teachers }} · รายวิชา {{ d.courses }}</p>
+            </div>
+            <button class="shrink-0 text-xs text-sky-300/80 hover:text-sky-300" :data-testid="`edit-dept-${d.code}`" @click="openDept(d)">แก้ไข</button>
           </div>
+          <p v-if="!data.departments.length" class="text-sm text-slate-500">ยังไม่มีแผนกวิชา — กด “เพิ่มแผนกวิชา”</p>
         </div>
       </section>
 
@@ -216,6 +269,24 @@ async function removeCourse(c: any) {
         </div>
       </section>
     </template>
+
+    <!-- add / edit department dialog -->
+    <div v-if="dept" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" @click.self="closeDept">
+      <form class="card w-full max-w-md space-y-3" data-testid="dept-dialog" @submit.prevent="saveDept">
+        <h2 class="text-lg font-medium text-slate-50">{{ dept.id ? 'แก้ไขแผนกวิชา' : 'เพิ่มแผนกวิชา' }}</h2>
+        <div><p class="label">รหัสแผนก * <span class="text-xs text-slate-500">(อังกฤษ/ตัวเลข ไม่เกิน 20 ตัว)</span></p><input v-model="dept.code" class="input uppercase" :disabled="deptBusy" maxlength="20" placeholder="เช่น IT, ACC, EL" data-testid="d-code"></div>
+        <div><p class="label">ชื่อแผนกวิชา *</p><input v-model="dept.name" class="input" :disabled="deptBusy" maxlength="150" placeholder="เช่น เทคโนโลยีสารสนเทศ" data-testid="d-name"></div>
+        <p v-if="deptErr" class="text-sm text-red-300" data-testid="d-err">{{ deptErr }}</p>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <button v-if="dept.id" type="button" class="text-sm text-red-300/80 hover:text-red-300" data-testid="d-delete" :disabled="deptBusy" @click="removeDept(data.departments.find((x: any) => x.id === dept.id))">ลบแผนกนี้</button>
+          <span v-else />
+          <div class="flex gap-2">
+            <button type="button" class="btn-ghost !py-2 text-sm" @click="closeDept">ยกเลิก</button>
+            <button class="btn-primary !py-2 text-sm" :disabled="deptBusy || !dept.code.trim() || !dept.name.trim()" data-testid="d-save">{{ deptBusy ? 'กำลังบันทึก…' : dept.id ? 'บันทึก' : 'เพิ่มแผนก' }}</button>
+          </div>
+        </div>
+      </form>
+    </div>
 
     <!-- add user dialog -->
     <div v-if="add" class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 p-4" @click.self="add = null">

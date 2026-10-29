@@ -342,5 +342,17 @@
   {
     "method": "GET",
     "path": "/jobs/{id}"
+  },
+  {
+    "method": "POST",
+    "path": "/admin/departments"
+  },
+  {
+    "method": "PUT",
+    "path": "/admin/departments/{id}"
+  },
+  {
+    "method": "DELETE",
+    "path": "/admin/departments/{id}"
   }
 ]
