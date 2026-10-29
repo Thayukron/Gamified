@@ -3,43 +3,32 @@
 ระบบประเมินโปรไฟล์ผู้เรียนผ่านเกมจำลองสถานการณ์ (VARK, RIASEC, Mindset) พร้อมแดชบอร์ดครูและ AI ช่วยวิเคราะห์การสอน
 ดูข้อกำหนดทั้งหมดใน [requiments.md](requiments.md)
 
-## Tech Stack
-- **Frontend:** Nuxt 3 (SPA), Pinia, Tailwind CSS — ``
-- **Backend:** Nitro (Nuxt 3 server) TypeScript — `server/`
-- **Database:** MySQL / MariaDB — `database/schema.sql`
+## รันระบบ (Node + MariaDB)
+ระบบรันด้วย Node 22 (Nuxt/Nitro) ตัวเดียว ทั้งเว็บและ API (86 endpoints) + MariaDB 10.6 service ในเครื่อง (127.0.0.1:3306) — ไม่มี Docker แล้ว (ถอดออก 2026-10-29)
 
-## 🐳 รันด้วย Docker (แนะนำ · ใช้ deploy จริง)
-```bash
-cp .env.example .env     # ตั้งรหัสผ่านฐานข้อมูล
-docker compose up -d --build
+```powershell
+copy .env.example .env     # ตั้ง DB_PASSWORD และตรวจ ACADEMIC_YEAR / SEMESTER
+npm install
+npm run db:init            # ครั้งแรก: สร้างตาราง + บัญชี admin (เฉพาะฐานว่าง)
+npm run dev                # เปิดชุดพัฒนา http://localhost:3100 (API อยู่ใต้ /api เดียวกัน)
 ```
-เปิด http://localhost:8090 → `admin` / `admin1234` (ระบบบังคับเปลี่ยนรหัสครั้งแรก) · อัปเดต: `git pull && docker compose up -d --build`
+
+หรือรัน `.\start-dev.ps1` (เปิด Nuxt dev ที่ 3100) · อัปเดต: `git pull` แล้วรัน `npm run db:upgrade` (รัน upgrades ตาม ledger ไม่ลบข้อมูล)
 รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [DEPLOY.md](DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [Manual.md](Manual.md)
 
 ## เริ่มต้นใช้งาน (Development)
-**ฐานข้อมูลชุดเดียวกั้บ Docker เสมอ** (MariaDB พอรต์ 127.0.0.1:3306 ค่าเชื่่อมต้ออ่านจาก `.env`) — ข้อมูลท่ีเห็่นตอนพัฒนา = ข้อมูลท่ีผ้้ใช้จริงเห็่นท่ี http://localhost:8090
-**ฐานข้อมูลชุดเดียวกั้บ Docker เสมอ** (MariaDB พอรต์ 127.0.0.1:3306 ค่าเชื่่อมต้ออ่านจาก `.env`) — ข้อมูลท่ีเห็่นตอนพัฒนา = ข้อมูลท่ีผ้้ใช้จริงเห็่นท่ี http://localhost:8090
-# 1) ครั้่งแรก: ตั้่งค่า .env แล้้วเปิิด Docker (สร้้างฐานข้อมูลให้อัตโนมัตติ)
-```powershell
-# 1) ครั้งแรก: ตั้งค่า .env แล้วเปิด Docker (สร้างฐานข้อมูลให้อัตโนมัติ)
-cp .env.example .env; docker compose up -d --build
-# 3) เปิิดชุดพัฒนา (Nuxt dev 3100 — เสิ้่ง API เองท่ี /api ต้อฐานข้อมูลเดีียว)
-cd frontend; npm install; cd ..
-# 3) เปิิดชุดพัฒนา (Nuxt dev 3100 — เสิ้่ง API เองท่ี /api ต้อฐานข้อมูลเดีียว)
-./start-dev.ps1
-⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
-
-⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
+**ฐานข้อมูลชุดเดียวกับ production เสมอ** (MariaDB 127.0.0.1:3306 ค่าเชื่อมต่ออ่านจาก `.env`) — ข้อมูลที่เห็นตอนพัฒนา = ข้อมูลที่ผู้ใช้จริงเห็น
+⚠ ฐานข้อมูลเดียว = ข้อมูลจริง — ห้ามแก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้าง: `npm run db:upgrade`
 
 เปิด http://localhost:3100
 
 | บทบาท | ชื่อผู้ใช้ | รหัสผ่าน |
 |---|---|---|
-| ผู้ดูแลระบบ | admin | admin1234 |
-| ครู | teacher1 | teacher1234 |
-| นักเรียน | student001 – student010 | student1234 |
+| ผู้ดูแลระบบ | admin | admin1234 (บังคับเปลี่ยนครั้งแรก) |
+| ครู (demo) | teacher-demo | teacher1234 |
+| นักเรียน (demo) | student-demo | student1234 (บังคับตั้งใหม่ครั้งแรก) |
 
-ค่าเชื่อมต้อฐานข้อมูลมาจาก `.env` (ชุดเดียวกับ Docker)
+ค่าเชื่อมต่อฐานข้อมูลมาจาก `.env`
 
 ## API
 | Method | Path | สิทธิ์ |
