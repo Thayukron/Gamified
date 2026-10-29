@@ -11,7 +11,7 @@ export default defineNuxtConfig({
       password: '', connectionLimit: 10,
     },
     tokenTtlHours: 168,
-    appKeyPath: '../backend/storage/app.key',
+    appKeyPath: 'storage/app.key',
     geminiBaseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     geminiTimeoutSeconds: 85,
     corsOrigins: 'http://localhost:3100,http://127.0.0.1:3100',

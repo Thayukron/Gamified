@@ -3,4 +3,6 @@ node_modules
 .output
 .data
 dist
+tests
+storage
 *.log

@@ -5,8 +5,8 @@
 
 ## Tech Stack
 - **Frontend:** Nuxt 3 (SPA), Pinia, Tailwind CSS — `frontend/`
-- **Backend:** PHP 8.2 RESTful API (ไม่ใช้ framework) — `backend/`
-- **Database:** MySQL / MariaDB — `backend/database/schema.sql`
+- **Backend:** Nitro (Nuxt 3 server) TypeScript — `frontend/server/`
+- **Database:** MySQL / MariaDB — `frontend/database/schema.sql`
 
 ## 🐳 รันด้วย Docker (แนะนำ · ใช้ deploy จริง)
 ```bash
@@ -17,19 +17,19 @@ docker compose up -d --build
 รายละเอียดการติดตั้ง สำรอง/กู้คืน และ deploy: [DEPLOY.md](DEPLOY.md) · คู่มือเปิด-ปิดระบบและ Cloudflare Tunnel: [Manual.md](Manual.md)
 
 ## เริ่มต้นใช้งาน (Development)
-
-**ใช้ฐานข้อมูลชุดเดียวกับ Docker เสมอ** (MariaDB ใน Docker พอร์ต 127.0.0.1:3320 ค่าเชื่อมต่ออ่านจาก `.env`) — ข้อมูลที่เห็นตอนพัฒนา = ข้อมูลที่ผู้ใช้จริงเห็นที่ http://localhost:8090
-
+**ฐานข้อมูลชุดเดียวกั้บ Docker เสมอ** (MariaDB พอรต์ 127.0.0.1:3306 ค่าเชื่่อมต้ออ่านจาก `.env`) — ข้อมูลท่ีเห็่นตอนพัฒนา = ข้อมูลท่ีผ้้ใช้จริงเห็่นท่ี http://localhost:8090
+**ฐานข้อมูลชุดเดียวกั้บ Docker เสมอ** (MariaDB พอรต์ 127.0.0.1:3306 ค่าเชื่่อมต้ออ่านจาก `.env`) — ข้อมูลท่ีเห็่นตอนพัฒนา = ข้อมูลท่ีผ้้ใช้จริงเห็่นท่ี http://localhost:8090
+# 1) ครั้่งแรก: ตั้่งค่า .env แล้้วเปิิด Docker (สร้้างฐานข้อมูลให้อัตโนมัตติ)
 ```powershell
 # 1) ครั้งแรก: ตั้งค่า .env แล้วเปิด Docker (สร้างฐานข้อมูลให้อัตโนมัติ)
 cp .env.example .env; docker compose up -d --build
-# 2) ติดตั้ง frontend
+# 3) เปิิดชุดพัฒนา (Nuxt dev 3100 — เสิ้่ง API เองท่ี /api ต้อฐานข้อมูลเดีียว)
 cd frontend; npm install; cd ..
-# 3) เปิดชุดพัฒนา (API 8100 + Nuxt 3100 ต่อฐานข้อมูล Docker)
+# 3) เปิิดชุดพัฒนา (Nuxt dev 3100 — เสิ้่ง API เองท่ี /api ต้อฐานข้อมูลเดีียว)
 ./start-dev.ps1
-```
+⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node frontend/scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
 
-⚠ ห้ามรัน `migrate.php` — จะล้างข้อมูลจริงทั้งหมด (สคริปต์ปฏิเสธเองถ้ามีผู้ใช้อยู่แล้ว) · อัปเกรดโครงสร้างใช้ `docker compose up -d --build` (รัน `install.php` ให้)
+⚠ ฐานข้อมูลเดีียว = ข้อมูลจริง — ห้า้แก้/ลบข้อมูลโดยไม่ถาม · อัปเกรดโครงสร้้าง: `node frontend/scripts/upgrade-db.mjs` (รันให้อัตโนมัตติเมื่่อ deploy)
 
 เปิด http://localhost:3100
 
@@ -39,7 +39,7 @@ cd frontend; npm install; cd ..
 | ครู | teacher1 | teacher1234 |
 | นักเรียน | student001 – student010 | student1234 |
 
-ค่าเชื่อมต่อฐานข้อมูลมาจาก `.env` (ชุดเดียวกับ Docker) · override เฉพาะเครื่องได้ที่ `backend/config.local.php`
+ค่าเชื่อมต้อฐานข้อมูลมาจาก `.env` (ชุดเดียวกับ Docker)
 
 ## API
 | Method | Path | สิทธิ์ |

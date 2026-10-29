@@ -809,3 +809,19 @@
 - ตรวจผ่าน: build, server typecheck, 25 tests, prompt/model parity 95+16 fixtures, phase5 live311requests/43comparisons/30routes, regression staff262/56 และเกม78/21, smoke15; ตรวจ preview3100 และล้างผู้ใช้/mock keys พร้อมคืน settings แล้ว
 - Gemini ทดสอบกับ mock เท่านั้น ยังไม่มี key จริง จึงรอตรวจรับคุณภาพ/provider จริง; เฟส6 startup/deployment/backup/rollback/ย้าย assets และถอด PHP-Docker ยังเหลือ ดู docs/migration/phase5-ai-plans-jobs.md
 - ไม่ push ตามผู้ใช้; tests/backups/storage/.env ignore ต่อไป และไม่รวม main.css formatting ของผู้ใช้ใน commit
+
+# 2026-10-29 — เฟส 6: Node deployment, backup/rollback, ย้าย assets
+
+- ย้าย assets ฐานขอมูลเข้า frontend/: schema.sql, upgrades/, scenarios/ (git mv) + app.key ไป frontend/storage/ (SHA256 ตรง) · nuxt.config appKeyPath=storage/app.key · .gitignore เพิ่ม frontend/storage/
+- Docker 2 container: web (Node 22 build Nuxt, รัน upgrade-db.mjs กอน start) + db (MariaDB 11.4 เดิม) · ถอด api-PHP/web-Nginx · frontend/Dockerfile ใหม่ + .dockerignore
+- .env.example: ตัด SEED_DEMO (Node init-db ไม่มี) · start-dev.ps1: ตัด Docker/PHP 8100 เหลือ MariaDB 3306 + nuxt dev 3100
+- สคริปตสำรอง/กู้คืน tools/backup.ps1 + tools/restore.ps1 (ฐาน + app.key พรอมกัน, ทดสอบ dump 20 ตารางผาน) · frontend/scripts/reset-password.mjs แทน PHP bin
+- เอกสาร: DEPLOY.md ใหม (Node+MariaDB, rollback), Manual.md แกเฟส 6, .env.example
+- ทดสอบ: upgrade-db.mjs รันผาน, backup dump 20 ตาราง + app.key, app health OK
+- ยังไม commit/push ตามผ้ใช · ถอด backend/ PHP ทังหมดรอผ้ใชตรวจรับเฟส 6
+## 2026-10-29 — ถอด backend/ PHP ทังหมด (หลังผ้ใชตรวจรบัเฟส 6)
+- ลบ `backend/` (PHP API ทังหมด), `tools/mock-gemini/` (PHP mock Gemini), `frontend/docker/nginx.conf` (ไม่ใช้งานแล้ว)
+- ลบ `tools/migration-inventory.mjs` (อ่าน `backend/routes.php` ท่ีหายแล้ว — ไม่สามารถรันได้อีก)
+- แก้ referenc: `CLAUDE.md` (โครงสร้างโค้ด = Nitro, status), `README.md` (tech stack + dev section), `.gitignore` (ลบบรรทัด backend/mock-gemini), `start-dev.ps1`, `tools/README.md`, comment ใน `useApi.ts` / `lessonPlan.ts` / `progression.ts`
+- ทดสอบ: build + typecheck:server ผาน · production smoke ท่ี 3100: health, login ครู/นักศึกษา, PUT /me/password, protected endpoint /teacher/courses, /me/ai (app.key) — ผานทังหมด
+- commit + push ตามปกตติ (ผ้ใชตรวจรบัแล้ว)

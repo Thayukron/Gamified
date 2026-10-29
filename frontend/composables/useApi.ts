@@ -24,7 +24,7 @@ export function useApi() {
 }
 
 /**
- * For long AI calls: the server answers at once with a job id and keeps working (see backend BackgroundJob),
+ * For long AI calls: the server answers at once with a job id and keeps working (see server/services/backgroundJob.ts),
  * then we poll until the result is ready — so a 60–160 s Gemini call survives Cloudflare Tunnel's 100 s limit.
  * Resolves with the same response the direct call would give; errors keep the server's message.
  */

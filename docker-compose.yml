@@ -1,5 +1,6 @@
 # ARCANA PROFILE — run everything with:  docker compose up -d --build
 # Settings come from .env (copy .env.example). See DEPLOY.md.
+# Node 22 (Nuxt/Nitro) serves both the web app and the API; MariaDB is the only other service.
 name: arcana
 
 services:
@@ -25,9 +26,11 @@ services:
       timeout: 5s
       retries: 20
 
-  api:
-    build: ./backend
+  web:
+    build: ./frontend
     restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8090}:3000"
     environment:
       DB_HOST: db
       DB_PORT: 3306
@@ -36,24 +39,15 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       ACADEMIC_YEAR: ${ACADEMIC_YEAR:-2569}
       SEMESTER: ${SEMESTER:-1}
-      SEED_DEMO: ${SEED_DEMO:-0}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       TZ: Asia/Bangkok
     volumes:
       # app.key encrypts teachers' Gemini keys — back it up together with the database
-      - api_storage:/var/www/html/storage
+      - app_storage:/app/storage
     depends_on:
       db:
         condition: service_healthy
 
-  web:
-    build: ./frontend
-    restart: unless-stopped
-    ports:
-      - "${APP_PORT:-8090}:80"
-    depends_on:
-      - api
-
 volumes:
   db_data:
-  api_storage:
+  app_storage:

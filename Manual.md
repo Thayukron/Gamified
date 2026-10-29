@@ -1,12 +1,10 @@
 # 📘 คู่มือการรันระบบ ARCANA PROFILE
 
-> เฟส 5 (2026-10-29): API ย้ายเป็น Nitro ครบ 86/86 แล้ว ทดลองแผนการสอน/ใบงาน/เล่มรายวิชาและการตั้งค่า AI ที่ port 3100 ด้วย teacher-demo/teacher1234; ครูต้องกรอก Gemini key ของตนเองก่อนสร้างด้วย AI ดู [รายละเอียดและข้อจำกัดการตรวจรับ](docs/migration/phase5-ai-plans-jobs.md) การทดสอบ provider รอบนี้ใช้ mock ยังรอ key จริง
+> เฟส 6 (2026-10-29): ถอด PHP ออกแล้ว — ระบบ Node 22 (Nuxt/Nitro) ตัวเดียวส่งทั้งเว็บและ API (86 endpoints) + MariaDB · สำรอง/กู้คืนใช้ `tools/backup.ps1` / `tools/restore.ps1` · ดูประวัติการย้าย API ใน [docs/migration/](docs/migration/)
 
-> เฟส 4 (2026-10-29): ครู/แอดมินส่วนจัดการข้อมูล dashboard ไกด์ จัดกลุ่ม และรายงานใช้ Nitro แล้ว รวม 56/86 API ทดลองที่ port 3100 ด้วย `teacher-demo/teacher1234` ดู [คู่มือเฟส 4](docs/migration/phase4-staff.md) AI/แผนการสอนยังรอเฟส 5
 
-> เฟส 3 (2026-10-29): เกม/ผลประเมินฝั่งนักศึกษาใช้ Nitro แล้ว รัน Nuxt โดยตรง เปิด `/login` ที่ port 3100 ใช้ `student-demo/student1234` เพื่อตรวจรับ รายละเอียด [เฟส 3](docs/migration/phase3-game.md) ส่วนครู/แอดมิน/AI ยังอยู่ระหว่างย้าย
 
-> อัปเดต 2026-10-29: งานย้าย Nuxt เฟส 2 ใช้ MariaDB service ในเครื่อง port 3306 และฐาน gamified ใหม่ตามผู้ใช้ รัน API โดยไม่ใช้ Docker: เข้า `frontend` แล้ว `npm run dev -- --dotenv ../.env` เปิด `http://localhost:3100/api/health` รองรับเฉพาะ auth/account ที่ย้ายแล้ว ดู [วิธีรันและขอบเขตเฟส 2](docs/migration/phase2-foundation.md) คำสั่ง Docker/start-dev เดิมด้านล่างเป็นของระบบ PHP เดิม
+
 
 คู่มือนี้สำหรับเปิด/ปิดระบบบนเครื่องนี้ด้วยตัวเอง และเปิดลิงก์ให้นักเรียน/ครูเข้าจากภายนอกผ่าน Cloudflare Tunnel
 (รายละเอียดการติดตั้งบนเซิร์ฟเวอร์ใหม่ดูที่ [DEPLOY.md](DEPLOY.md))
@@ -22,12 +20,11 @@
 
 ## 1. ภาพรวม: ระบบประกอบด้วยอะไร 🧩
 
-ระบบทั้งหมดรันใน **Docker** 3 ส่วน (เปิด/ปิดพร้อมกันด้วยคำสั่งเดียว)
+ระบบทั้งหมดรันใน **Docker** 2 ส่วน (เปิด/ปิดพร้อมกันด้วยคำสั่งเดียว)
 
 | ส่วน | หน้าที่ | ที่อยู่ |
 |---|---|---|
-| `web` | หน้าเว็บ (Nginx) | http://localhost:8090 |
-| `api` | ระบบหลังบ้าน (PHP) | ผ่าน http://localhost:8090/api |
+| `web` | หน้าเว็บ + REST API (Node 22 / Nuxt-Nitro) | http://localhost:8090 |
 | `db` | ฐานข้อมูล MariaDB (**ข้อมูลจริงชุดเดียวของระบบ**) | `127.0.0.1:3320` (เฉพาะเครื่องนี้) |
 
 - ค่ารหัสผ่านฐานข้อมูลและพอร์ตอยู่ในไฟล์ `.env` (ห้ามส่งไฟล์นี้ให้ใคร / ไม่ขึ้น GitHub)
@@ -44,7 +41,7 @@
    docker compose up -d
    ```
 
-3. ตรวจว่าทำงานครบ 3 ตัว (คอลัมน์ STATUS เป็น `Up`)
+3. ตรวจว่าทำงานครบ 2 ตัว (คอลัมน์ STATUS เป็น `Up`)
 
    ```powershell
    docker compose ps
@@ -161,19 +158,17 @@ docker rm -f arcana-quick-tunnel
 ## 6. สำรองและกู้คืนข้อมูล 💾
 
 ควรสำรองก่อนอัปเดตระบบ ก่อนนำเข้าข้อมูลชุดใหญ่ และเป็นประจำ (ไฟล์เก็บในโฟลเดอร์ `backups\` ซึ่งไม่ขึ้น GitHub)
-
 ```powershell
-# สำรอง (ได้ไฟล์ตามวันที่ เช่น backups\arcana-2569-10-20.sql — ปีตามที่ตั้งในเครื่อง)
-New-Item -ItemType Directory -Force backups | Out-Null
-docker compose exec -T db sh -c 'mariadb-dump -uroot -p"$MARIADB_ROOT_PASSWORD" --single-transaction "$MARIADB_DATABASE"' | Out-File -Encoding utf8 "backups\arcana-$(Get-Date -Format yyyy-MM-dd).sql"
+# สำรอง (ไดไฟล 2 ตว: ฐานขอมูล .sql + app.key — ตองเกบพรอมกกัน)
+.\tools\backup.ps1 -Tag phase6
 ```
 
 ```powershell
-# กู้คืน (⚠️ เขียนทับข้อมูลปัจจุบันทั้งหมด — แก้ชื่อไฟล์ให้ตรง)
-Get-Content -Raw -Encoding utf8 "backups\arcana-2569-10-20.sql" | docker compose exec -T db sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"'
+# กูคืน (⚠️ เขียนทับขอมูลปจจุบันทังหมด — แกชื่อไฟลใหตรง, ระบบถามยืนยันกอน)
+.\tools\restore.ps1 -BackupFile backups\gamified-<stamp>.sql
 ```
 
-> 🔑 API Key ของครูถูกเข้ารหัสด้วยไฟล์ `app.key` ในระบบ — ถ้าย้ายไปเครื่องใหม่ต้องย้ายไฟล์นี้ไปด้วย (ดู [DEPLOY.md](DEPLOY.md))
+> 🔑 สคริปตสำรองไฟล `app.key` (กุนแจเข้ารหัส API Key ของครู) พรอมฐานขอมูลใหอัตโนมัติ — ถ้ายายเครื่องใหมตองกูคืน 2 ไฟลพรอมกกัน (ดู [DEPLOY.md](DEPLOY.md))
 
 ## 7. ดูข้อมูลในฐานข้อมูลโดยตรง 🗄️
 
@@ -201,7 +196,7 @@ Get-Content -Raw -Encoding utf8 "backups\arcana-2569-10-20.sql" | docker compose
 | ลิงก์ Tunnel ขึ้น *Error 502 / 1033* | ระบบ ARCANA ปิดอยู่ → `docker compose up -d` |
 | ใส่ API Key Gemini แล้วขึ้น 502 / “เครือข่ายอาจบล็อก” | เครือข่ายสถานศึกษา (UniNet) บล็อก `generativelanguage.googleapis.com` → ให้เครื่องนี้ใช้ฮอตสปอตมือถือ หรือขอผู้ดูแลเครือข่ายเปิดโดเมนนี้ |
 | AI ขึ้น “เกินโควตา” / “Google ไม่ว่าง” | รอ 1–2 นาทีแล้วกดใหม่ (โควตาของ Key ครูแต่ละคน) — ไกด์แบบไม่ใช้ AI ใช้ได้ตามปกติ |
-| ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `docker compose exec api php bin/reset-password.php admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
+| ผู้ดูแลระบบลืมรหัสผ่าน (ไม่มี admin คนอื่นรีเซ็ตให้) | `docker compose exec web node scripts/reset-password.mjs admin` → รหัสผ่านกลายเป็น `admin` แล้วระบบบังคับตั้งใหม่ตอนเข้า |
 | พอร์ต 8090 ถูกโปรแกรมอื่นใช้ | แก้ `APP_PORT` ในไฟล์ `.env` เป็นเลขอื่น (เช่น 8091) แล้ว `docker compose up -d` |
 
 ## 9. (สำหรับนักพัฒนา) โหมดแก้โค้ด 👩‍💻
@@ -211,10 +206,9 @@ Get-Content -Raw -Encoding utf8 "backups\arcana-2569-10-20.sql" | docker compose
 ```powershell
 ./start-dev.ps1
 ```
-
-- หน้าเว็บ: http://localhost:3100 · API: http://127.0.0.1:8100
-- แก้เสร็จแล้วต้อง `docker compose up -d --build` เพื่อให้ http://localhost:8090 (และลิงก์ Tunnel) ได้โค้ดใหม่
-- ⚠️ ห้ามรัน `php backend/database/migrate.php` — คำสั่งนี้ล้างข้อมูลจริง (ระบบจะปฏิเสธถ้ามีผู้ใช้อยู่แล้ว)
+- หนาเว็บ: http://localhost:3100 (API อยู /api ของเว็บตัวเดยว)
+- แกเสร็จแลวตอง `docker compose up -d --build` เพื่oให http://localhost:8090 (และลิงค Tunnel) ไดโคดใหม
+- ⚠️ ฐานขอมูลชุดเดียว — การทดสอบใด ๆ กระทบขอมูลจริง: สำรองกอนดวย `tools/backup.ps1`
 
 ---
 
@@ -227,5 +221,5 @@ Get-Content -Raw -Encoding utf8 "backups\arcana-2569-10-20.sql" | docker compose
 | ดูสถานะ | `docker compose ps` |
 | อัปเดตโค้ดใหม่ | `git pull` แล้ว `docker compose up -d --build` |
 | เปิดลิงก์ภายนอก | `cloudflared tunnel --url http://localhost:8090` (ปิดด้วย `Ctrl + C`) |
-| ดู log เมื่อมีปัญหา | `docker compose logs --tail 50 api` |
+| ดู log เมื่อมีปัญหา | `docker compose logs --tail 50 web` |
 | สำรองข้อมูล | ดูข้อ 6 |

@@ -24,9 +24,9 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 | ส่วน | รายละเอียด |
 |---|---|
 | DB | **ปัจจุบัน (2026-10-29): MariaDB 10.6.26 service ในเครื่อง `127.0.0.1:3306` ฐาน `gamified` ใหม่ตามคำสั่งผู้ใช้** · credentials ใน `.env` (gitignored) · เดิม Docker 3320 ไม่ใช้เป็น DB ของงานย้ายรอบนี้ · ไม่ได้กู้ข้อมูลเดิม |
-| API | ปัจจุบัน Nitro `/api` ครบ 86 routes; PHP 8100 เป็นระบบอ้างอิงเดิม ไม่จำเป็นสำหรับ preview |
+| API | Nitro `/api` ครบ 86 routes เดียว (PHP ถอดออกแล้ว 2026-10-29 เฟส 6 — โฟลเดอร์ `backend/` ลบแล้ว) |
 | Frontend | Nuxt 3.21 production preview **port 3100** (port 3000 มีแอปอื่นของผู้ใช้ใช้อยู่) · API same origin `/api` |
-| สคริปต์ | รัน Node โดยตรงตาม docs/migration/phase5-ai-plans-jobs.md; start-dev.ps1 ยังเป็นสคริปต์ Docker/PHP เดิม รอปรับเฟส 6 · **ห้ามรัน migrate.php** ที่ล้างข้อมูล |
+| สคริปต์ | `start-dev.ps1` = MariaDB 3306 + nuxt dev 3100 · สำรอง/กู้คืน `tools/backup.ps1` / `tools/restore.ps1` · รัน Node โดยตรงตาม docs/migration/phase5-ai-plans-jobs.md |
 | ทดสอบ E2E | ใช้ playwright-core + Edge (`C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`) ติดตั้งใน scratchpad ไม่ใส่ในโปรเจกต์ |
 
 ฐานใหม่ในเครื่องมี `admin/admin1234` (ต้องเปลี่ยนรหัสครั้งแรก), archetypes 6 แบบ และเควสต์ 3 ชุด; เฟส 3 เพิ่ม `student-demo/student1234` สำหรับตรวจรับเกม โดยไม่เติมผล/รางวัลล่วงหน้า บัญชี teacher/student อื่นในเอกสารเก่าเป็นของฐานเดิม
@@ -35,16 +35,27 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 
 ## โครงสร้างโค้ด
 ```
-backend/
-  config.php            ค่า default (override ด้วย config.local.php — gitignored)
-  bootstrap.php         autoload App\* -> src/*, app_config()
-  routes.php            ประกาศ route ทั้งหมด ($router->get/post/put/delete(path, handler, roles))
-  public/index.php      front controller + CORS + error handling
-  src/Core/             Database(PDO), Router, Request, Response, HttpException, Auth(bearer token)
-  src/Controllers/      AuthController, StudentGameController
-  src/Services/ScenarioEngine.php  ตัดแท็กก่อนส่งผู้เล่น / replay log ตรวจเส้นทาง + รวมคะแนน / profile() / validate()
-  database/schema.sql   ตารางทั้งหมด · migrate.php = run schema + seed
-  database/scenarios/   JSON เนื้อเรื่อง (arcana-gate.json = ชุดสากล)
+frontend/  (Nuxt 3, ssr:false SPA + Nitro API ครบ 86 routes, Pinia, Tailwind, ฟอนต์ Prompt)
+  server/api/             route handlers (auth, student, teacher, admin, me, jobs) — 86 endpoints เดียว
+  server/services/        auth, password, gemini (BYOK), lessonPlan, lessonSheet, coursePlan, imports, rosterImport, teacherCourses, account, admin, profile, progression, scenarioEngine, grouping, teachingGuide, knowledge, aiGuide, backgroundJob
+  server/utils/           db (mysql2 pool), crypto (AES-256-GCM + app.key), http, input
+  database/schema.sql     ตารางทังหมด · upgrades/ = ไฟลปรบโครงสราง (ledger schema_migrations) · scenarios/ = JSON เนื้อเรื่อง
+  scripts/init-db.mjs     สร้างตาราง+admin (เฉพาะ --create-empty) · upgrade-db.mjs = รัน upgrades ตาม ledger · reset-password.mjs = รีเซ็ตรหัสฉุกเฉิน
+  storage/app.key         คีย์ AES สำหรับ Gemini Key ของครู (gitignored — ต้องสำรองพรอมฐานข้อมูล)
+  composables/useApi.ts   $fetch + Bearer token, 401 -> logout
+  stores/auth.ts          token ใน localStorage key gsp_token
+  middleware/auth.global.ts  บังคับ login + จำกดพื้่นที่ /student /teacher /admin ตาม role
+  layouts/default.vue, blank.vue · pages/{login,student,teacher,admin}
+  assets/css/main.css     class ร่วม: btn-primary, btn-ghost, input, label, card, card-hover, title-glow, divider-rune
+  components/             MysticBackground, MagicCircle, AppIcon (ไอคอน SVG), ComingSoonGrid (การด์ "ผนึก"), ArchetypeCard, RadarChart, game/VnBackground
+  composables/useGameAudio.ts  เสียงสังเคราะห์ Web Audio (bgm preset: mystery/wonder/tension หรืือ URL)
+  utils/profile.ts        ป้ายชื่่อเชิงบวก VARK/RIASEC/Mindset + type AssessmentResult
+  pages/student/          index (แผนที้โลก), play/[id] (VN player), result/[id], profile (Core Profile ร่วม), history
+  components/game/        CharacterSprite, StageCast, ChoicePanel, MiniGameSequence, MiniGameOrbs, VnBackground
+  components/ProfileReport.vue  การด์+กราฟ+แชร์ ใช้ร่วม result/profile · RewardSummary, AvatarCreator
+  components/game/CharacterPortrait.vue  ครอปหน้าสำหรับกล่องข้อความ/HUD
+  utils/progression.ts    XP/เลเวล/เหรียญ/ระดับการด์ (ต้องตรงกบ server/services/progression.ts)
+  composables/usePlayer.ts  ข้อมลผู้เล่น (xp, coins, avatar)
 frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
   composables/useApi.ts   $fetch + Bearer token, 401 -> logout
   stores/auth.ts          token ใน localStorage key gsp_token
@@ -94,6 +105,8 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 
 ## สถานะล่าสุด
 - 2026-10-29: Nuxt migration เฟส 5 ย้าย AI/plans/sheets/book/jobs เพิ่ม 30 routes รวม 86/86; frontend default /api ทุก API เข้า Nitro แล้ว; AES-compatible BYOK, dynamic model discovery/retry/cooldown, prompts/normalization เทียบ PHP 95+16 fixtures, background lease/heartbeat/timeout และ process-crash recovery; tests 25 และ typecheck ผ่าน ทดสอบ Gemini ด้วย mock เท่านั้น ยังต้องตรวจ key จริงก่อนรับงาน; รายละเอียด/ผล live ดู docs/migration/phase5-ai-plans-jobs.md; เฟส 6 deployment/asset paths/ถอด PHP-Docker ยังไม่เริ่ม; commit local เท่านั้น ไม่รวม main.css ของผู้ใช้ และ ignore tests
+- 2026-10-29: **เฟส 6 Node deployment เสร็จ** — ย้าย schema/upgrades/scenarios/app.key เข้า frontend/ · Docker 2 container (web=Node 22 + db) ถอด PHP/Nginx · tools/backup.ps1 + restore.ps1 (ฐาน+app.key) · reset-password.mjs · DEPLOY.md/Manual.md/.env.example/start-dev.ps1 แกครบ · ทดสอบ upgrade-db + backup dump 20 ตารางผาน · ถัดไป: ทดสอบ Gemini key จรง
+- 2026-10-29: **ถอด backend/ PHP ทังหมด** (ผ้ใชตรวจรบเฟส 6 แลว) — ลบ backend/, tools/mock-gemini/, frontend/docker/nginx.conf · แก referenc ใน CLAUDE.md/README.md/.gitignore/start-dev.ps1/tools/README.md · ทดสอบ build + production smoke (health/login/change-password/protected endpoint) ผาน · commit + push ตามปกติ
 - 2026-10-29: Nuxt migration เฟส 4 เสร็จ — เพิ่ม 38 staff routes รวม 56/86 (courses/roster/import/dashboard/guide/groups/report/admin/term/institution/status), เก็บ lookup ของ routes ที่ย้ายใน shared/data/migrated-api.json ใช้ routing/method guard ร่วมกัน; rules/MT19937/knowledge เทียบ PHP 251 fixtures ผ่าน, live staff 262 requests/56 comparisons ผ่านครบ38routesรวมrollback, regression game78/21และsmoke15ผ่าน, build/typecheckผ่าน; teacher-demo + DEMO-TEACHER สำหรับ preview; AI/plans/jobs รอเฟส5; ผู้ใช้สั่งไม่ push ให้ commit local เท่านั้น; tests ยัง ignore ดู docs/migration/phase4-staff.md
 - 2026-10-29: Nuxt migration เฟส 3 เสร็จ — ย้าย student API 9 routes รวม 18/86, engine/progression/profiles และ completion/progress transaction ล็อก user ป้องกันรางวัลซ้ำ/เปิด session ที่จบแล้ว; frontend ส่ง auth/account/student เข้า Nitro ส่วน staff/AI ยัง PHP; build/typecheck ผ่าน, 19 local tests, engine parity PHP 8.2 จำนวน 158 fixtures และ live DB 78 requests/21 exact PHP comparisons ผ่าน; tests/runtime oracle ยังคง ignore; เพิ่ม student-demo สำหรับ preview; รอตรวจรับก่อนเฟส 4 ดู `docs/migration/phase3-game.md`
 - 2026-10-29: Nuxt migration เฟส 2 เสร็จ implementation/verification — 9 endpoints (health/auth/account), pool/transaction, guards, ownership/settings helpers, safe fresh installer Node และ base seeds; ผู้ใช้อนุญาตสร้างฐานใหม่บน MariaDB local 3306 แล้ว สำรองก่อน live tests; build/typecheck ผ่าน, tests 14 + HTTP 15 + DB/HTTP 28 requests ผ่าน; tests ถูก ignore ตามผู้ใช้, `main.css` formatting เดิมคงค้างแต่แก้ช่องว่าง arbitrary classes 2 จุดที่ทำ build พัง; รอตรวจรับก่อนเฟส 3 ดู `docs/migration/phase2-foundation.md`
@@ -119,9 +132,9 @@ frontend/  (Nuxt 3, ssr:false SPA, Pinia, Tailwind, ฟอนต์ Prompt)
 - 2026-09-27: **ระบบนำเข้าข้อมูล (แอดมิน) เสร็จ** — `/admin/import` แม่แบบ Excel 5 ชีต (แผนก → ครู → นักศึกษา → รายวิชา → การลงทะเบียน) หรือ CSV, อ่านไฟล์ในเบราว์เซอร์ (`utils/importData.ts`, หัวคอลัมน์ไทย/อังกฤษ, ข้ามแถวคำอธิบาย/ตัวอย่าง, ส่ง `_row` = เลขแถวจริง) → ตรวจสอบ (`ImportService::validate`) → บันทึกใน transaction เดียว · นำเข้าซ้ำ = อัปเดต ไม่ซ้ำ · รหัสผ่านว่าง = ชื่อผู้ใช้/รหัสนักศึกษา · `/admin/data` ภาพรวม/รายวิชา(ลบ)/ค้นหาผู้ใช้(รีเซ็ตรหัสผ่าน) · ทดสอบโดย backup/restore DB (Key ครูยังอยู่) · ถัดไป: ปรับรายงานตามแบบฟอร์มจริง (รอผู้ใช้), Scenario Builder, เควสต์วิทยาลัย, PWA, ทดสอบโหลด
 - 2026-09-27: เขียน `docs/knowled.md` อธิบายชื่อ ARCANA PROFILE + ทฤษฎี VARK/RIASEC/Mindset + เหตุผลที่ใช้เกม + อ้างอิง (ใช้ตอบคำถามเชิงแนวคิด/นำเสนอ)
 - 2026-09-27: **ครูสร้างรายวิชา + เลือกกลุ่มผู้เรียนเองได้** (ผู้ใช้กำหนด: ผลเกมใช้ร่วมกันทุกวิชา ครูแค่ผูกวิชากับกลุ่มของตน) · `users.class_group` (ALTER ไม่รีเซ็ต) · `TeacherCourseController` · หน้า `/teacher/course/new`, `/teacher/course/[id]/students` · ⚠ DB มีข้อมูลที่ผู้ใช้นำเข้าเองแล้ว (ครู wichai, kanisron ฯลฯ) — ห้าม migrate/restore backup เก่า ให้ backup ใหม่ก่อนทดสอบทุกครั้ง
-- 2026-09-27: **บัญชีของฉัน/เปลี่ยนรหัสผ่าน/ลืมรหัสผ่าน/แอดมินแก้ไขผู้ใช้** — `/account` ทุกบทบาท · ลืมรหัสผ่าน = คำขอถึงแอดมิน/ครูประจำวิชา (ไม่มีอีเมล) → รีเซ็ตเป็นรหัสชั่วคราว = ชื่อผู้ใช้ + **บังคับตั้งใหม่ (`must_change_password`, กันทั้ง frontend middleware และ Router)** · บัญชีนำเข้าที่ไม่กำหนดรหัสก็ถูกบังคับเปลี่ยน · `backend/bin/reset-password.php` สำหรับกรณีฉุกเฉิน · E2E ทดสอบใช้ `p.goto('/account')` เพราะนักศึกษาใหม่มีหน้าต่างเลือกตัวละครบังหน้า
+- 2026-09-27: **บัญชีของฉัน/เปลี่ยนรหัสผ่าน/ลืมรหัสผ่าน/แอดมินแก้ไขผู้ใช้** — `/account` ทุกบทบาท · ลืมรหัสผ่าน = คำขอถึงแอดมิน/ครูประจำวิชา (ไม่มีอีเมล) → รีเซ็ตเป็นรหัสชั่วคราว = ชื่อผู้ใช้ + **บังคับตั้งใหม่ (`must_change_password`, กันทั้ง frontend middleware และ Router)** · บัญชีนำเข้าที่ไม่กำหนดรหัสก็ถูกบังคับเปลี่ยน · `frontend/scripts/reset-password.mjs` สำหรับกรณีฉุกเฉิน · E2E ทดสอบใช้ `p.goto('/account')` เพราะนักศึกษาใหม่มีหน้าต่างเลือกตัวละครบังหน้า
 - 2026-09-28: ทำเอกสารสรุปนำเสนอระบบ 1 หน้า `docs/สรุปนำเสนอระบบ-ARCANA-PROFILE.pdf` (ต้นฉบับ `docs/src/สรุปนำเสนอระบบ.html`)
-- 2026-09-28: **Docker + deploy ผ่าน git** — `docker compose up -d --build` → http://localhost:8090 (web=Nginx+SPA, api=PHP/Apache, db=MariaDB 11.4 พอร์ต 127.0.0.1:3320) · ค่าใน `.env` (ดู `.env.example`) · คู่มือ `DEPLOY.md` · `install.php` ปลอดภัย (ไม่ลบข้อมูล) · **เปลี่ยนโครงสร้าง DB ต่อจากนี้: แก้ schema.sql + เพิ่มไฟล์ `backend/database/upgrades/<วันที่>_<ชื่อ>.sql`** · docker.exe อยู่ที่ `C:/Users/USER/AppData/Local/Programs/DockerDesktop/resources/bin` (ไม่อยู่ใน PATH ของ Git Bash) · ข้อมูลผู้ใช้ถูกย้ายเข้า Docker แล้ว (ชุด dev พอร์ต 3310 ยังอยู่และยังใช้พัฒนาได้ แต่เป็นคนละชุดข้อมูล)
+- 2026-09-28: **Docker + deploy ผ่าน git** — `docker compose up -d --build` → http://localhost:8090 (web=Nginx+SPA, api=PHP/Apache, db=MariaDB 11.4 พอร์ต 127.0.0.1:3320) · ค่าใน `.env` (ดู `.env.example`) · คู่มือ `DEPLOY.md` · `install.php` ปลอดภัย (ไม่ลบข้อมูล) · **เปลี่ยนโครงสร้าง DB ต่อจากนี้: แก้ schema.sql + เพิ่มไฟล์ `frontend/database/upgrades/<วันที่>_<ชื่อ>.sql`** · docker.exe อยู่ที่ `C:/Users/USER/AppData/Local/Programs/DockerDesktop/resources/bin` (ไม่อยู่ใน PATH ของ Git Bash) · ข้อมูลผู้ใช้ถูกย้ายเข้า Docker แล้ว (ชุด dev พอร์ต 3310 ยังอยู่และยังใช้พัฒนาได้ แต่เป็นคนละชุดข้อมูล)
 - 2026-10-16: **แผนการจัดการเรียนรู้ตามแบบฟอร์มสถานศึกษา เฟส 1 เสร็จ** (ฟอร์ม สอศ. 2567 ฐานสมรรถนะ MIAP, ไฟล์ต้นแบบที่ผู้ใช้ให้อยู่ root ไม่ได้ commit) · แผนรายหน่วยข้อ 1–10 + 6.5 ปรับตามผู้เรียน + ภาคผนวกผลวิเคราะห์ผู้เรียน · ส่งออก Word (docx+jszip, ต้องใส่ `<w:cs/>`+`lang th-TH` ให้ไทยตัดคำถูก) · AI ร่างทุกข้อ (BYOK) / ร่างจากไกด์ · ตาราง `lesson_plans` · ตรวจไฟล์ Word: `scratchpad/docx2pdf.ps1` (Word COM) + `pdf2png.ps1` (Windows.Data.Pdf) · **พอร์ต 3100 ถูกโปรเจกต์ btech-sice ของผู้ใช้ใช้อยู่ → nuxt dev ของเราใช้ `--port 3110` + เพิ่ม cors ใน config.local.php ชั่วคราว** · เฟสถัดไปที่เสนอ: ระดับรายวิชา (หลักสูตรรายวิชา ตารางวิเคราะห์หน่วย/พฤติกรรม K-S-A-Ap ตารางหน่วยและชั่วโมง ปก คำนำ สารบัญ) → ใบความรู้/ใบงาน/ใบกิจกรรม/ใบมอบหมายงาน/แบบประเมิน
 - 2026-10-16: **แผนการจัดการเรียนรู้ เฟส 2 (เล่มระดับรายวิชา) เสร็จ** — `/teacher/course/[id]/plans/book` · ตาราง `course_plans` · Word ฉบับเต็มเรียงตามแบบฟอร์ม (ปก/คำนำ/สารบัญ TOC/หลักสูตรรายวิชา/มาตรฐานอาชีพ/วิเคราะห์หน่วย/วิเคราะห์พฤติกรรมแบบ 2/ชั่วโมง/แผนรายหน่วย/บรรณานุกรม/ภาคผนวก) · AI ไม่แตะข้อมูลหลักสูตรรายวิชา · ตรวจสารบัญด้วย `scratchpad/docx2pdf-toc.ps1` · เฟสถัดไปที่เสนอ: ใบความรู้/ใบงาน/ใบกิจกรรม/ใบมอบหมายงาน/แบบประเมิน
 - 2026-10-16: **แผนการจัดการเรียนรู้ เฟส 3 (เอกสารประกอบ) เสร็จ** — ใบความรู้/ใบงาน/ใบกิจกรรม/ใบมอบหมายงาน/แบบประเมิน (Rubric) · ตาราง `lesson_sheets` · หน้า `plans/[pid]/sheets/[sid]` · ชนิด/หัวข้อกำหนดที่ `utils/lessonPlan.ts` (SHEET_TYPES) + `LessonSheetService::FIELDS` (ต้องแก้คู่กัน) · ครบชุดแบบฟอร์มแผนของสถานศึกษาแล้ว (ปก→แผน→เอกสารประกอบ→ภาคผนวก)

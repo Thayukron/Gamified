@@ -1,6 +1,6 @@
 import { createConnection } from 'mysql2/promise'
 import { readFileSync, readdirSync } from 'node:fs'
-const directory = new URL('../../backend/database/upgrades/', import.meta.url)
+const directory = new URL('../database/upgrades/', import.meta.url)
 const db = await createConnection({ host: process.env.DB_HOST || '127.0.0.1', port: Number(process.env.DB_PORT || 3306), user: process.env.DB_USER || 'arcana', password: process.env.DB_PASSWORD || '', database: process.env.DB_NAME || 'gamified', multipleStatements: true })
 let locked = false
 try {

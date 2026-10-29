@@ -1,4 +1,4 @@
-// Mirrors backend/src/Services/Progression.php — keep the numbers in sync.
+// Mirrors server/services/progression.ts — keep the numbers in sync.
 import type { CharacterDef } from '~/utils/game'
 
 export const COINS_PER_ITEM = 20

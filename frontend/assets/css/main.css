@@ -7,47 +7,109 @@
    html.theme-staff = formal light theme for teachers & admins (set by layouts/default.vue)
    Values are "R G B" so Tailwind opacity modifiers (bg-white/5, border-rune-400/40) keep working. */
 :root {
-  --c-abyss-950: 5 3 13; --c-abyss-900: 11 7 24; --c-abyss-800: 20 13 43; --c-abyss-700: 31 21 66; --c-abyss-600: 45 31 94;
-  --c-arcane-300: 196 181 253; --c-arcane-400: 167 139 250; --c-arcane-500: 139 92 246; --c-arcane-600: 124 58 237;
-  --c-rune-100: 254 243 199; --c-rune-200: 253 230 138; --c-rune-300: 252 211 77; --c-rune-400: 245 196 81; --c-rune-500: 224 168 46; --c-rune-600: 183 121 31;
-  --c-slate-50: 248 250 252; --c-slate-100: 241 245 249; --c-slate-200: 226 232 240; --c-slate-300: 203 213 225; --c-slate-400: 148 163 184;
-  --c-slate-500: 100 116 139; --c-slate-600: 71 85 105; --c-slate-700: 51 65 85; --c-slate-800: 30 41 59; --c-slate-900: 15 23 42; --c-slate-950: 2 6 23;
+  --c-abyss-950: 5 3 13;
+  --c-abyss-900: 11 7 24;
+  --c-abyss-800: 20 13 43;
+  --c-abyss-700: 31 21 66;
+  --c-abyss-600: 45 31 94;
+  --c-arcane-300: 196 181 253;
+  --c-arcane-400: 167 139 250;
+  --c-arcane-500: 139 92 246;
+  --c-arcane-600: 124 58 237;
+  --c-rune-100: 254 243 199;
+  --c-rune-200: 253 230 138;
+  --c-rune-300: 252 211 77;
+  --c-rune-400: 245 196 81;
+  --c-rune-500: 224 168 46;
+  --c-rune-600: 183 121 31;
+  --c-slate-50: 248 250 252;
+  --c-slate-100: 241 245 249;
+  --c-slate-200: 226 232 240;
+  --c-slate-300: 203 213 225;
+  --c-slate-400: 148 163 184;
+  --c-slate-500: 100 116 139;
+  --c-slate-600: 71 85 105;
+  --c-slate-700: 51 65 85;
+  --c-slate-800: 30 41 59;
+  --c-slate-900: 15 23 42;
+  --c-slate-950: 2 6 23;
   --c-white: 255 255 255;
-  --c-red-100: 254 226 226; --c-red-200: 254 202 202; --c-red-300: 252 165 165;
-  --c-emerald-100: 209 250 229; --c-emerald-200: 167 243 208; --c-emerald-300: 110 231 183;
-  --c-sky-100: 224 242 254; --c-sky-200: 186 230 253; --c-sky-300: 125 211 252;
-  --c-amber-100: 254 243 199; --c-amber-200: 253 230 138; --c-amber-300: 252 211 77;
+  --c-red-100: 254 226 226;
+  --c-red-200: 254 202 202;
+  --c-red-300: 252 165 165;
+  --c-emerald-100: 209 250 229;
+  --c-emerald-200: 167 243 208;
+  --c-emerald-300: 110 231 183;
+  --c-sky-100: 224 242 254;
+  --c-sky-200: 186 230 253;
+  --c-sky-300: 125 211 252;
+  --c-amber-100: 254 243 199;
+  --c-amber-200: 253 230 138;
+  --c-amber-300: 252 211 77;
 }
+
 html.theme-staff {
   color-scheme: light;
   /* surfaces: page #f6f7fb, cards/inputs white */
-  --c-abyss-950: 246 247 251; --c-abyss-900: 255 255 255; --c-abyss-800: 255 255 255; --c-abyss-700: 238 240 248; --c-abyss-600: 224 228 242;
+  --c-abyss-950: 246 247 251;
+  --c-abyss-900: 255 255 255;
+  --c-abyss-800: 255 255 255;
+  --c-abyss-700: 238 240 248;
+  --c-abyss-600: 224 228 242;
   /* secondary (labels, outline buttons, rims) -> muted indigo */
-  --c-arcane-300: 91 97 140; --c-arcane-400: 129 140 248; --c-arcane-500: 124 58 237; --c-arcane-600: 109 40 217;
+  --c-arcane-300: 91 97 140;
+  --c-arcane-400: 129 140 248;
+  --c-arcane-500: 124 58 237;
+  --c-arcane-600: 109 40 217;
   /* primary accent (was gold) -> indigo (brand gradient indigo -> violet keeps the ARCANA purple) */
-  --c-rune-100: 49 46 129; --c-rune-200: 55 48 163; --c-rune-300: 79 70 229; --c-rune-400: 99 102 241; --c-rune-500: 79 70 229; --c-rune-600: 67 56 202;
+  --c-rune-100: 49 46 129;
+  --c-rune-200: 55 48 163;
+  --c-rune-300: 79 70 229;
+  --c-rune-400: 99 102 241;
+  --c-rune-500: 79 70 229;
+  --c-rune-600: 67 56 202;
   /* text scale inverted: slate-50/100 (bright text on dark) become near-black on light */
-  --c-slate-50: 11 19 36; --c-slate-100: 20 32 51; --c-slate-200: 36 50 74; --c-slate-300: 59 74 99; --c-slate-400: 85 99 122;
-  --c-slate-500: 107 119 137; --c-slate-600: 138 149 166; --c-slate-700: 182 191 204; --c-slate-800: 216 222 231; --c-slate-900: 238 241 245; --c-slate-950: 247 249 251;
+  --c-slate-50: 11 19 36;
+  --c-slate-100: 20 32 51;
+  --c-slate-200: 36 50 74;
+  --c-slate-300: 59 74 99;
+  --c-slate-400: 85 99 122;
+  --c-slate-500: 107 119 137;
+  --c-slate-600: 138 149 166;
+  --c-slate-700: 182 191 204;
+  --c-slate-800: 216 222 231;
+  --c-slate-900: 238 241 245;
+  --c-slate-950: 247 249 251;
   /* "white" is only used for faint overlays/rims on dark panels -> faint navy tints on light */
   --c-white: 15 23 42;
   /* light status text shades -> dark, readable on white */
-  --c-red-100: 122 26 19; --c-red-200: 145 32 24; --c-red-300: 180 35 24;
-  --c-emerald-100: 5 79 49; --c-emerald-200: 5 96 58; --c-emerald-300: 6 118 71;
-  --c-sky-100: 8 76 117; --c-sky-200: 10 90 138; --c-sky-300: 11 106 162;
-  --c-amber-100: 114 61 5; --c-amber-200: 138 75 6; --c-amber-300: 161 92 7;
+  --c-red-100: 122 26 19;
+  --c-red-200: 145 32 24;
+  --c-red-300: 180 35 24;
+  --c-emerald-100: 5 79 49;
+  --c-emerald-200: 5 96 58;
+  --c-emerald-300: 6 118 71;
+  --c-sky-100: 8 76 117;
+  --c-sky-200: 10 90 138;
+  --c-sky-300: 11 106 162;
+  --c-amber-100: 114 61 5;
+  --c-amber-200: 138 75 6;
+  --c-amber-300: 161 92 7;
 }
 
 @layer base {
   html {
     color-scheme: dark;
   }
+
   html.theme-staff {
     color-scheme: light;
   }
+
   body {
     @apply bg-abyss-950 font-sans text-slate-200 antialiased;
   }
+
   ::selection {
     @apply bg-arcane-600/60 text-white;
   }
@@ -57,6 +119,7 @@ html.theme-staff {
   .btn {
     @apply relative inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-medium tracking-wide transition duration-300 disabled:cursor-not-allowed disabled:opacity-50;
   }
+
   /* Gold rune button with a sweeping shine */
   .btn-primary {
     @apply btn overflow-hidden text-abyss-950 shadow-glow-gold hover:-translate-y-0.5 hover:shadow-[0_0_36px_-4px_rgba(245,196,81,0.9)];
@@ -64,35 +127,44 @@ html.theme-staff {
     background-size: 200% 100%;
     animation: shimmer 4s linear infinite;
   }
+
   .btn-ghost {
     @apply btn border border-arcane-400/30 text-arcane-300 hover:border-arcane-400/70 hover:bg-arcane-500/10 hover:text-white;
   }
+
   .input {
     @apply w-full rounded-xl border border-arcane-400/25 bg-abyss-900/70 px-4 py-2.5 text-slate-100 placeholder-slate-500 outline-none transition focus:border-rune-400/70 focus:shadow-glow-gold;
   }
+
   .label {
     @apply mb-1.5 block text-xs font-medium uppercase tracking-[0.2em] text-arcane-300/80;
   }
+
   /* Frosted obsidian panel with a faint violet rim */
   .card {
     @apply relative rounded-2xl border border-arcane-400/20 bg-abyss-800/60 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.8)] backdrop-blur-md;
   }
+
   .card-hover {
     @apply transition duration-500 hover:-translate-y-1 hover:border-rune-400/50 hover:shadow-glow-gold;
   }
+
   .title-glow {
     @apply font-display text-rune-300;
     text-shadow: 0 0 18px rgba(245, 196, 81, 0.45), 0 0 2px rgba(253, 230, 138, 0.8);
   }
+
   /* Gold coin glyph */
   .coin {
     @apply inline-block h-3.5 w-3.5 shrink-0 rounded-full border border-amber-600;
     background: radial-gradient(circle at 35% 30%, #fef3c7, #fbbf24 45%, #b45309);
     box-shadow: 0 0 6px rgba(251, 191, 36, 0.6);
   }
+
   .divider-rune {
     @apply flex items-center gap-3 text-rune-400/70;
   }
+
   .divider-rune::before,
   .divider-rune::after {
     content: '';
@@ -109,85 +181,102 @@ html.theme-staff body {
     radial-gradient(900px 420px at 95% -8%, rgba(168, 85, 247, 0.11), transparent 60%);
   background-attachment: fixed;
 }
+
 .theme-staff body,
 .theme-staff .font-sans {
   font-family: "IBM Plex Sans Thai", "Kanit", system-ui, sans-serif;
 }
+
 .theme-staff .font-display,
 .theme-staff h1,
 .theme-staff h2 {
   font-family: "Prompt", "IBM Plex Sans Thai", system-ui, sans-serif;
   letter-spacing: -0.01em !important;
 }
+
 .theme-staff .btn-primary {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: #fff;
   animation: none;
   box-shadow: 0 8px 18px -8px rgba(79, 70, 229, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
+
 .theme-staff .btn-primary:hover:not(:disabled) {
   filter: brightness(1.07);
   transform: translateY(-1px);
   box-shadow: 0 12px 24px -10px rgba(79, 70, 229, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
+
 .theme-staff .btn-ghost {
   border-color: #e2e8f0;
   background: #fff;
   color: #334155;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
+
 .theme-staff .btn-ghost:hover:not(:disabled) {
   border-color: #c7d2fe;
   background: #eef2ff;
   color: #4338ca;
 }
+
 .theme-staff .card {
   background: #fff;
   border-color: rgba(226, 232, 240, 0.95);
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 28px -14px rgba(16, 24, 40, 0.1);
   backdrop-filter: none;
 }
+
 .theme-staff .card-hover:hover {
   transform: translateY(-2px);
   border-color: #c7d2fe;
   box-shadow: 0 18px 36px -16px rgba(79, 70, 229, 0.28);
 }
+
 .theme-staff .input {
   border-color: #e2e8f0;
   background: #fff;
 }
+
 .theme-staff .input:focus {
   border-color: #818cf8;
   box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.14);
 }
+
 .theme-staff .label {
   text-transform: none;
   letter-spacing: normal;
   font-size: 0.8125rem;
   color: #475569;
 }
+
 .theme-staff .title-glow {
   color: #0f172a;
   text-shadow: none;
   font-weight: 600;
 }
+
 .theme-staff .shadow-glow,
 .theme-staff .shadow-glow-gold {
   box-shadow: none;
 }
+
 .theme-staff .divider-rune {
   color: #64748b;
 }
+
 .theme-staff select option {
   background: #fff !important;
   color: rgb(20 32 51);
 }
+
 /* brand gradient helpers (staff pages) */
 .staff-hero {
   @apply relative overflow-hidden rounded-3xl p-6 text-snow sm:p-8;
   background: linear-gradient(120deg, #312e81 0%, #4f46e5 45%, #7c3aed 80%, #a855f7 100%);
   box-shadow: 0 24px 48px -24px rgba(79, 70, 229, 0.6);
 }
+
 .staff-hero::before {
   content: "";
   position: absolute;
@@ -197,6 +286,7 @@ html.theme-staff body {
   mask-image: linear-gradient(100deg, transparent 30%, #000 100%);
   pointer-events: none;
 }
+
 .staff-hero::after {
   content: "";
   position: absolute;
@@ -208,11 +298,13 @@ html.theme-staff body {
   background: radial-gradient(circle, rgba(255, 255, 255, 0.22), transparent 65%);
   pointer-events: none;
 }
+
 .staff-section {
   @apply flex items-center gap-2 text-base font-semibold text-slate-50;
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -220,6 +312,7 @@ html.theme-staff body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+
   /* star twinkle only fades brightness (no movement), so it stays on for reduced-motion users */
   .animate-twinkle {
     animation-duration: var(--twinkle-dur, 3s) !important;
@@ -235,18 +328,22 @@ html.theme-staff body {
   font-weight: 400;
   font-display: swap;
 }
+
 @font-face {
   font-family: 'THSarabunPSK';
   src: local('TH SarabunPSK Bold'), url('/fonts/THSarabun-Bold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }
+
 .print-only {
   display: none;
 }
+
 @page {
   size: A4;
   margin: 14mm 12mm;
+
   /* page number top right, Thai official-document style (first page — cover/title — has none) */
   @top-right {
     content: counter(page);
@@ -257,30 +354,37 @@ html.theme-staff body {
     padding-bottom: 2mm;
   }
 }
+
 @page :first {
   @top-right {
     content: none;
   }
 }
+
 @media print {
+
   html,
   body {
     background: #fff !important;
     color: #111 !important;
     font-size: 11pt;
   }
+
   .no-print {
     display: none !important;
   }
+
   .print-only {
     display: block !important;
     color: #555 !important;
     margin-bottom: 4mm;
   }
+
   main {
     max-width: none !important;
     padding: 0 !important;
   }
+
   .print-doc,
   .print-doc * {
     color: #1a1a1a !important;
@@ -293,39 +397,48 @@ html.theme-staff body {
     opacity: 1 !important;
     transform: none !important;
   }
+
   .print-doc .card,
   .print-doc section,
   .print-doc .rounded-xl {
     border-color: #c8c8c8 !important;
   }
+
   .print-doc .card,
   .print-doc .rounded-xl,
   .print-doc li,
   .print-doc tr {
     break-inside: avoid;
   }
+
   .print-doc h2,
   .print-doc .title-glow {
     color: #000 !important;
   }
+
   .print-doc .num {
     border: 1.5px solid #333 !important;
   }
+
   .print-doc .text-slate-400,
   .print-doc .text-slate-500,
   .print-doc .hint {
     color: #555 !important;
   }
+
   /* show folded content (group rosters, generated unit plans) */
   .print-doc .print-show-flex {
     display: flex !important;
   }
+
   .print-doc .print-show-row {
     display: table-row !important;
   }
-  .print-doc details > *:not(summary) {
+
+  .print-doc details>*:not(summary) {
     display: block !important;
   }
+
   .print-doc a {
     text-decoration: none !important;
   }
@@ -337,19 +450,23 @@ html.theme-staff body {
     letter-spacing: normal !important;
     text-transform: none !important;
   }
+
   .print-doc {
     font-size: 16pt !important;
     line-height: 1.32 !important;
   }
+
   /* Three levels only (user spec): main headings 18pt bold · sub-headings 16pt bold · body 16pt regular */
   .print-doc * {
     font-size: 16pt !important;
     font-weight: 400 !important;
     line-height: 1.32 !important;
   }
+
   .print-doc .print-only {
     font-size: 14pt !important;
   }
+
   /* level 1 — main headings (document title + numbered sections): 18pt bold */
   .print-doc h1,
   .print-doc h2,
@@ -358,6 +475,7 @@ html.theme-staff body {
     font-weight: 700 !important;
     line-height: 1.25 !important;
   }
+
   /* level 2 — sub-headings (section sub-titles, block titles, group names, table headers): 16pt bold */
   .print-doc .sub-h,
   .print-doc .font-medium,
@@ -374,54 +492,65 @@ html.theme-staff body {
   .print-doc .grid {
     display: block !important;
   }
-  .print-doc .grid > * {
+
+  .print-doc .grid>* {
     margin-bottom: 2.5mm !important;
   }
+
   .print-doc section.card {
     border: none !important;
     border-radius: 0 !important;
     padding: 0 !important;
     margin: 0 0 7mm !important;
   }
-  .print-doc section.card > h2,
-  .print-doc section.card > div > div > h2 {
+
+  .print-doc section.card>h2,
+  .print-doc section.card>div>div>h2 {
     border-bottom: 1.5pt solid #333 !important;
     padding-bottom: 1.5mm !important;
     margin-bottom: 2mm !important;
     break-after: avoid;
   }
+
   .print-doc .rounded-xl {
     border-width: 0.75pt !important;
     border-radius: 1.5mm !important;
     padding: 2.5mm 3.5mm !important;
   }
+
   .print-doc .num {
     width: auto !important;
     height: auto !important;
     border: none !important;
     padding: 0 !important;
   }
+
   .print-doc .num::after {
     content: '.';
   }
+
   .print-doc table {
     border-collapse: collapse !important;
     min-width: 0 !important;
     width: 100% !important;
   }
+
   .print-doc th,
   .print-doc td {
     border: 0.75pt solid #999 !important;
     padding: 1.5mm 2mm !important;
     vertical-align: top !important;
   }
+
   .print-doc thead {
     display: table-header-group;
   }
+
   .print-doc .pill {
     border: none !important;
     padding: 0 3mm 0 0 !important;
   }
+
   .print-doc ul,
   .print-doc ol {
     margin-top: 1mm !important;
@@ -429,79 +558,96 @@ html.theme-staff body {
 
   /* ---- indentation hierarchy (Thai official-document style) ---- */
   /* document title block centred */
-  .print-doc > div > header {
+  .print-doc>div>header {
     text-align: center !important;
     margin-bottom: 6mm !important;
   }
-  .print-doc > div > header .flex {
+
+  .print-doc>div>header .flex {
     justify-content: center !important;
   }
+
   /* level 1: section headings flush left; level 2: everything under a heading indented */
-  .print-doc section.card > :not(:first-child) {
+  .print-doc section.card> :not(:first-child) {
     margin-left: 10mm !important;
   }
-  .print-doc section.card > :first-child .hint {
+
+  .print-doc section.card> :first-child .hint {
     margin-left: 10mm !important;
   }
+
   /* level 3: lists and sub-blocks inside a section indent further */
   .print-doc section.card .sub-h {
     margin-top: 3mm !important;
     font-weight: 700 !important;
     color: #000 !important;
   }
-  .print-doc section.card .sub-h + ul,
-  .print-doc section.card .sub-h + ol,
-  .print-doc section.card .sub-h + div,
+
+  .print-doc section.card .sub-h+ul,
+  .print-doc section.card .sub-h+ol,
+  .print-doc section.card .sub-h+div,
   .print-doc .rounded-xl ul,
   .print-doc .rounded-xl ol {
     margin-left: 6mm !important;
   }
+
   /* bulleted items ("• text"): wrapped lines align with the text, not the bullet */
-  .print-doc ul > li:not(.flex):not(.rounded-xl) {
+  .print-doc ul>li:not(.flex):not(.rounded-xl) {
     padding-left: 5mm !important;
     text-indent: -5mm !important;
   }
+
   .print-doc li * {
     text-indent: 0 !important;
   }
+
   /* icon + text items (e.g. "✦ …"): keep the icon in its own column */
   .print-doc li.flex {
     text-indent: 0 !important;
     gap: 2.5mm !important;
   }
-  .print-doc li.flex > span.text-rune-400:first-child {
+
+  .print-doc li.flex>span.text-rune-400:first-child {
     flex-shrink: 0 !important;
     width: 4mm !important;
   }
-  .print-doc li.flex > span:first-child {
+
+  .print-doc li.flex>span:first-child {
     flex-shrink: 0 !important;
   }
+
   .print-doc li.rounded-xl {
     text-indent: 0 !important;
     padding-left: 3.5mm !important;
   }
+
   .print-doc ol.list-decimal {
     padding-left: 6mm !important;
   }
+
   /* prose paragraph: first-line indent */
   .print-doc .print-para {
     text-indent: 12mm !important;
     text-align: justify;
     text-justify: inter-character;
   }
+
   .print-doc .rounded-xl {
     margin-left: 0 !important;
   }
+
   .print-doc td,
   .print-doc th {
     text-indent: 0 !important;
   }
+
   /* indented blocks must shrink by the indent so they stay inside the page */
-  .print-doc section.card > :not(:first-child) {
+  .print-doc section.card> :not(:first-child) {
     width: calc(100% - 10mm) !important;
     max-width: calc(100% - 10mm) !important;
   }
-  .print-doc section.card > :first-child {
+
+  .print-doc section.card> :first-child {
     padding-right: 0 !important;
   }
 }

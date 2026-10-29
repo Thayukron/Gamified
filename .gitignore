@@ -4,15 +4,11 @@ frontend/.output/
 frontend/.data/
 frontend/dist/
 frontend/tests/
-backend/config.local.php
-backend/vendor/
 *.log
 .env
 .DS_Store
 art-source/
-backend/storage/
-tools/mock-gemini/*.txt
-tools/mock-gemini/*.log
+frontend/storage/
 docs/ตัวอย่างไกด์การสอน-DSA.pdf
 docs/ไกด์การสอน-DSA-THSarabun.pdf
 docs/ไกด์การสอน-DSA-ฉบับจัดย่อหน้า.pdf

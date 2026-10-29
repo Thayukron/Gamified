@@ -1,19 +1,13 @@
-# 🚀 การติดตั้งและ Deploy ด้วย Docker
+# 🚀 การติดตังและ Deploy (Node + MariaDB)
 
-> เฟส 5: API ทั้ง 86 endpoints ย้ายเป็น Nitro แล้ว รวม AI/แผนการสอน/jobs ค่า frontend เริ่มต้น `/api`; ดู [วิธีรัน Node + MariaDB และอัปเกรด schema](docs/migration/phase5-ai-plans-jobs.md) การตรวจ Gemini ใช้ mock ยังรอตรวจรับด้วย key จริง และจัด deployment/ถอด PHP ในเฟส 6 ขั้นตอน Docker ด้านล่างเป็นระบบเดิม
+> เฟส 6 (2026-10-29): ถอด PHP/Docker-API ออกแล้ว — ระบบรันดวย Node 22 (Nuxt/Nitro) ตัวเดียว
+> ทั้งเว็บและ API (86 endpoints) + MariaDB 11.4 · ดูประวัติการย้าย API ใน [docs/migration/](docs/migration/)
 
-> เฟส 4: เพิ่ม staff APIs รวม 56/86 endpoints แล้ว ใช้ Node + MariaDB ในเครื่องโดยตรง ดู [สถานะและการทดลอง](docs/migration/phase4-staff.md) ยังไม่ถอด PHP ทั้งระบบจนกว่า AI/plans/jobs และ deployment จะย้ายครบ
-
-> เฟส 3: auth/account/student ย้ายเป็น Nitro รวม 18/86 endpoints แล้ว ดู [สถานะและวิธีทดลอง](docs/migration/phase3-game.md) ใช้ MariaDB ในเครื่อง ไม่ต้อง Docker สำหรับส่วนที่ย้ายแล้ว
-
-> งานย้าย Nuxt 3 (2026-10-29): เป้าหมายใหม่เป็น Node.js + MariaDB service โดยตรง เฟส 2 รัน API auth/account ได้แล้วด้วยฐานใหม่ในเครื่อง port 3306 ดู [วิธีรันแบบไม่ใช้ Docker](docs/migration/phase2-foundation.md) ระบบ Nuxt ยังย้ายไม่ครบทุก API จึงยังไม่ใช่ replacement สำหรับ production ทั้งระบบ ขั้นตอนด้านล่างสำหรับ PHP deployment เดิม
-
-ระบบมี 3 container ทำงานร่วมกัน สั่งรันด้วยคำสั่งเดียว
+ระบบมี 2 container ทำงานร่วมกัน สั่งรันด้วยคำสั่งเดียว
 
 | container | หน้าที่ | ภายใน |
 |---|---|---|
-| `web` | หน้าเว็บ (Nuxt build แล้ว) + ส่งต่อ `/api` ไปยัง API | Nginx |
-| `api` | REST API | PHP 8.2 + Apache |
+| `web` | หน้าเว็บ (Nuxt build) + REST API ทุก endpoint | Node 22 (Nitro) |
 | `db` | ฐานข้อมูล | MariaDB 11.4 |
 
 ผู้ใช้เปิดแค่ `http://<เซิร์ฟเวอร์>:8090` — API อยู่ใต้ `/api` ของเว็บเดียวกัน (ไม่ต้องตั้ง CORS)
@@ -32,13 +26,16 @@ nano .env            # ตั้ง DB_PASSWORD, DB_ROOT_PASSWORD ให้เ�
 docker compose up -d --build
 ```
 
+เมื่อ container `web` เริ่มทำงานจะรัน `scripts/init-db.mjs` อัตโนมัติ:
+- ฐานว่าง → สร้างตารางทั้งหมด + บัญชี `admin` + archetypes + scenarios สากล
+- ฐานมีข้อมูลแล้ว → รันเฉพาะไฟล์ upgrade ใน `frontend/database/upgrades/` (**ไม่ลบข้อมูล**)
+
 เปิด `http://<เซิร์ฟเวอร์>:8090` → เข้าสู่ระบบ `admin` / `admin1234` → ระบบบังคับให้ตั้งรหัสผ่านใหม่ทันที
 (หรือกำหนด `ADMIN_PASSWORD` ใน `.env` ก่อนติดตั้ง)
 
-จากนั้น: หน้าแอดมิน → **นำเข้าข้อมูล** (แผนก ครู นักศึกษา พร้อมกลุ่มเรียน) → ครูเข้าไปสร้างรายวิชาของตนเอง
+จากนั้น: หน้าแอดมิน → **นำเข้าข้อมูล** (แผนก ครู นักเรียน พร้อมกลุ่มเรียน) → ครูเข้าไปสร้างรายวิชาของตนเอง
 
-> ทดลองระบบแบบมีข้อมูลตัวอย่าง: ตั้ง `SEED_DEMO=1` **ก่อน**สั่ง `up` ครั้งแรก
-> (ครู `teacher1`/`teacher1234`, นักศึกษา `student001`–`046`/`student1234`)
+> ระบบ Node ไม่มี `SEED_DEMO` — ต้องการข้อมูลตัวอย่างให้สร้างบัญชีทดสอบแล้วนำเข้าในหน้าแอดมิน
 
 ---
 
@@ -50,30 +47,44 @@ git pull
 docker compose up -d --build
 ```
 
-- ข้อมูลอยู่ใน volume (`db_data`, `api_storage`) — **ไม่หายเมื่อ build ใหม่**
-- ทุกครั้งที่ API เริ่มทำงาน `backend/database/install.php` จะตรวจฐานข้อมูล:
-  ว่าง → สร้างตาราง · มีข้อมูลแล้ว → ใช้เฉพาะไฟล์ปรับโครงสร้างใหม่ใน `backend/database/upgrades/` (**ไม่ลบข้อมูล**)
-- ⚠️ ห้ามรัน `migrate.php` บนเซิร์ฟเวอร์จริง (ล้างข้อมูลทั้งหมด)
+- ข้อมูลอยู่ใน volume (`db_data`, `app_storage`) — **ไม่หายเมื่อ build ใหม่**
+- ไฟล์ `app.key` (กุญแจเข้ารหัส API Key ของครู) อยู่ใน volume `app_storage` เช่นกัน
+- ⚠️ ห้ามรัน `init-db.mjs` โดยไม่มี `--create-empty` บนฐานที่มีข้อมูล (สคริปต์ปฏิเสธเอง)
 
 ---
 
 ## 3. สำรองและกู้คืนข้อมูล 💾
 
-ต้องสำรอง **2 อย่างคู่กัน**: ฐานข้อมูล + `app.key` (กุญแจเข้ารหัส API Key ของครู — ถ้าหาย ครูต้องกรอก Key ใหม่)
+ต้องสำรอง **2 อย่างคู่กัน**: ฐานข้อมูล + `app.key` (ถ้าหาย ครูต้องกรอก Key ใหม่ทุกคน)
+
+### บนเครื่องพัฒนา (Windows) — ใช้สคริปต์พร้อม
+
+```powershell
+.\tools\backup.ps1 -Tag phase6        # → backups\gamified-<stamp>.sql + app.key-<stamp>.key
+.\tools\restore.ps1 -BackupFile backups\gamified-<stamp>.sql   # กู้คืนฐาน + app.key (ถามยืนยัน)
+```
+
+### บนเซิร์ฟเวอร์ (Linux)
 
 ```bash
 # สำรอง
 docker compose exec -T db sh -c 'mariadb-dump -uroot -p"$MARIADB_ROOT_PASSWORD" --single-transaction "$MARIADB_DATABASE"' > backup-$(date +%F).sql
-docker compose cp api:/var/www/html/storage/app.key ./app.key.backup
+docker compose cp web:/app/storage/app.key ./app.key.backup
 
 # กู้คืน
 docker compose exec -T db sh -c 'mariadb -uroot -p"$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' < backup-2026-09-28.sql
-docker compose cp ./app.key.backup api:/var/www/html/storage/app.key
-docker compose exec api chown www-data:www-data storage/app.key
-docker compose restart api
+docker compose cp ./app.key.backup web:/app/storage/app.key
+docker compose restart web
 ```
 
 แนะนำตั้ง cron สำรองทุกคืน และเก็บไฟล์ไว้นอกเครื่องเซิร์ฟเวอร์
+
+### Rollback เวอร์ชันโค้ด
+
+1. สำรองข้อมูลก่อน (ข้อ 3)
+2. `git checkout <commit-เก่า>` แล้ว `docker compose up -d --build`
+3. ถ้าเวอร์ชันเก่ายังเป็น PHP (ก่อน 2026-10-29) ใช้ `docker-compose.yml` ของ commit นั้น — ฐานข้อมูลใช้ร่วมกันได้
+4. กู้คืนข้อมูลจาก backup ถ้าจำเป็น
 
 ---
 
@@ -82,10 +93,10 @@ docker compose restart api
 | ต้องการ | คำสั่ง |
 |---|---|
 | ดูสถานะ | `docker compose ps` |
-| ดู log API | `docker compose logs -f api` |
+| ดู log | `docker compose logs -f web` |
 | หยุดระบบ (ข้อมูลยังอยู่) | `docker compose down` |
 | เริ่มระบบ | `docker compose up -d` |
-| แอดมินลืมรหัสผ่าน | `docker compose exec api php bin/reset-password.php admin` → รหัสชั่วคราว = `admin` |
+| อัปเกรด schema โดยตรง | `docker compose exec web node scripts/upgrade-db.mjs` |
 | เปลี่ยนภาคเรียน | แก้ `ACADEMIC_YEAR` / `SEMESTER` ใน `.env` → `docker compose up -d` |
 | ดูฐานข้อมูลด้วย HeidiSQL/DBeaver (บนเซิร์ฟเวอร์) | `127.0.0.1:3320` ผู้ใช้/รหัสตาม `.env` |
 
@@ -95,17 +106,16 @@ docker compose restart api
 
 ## 5. ใช้งานจริงผ่านอินเทอร์เน็ต 🔒
 
-- ควรเปิดผ่าน **HTTPS** — วาง reverse proxy (เช่น Nginx/Caddy ของเซิร์ฟเวอร์ หรือ Cloudflare Tunnel) ไว้หน้า `web:8090`
+- ควรเปิดผ่าน **HTTPS** — วาง reverse proxy (เช่น Nginx/Caddy ของเซิร์ฟเวอร์ หรือ Cloudflare Tunnel) หน้าง `web:8090`
 - เปิด firewall เฉพาะพอร์ตเว็บ ไม่ต้องเปิดพอร์ตฐานข้อมูล (3320 ผูกกับ 127.0.0.1 อยู่แล้ว)
 - เปลี่ยนรหัสผ่านใน `.env` จากค่าตัวอย่างทุกตัว
 
 ---
 
-## 6. ฐานข้อมูลชุดเดียว (เครื่องพัฒนา = Docker)
+## 6. ฐานข้อมูลชุดเดียว (เครื่องพัฒนา = ฐานเดียวกับ production)
 
-ตั้งแต่ 2026-10-19 ใช้ฐานข้อมูลชุดเดียว: ชุดพัฒนา (`php -S` พอร์ต 8100 ผ่าน `start-dev.ps1`) ต่อ MariaDB ใน Docker ทาง `127.0.0.1:DB_PUBLISH_PORT`
-ด้วยค่าใน `.env` (ดู `backend/config.php`) และ `backend/storage/app.key` ต้องเป็นไฟล์เดียวกับใน container (ให้ถอดรหัส API Key ของครูได้):
+ตั้งแต่วันที่ 2026-10-19 ใช้ฐานข้อมูลชุดเดียว: ชุดพัฒนาต่อ MariaDB เดียวกันผ่าน `127.0.0.1:DB_PUBLISH_PORT`
+ด้วยค่าใน `.env` และ `frontend/storage/app.key` ต้องเป็นไฟล์เดียวกับใน container
 
-```bash
-docker compose cp api:/var/www/html/storage/app.key backend/storage/app.key
-```
+- **ห้ามรัน `migrate.php`** (ล้างข้อมูลจริง; สคริปต์ปฏิเสธเมื่อมีผู้ใช้ เว้นแต่ `--wipe-real-data`)
+- การทดสอบใด ๆ บนเครื่องพัฒนากระทบข้อมูลจริง: สำรองก่อนด้วย `tools/backup.ps1`

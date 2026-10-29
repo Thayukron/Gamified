@@ -1,4 +1,4 @@
-// Unit lesson plan (OVEC 2567 form) — content shape mirrors backend LessonPlanService::EMPTY.
+// Unit lesson plan (OVEC 2567 form) — content shape mirrors server/services/lessonPlan.ts EMPTY.
 export interface PlanContent {
   outcome: string
   standard: { occupation: string; sub_competency: string; criteria: string; method: string; performance_evidence: string; knowledge_evidence: string; career_integration: string }
@@ -13,7 +13,7 @@ export interface PlanContent {
   after: { results: string; problems: string; solution_result: string; next_time: string }
 }
 
-/** Course-level part of the book — mirrors backend CoursePlanService::EMPTY. */
+/** Course-level part of the book — mirrors server/services/coursePlan.ts EMPTY. */
 export interface CourseBook {
   curriculum: {
     program: string; field_type: string; occupation_group: string; major: string
