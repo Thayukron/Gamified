@@ -26,6 +26,8 @@ try {
   await db.changeUser({ database: name })
   await db.query("SET time_zone = '+07:00'")
   await db.query(tablesOnly)
+  const [lease] = await db.execute("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='background_jobs' AND COLUMN_NAME='lease_until'")
+  if (!lease.length) throw new Error('Schema is missing background_jobs.lease_until; update schema.sql before initializing')
   await db.query('CREATE TABLE schema_migrations (name VARCHAR(190) PRIMARY KEY, applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB')
   await db.beginTransaction()
   try {
