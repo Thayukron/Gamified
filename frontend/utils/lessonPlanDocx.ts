@@ -353,7 +353,9 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       big(`รหัสวิชา ${course.code}  วิชา ${course.name}`, 20, 900),
       ...(book!.author ? [big(`จัดทำโดย ${book!.author}`, 18, 900, false)] : []),
       big(`ภาคเรียนที่ ${opts.learners.term.semester} ปีการศึกษา ${opts.learners.term.academic_year}`, 18, 0, false),
-      big(opts.institution?.name || 'วิทยาลัย……………………………', 20, 600),
+      big(`${course.department_name ? `แผนกวิชา${String(course.department_name).replace(/^แผนก(วิชา)?s*/, '')} ` : ''}${opts.institution?.name || 'วิทยาลัย……………………………'}`, 20, 600),
+      big('สำนักงานคณะกรรมการการอาชีวศึกษา', 20),
+      big('กระทรวงศึกษาธิการ', 20),
     ]
   }
 
@@ -366,8 +368,9 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
 
   const toc = () => [
     new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: true, spacing: { after: 160 }, children: [run('สารบัญ', { bold: true, size: 18 })] }),
-    // page numbers written from the layout estimate; dirty, so Word recounts them exactly when the file opens
-    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3', beginDirty: true }),
+    // numbers written from the layout estimate. Not dirty: updating while the file opens, before Word has laid out the
+    // pages, turns every entry into the first page of its section (ก / 1). The teacher updates it once it is open.
+    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3' }),
   ]
 
   const curriculumPart = () => {
@@ -649,7 +652,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const pageHeader = () => new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
   const headingRun = { font: FONT, bold: true, boldComplexScript: true, color: '000000' }
   // The table of contents is written WITH page numbers (laid out from the TH SarabunPSK files the site serves),
-  // so it shows them in any program and before Word updates it; Word still offers to update them exactly.
+  // so it shows them in any program; Thai line breaks can differ from Word's, so "update field" in Word makes them exact.
   let pageNumbers: any
   if (book) {
     try {
@@ -664,7 +667,6 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     creator: 'ARCANA PROFILE',
     title: `แผนการจัดการเรียนรู้ ${course.code} ${course.name}`,
     pageNumbers,
-    features: book ? { updateFields: true } : undefined, // Word offers to refresh the table of contents when the file opens
     styles: {
       default: { document: { run: { font: FONT, size: PT(16), sizeComplexScript: PT(16), language: { value: 'th-TH', bidirectional: 'th-TH' } } } },
       paragraphStyles: [
