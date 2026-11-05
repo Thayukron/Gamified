@@ -632,8 +632,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     sheets.forEach((s, i) => {
       if (book && !withPlan && i === 0) first = true // the unit heading already starts the page
       newPage()
-      // in the book every sheet is listed in the table of contents under its unit
-      if (book) children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, spacing: { after: 80 }, children: [run(`${SHEET_TYPES[s.type].th}ที่ ${s.number} ${s.title}`, { bold: true })] }))
+      // table-of-contents entry under its unit, invisible like the unit's (Heading 3 style): the header table names the sheet
+      if (book) children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun({ text: `${SHEET_TYPES[s.type].th}ที่ ${s.number} ${s.title}`, language: { value: 'th-TH', bidirectional: 'th-TH' } })] }))
       children.push(...sheetBody(pl, s))
     })
   })
@@ -675,7 +675,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
         { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, color: 'FFFFFF', size: 2, sizeComplexScript: 2 }, paragraph: { spacing: { before: 0, after: 0, line: 240 } } },
         // table-of-contents entries (Word's built-in "toc 1/2" styles would fall back to Angsana)
         { id: 'TOC1', name: 'toc 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 60, after: 0 } } },
-        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 80 } } },
+        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, color: 'FFFFFF', size: 2, sizeComplexScript: 2 }, paragraph: { spacing: { before: 0, after: 0, line: 240 } } },
         { id: 'TOC3', name: 'toc 3', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 1134 }, spacing: { before: 0, after: 0 } } },
         { id: 'TOC2', name: 'toc 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 567 }, spacing: { before: 0, after: 0 } } },
       ],
