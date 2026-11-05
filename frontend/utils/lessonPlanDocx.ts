@@ -52,7 +52,7 @@ const toNum = (s: string | number) => {
  */
 export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string }; include?: Set<string> }) {
   const d = await import('docx')
-  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
+  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, NumberFormat, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
 
   const logo = await fetch('/forms/ovec-logo.png').then((r) => r.arrayBuffer())
 
@@ -596,17 +596,19 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const unitWanted = (pl: PlanForExport) => !anyOf('unit:') || has(`unit:${pl.id}`)
   const sheetWanted = (s: Sheet) => (anyOf('sheet:') ? has(`sheet:${s.id}`) : anyOf('type:') ? has(`type:${s.type}`) : true)
 
-  const children: any[] = []
+  // front matter (คำนำ … ตารางหน่วย) is numbered ก ข ค; the numbering restarts at 1 with the first unit plan
+  const front: any[] = []
   if (book) {
-    if (has('preface')) children.push(...preface())
-    if (has('toc')) children.push(...toc())
-    if (has('curriculum')) children.push(...curriculumPart())
-    if (has('occupational')) children.push(...occupationalPart())
-    if (has('job')) children.push(...jobPart())
-    if (has('behaviour')) children.push(...behaviourPart())
-    if (has('units')) children.push(...unitsPart())
+    if (has('preface')) front.push(...preface())
+    if (has('toc')) front.push(...toc())
+    if (has('curriculum')) front.push(...curriculumPart())
+    if (has('occupational')) front.push(...occupationalPart())
+    if (has('job')) front.push(...jobPart())
+    if (has('behaviour')) front.push(...behaviourPart())
+    if (has('units')) front.push(...unitsPart())
   }
-  let first = !children.length
+  const children: any[] = []
+  let first = true
   const newPage = () => {
     if (!first) children.push(pageBreak())
     first = false
@@ -616,8 +618,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const sheets = (pl.sheets ?? []).filter(sheetWanted)
     if (!withPlan && !sheets.length) return
     if (book) {
-      // unit heading for the table of contents
-      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
+      // table-of-contents entry only: the Heading 2 style makes it invisible, the header table below already names the unit
+      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, children: [new TextRun({ text: `หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, language: { value: 'th-TH', bidirectional: 'th-TH' } })] }))
       first = false
     }
     if (withPlan) {
@@ -632,17 +634,19 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       children.push(...sheetBody(pl, s))
     })
   })
-  if (book && has('bibliography')) children.push(...bibliographyPart())
+  if (book && has('bibliography')) {
+    children.push(...bibliographyPart())
+    first = false
+  }
   if (opts.learners && has('appendix')) {
     const app = appendix()
     if (first) app.shift() // nothing before it: no leading page break
     if (book) app.splice(0, first ? 1 : 2, partTitle('ภาคผนวก', !first)) // a TOC heading
     children.push(...app)
   }
-  if (!children.length) children.push(p([run()]))
 
   const page = { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } }
-  const pageHeader = new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
+  const pageHeader = () => new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
   const headingRun = { font: FONT, bold: true, boldComplexScript: true, color: '000000' }
   // The table of contents is written WITH page numbers (laid out from the TH SarabunPSK files the site serves),
   // so it shows them in any program and before Word updates it; Word still offers to update them exactly.
@@ -665,7 +669,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       default: { document: { run: { font: FONT, size: PT(16), sizeComplexScript: PT(16), language: { value: 'th-TH', bidirectional: 'th-TH' } } } },
       paragraphStyles: [
         { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(18), sizeComplexScript: PT(18) }, paragraph: { spacing: { before: 0, after: 160 } } },
-        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 120 } } },
+        // unit entries for the table of contents: 1 pt white, so nothing shows on the page (style formatting doesn't carry over to the TOC)
+        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, color: 'FFFFFF', size: 2, sizeComplexScript: 2 }, paragraph: { spacing: { before: 0, after: 0, line: 240 } } },
         // table-of-contents entries (Word's built-in "toc 1/2" styles would fall back to Angsana)
         { id: 'TOC1', name: 'toc 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 60, after: 0 } } },
         { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 80 } } },
@@ -673,12 +678,13 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
         { id: 'TOC2', name: 'toc 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 567 }, spacing: { before: 0, after: 0 } } },
       ],
     },
-    sections: book && has('cover')
-      ? [
-          { properties: { page }, children: cover() }, // cover: no page number
-          { properties: { page }, headers: { default: pageHeader }, children },
-        ]
-      : [{ properties: { page }, headers: { default: pageHeader }, children }],
+    sections: [
+      ...(book && has('cover') ? [{ properties: { page }, children: cover() }] : []), // cover: no page number, not counted
+      ...(front.length ? [{ properties: { page: { ...page, pageNumbers: { start: 1, formatType: NumberFormat.THAI_LETTERS } } }, headers: { default: pageHeader() }, children: front }] : []),
+      ...(children.length || !front.length && !(book && has('cover'))
+        ? [{ properties: { page: { ...page, pageNumbers: { start: 1, formatType: NumberFormat.DECIMAL } } }, headers: { default: pageHeader() }, children: children.length ? children : [p([run()])] }]
+        : []),
+    ],
   })
   const blob = await markThaiRuns(await Packer.toBlob(doc))
   const url = URL.createObjectURL(blob)
