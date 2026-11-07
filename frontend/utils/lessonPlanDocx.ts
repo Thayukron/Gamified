@@ -452,7 +452,9 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const pr = u.reduce((s, r) => s + toNum(r.hours_practice), 0)
     const pc = u.reduce((s, r) => s + toNum(r.percent), 0)
     const f = book!.final_eval
-    return { t, pr, pc, ft: toNum(f.hours_theory), fp: toNum(f.hours_practice), fpc: toNum(f.percent) }
+    const m = book!.midterm_eval
+    // ft/fp/fpc = everything assessed outside the units (midterm + course-level assessment), for the grand totals
+    return { t, pr, pc, mt: toNum(m.hours_theory), mp: toNum(m.hours_practice), mpc: toNum(m.percent), ot: toNum(f.hours_theory), op: toNum(f.hours_practice), opc: toNum(f.percent), ft: toNum(f.hours_theory) + toNum(m.hours_theory), fp: toNum(f.hours_practice) + toNum(m.hours_practice), fpc: toNum(f.percent) + toNum(m.percent) }
   }
 
   const behaviourPart = () => {
@@ -500,7 +502,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
             tcell(`${r.hours_theory || 0}/${r.hours_practice || 0}`, wd[5], { center: true }), tcell(r.percent, wd[6], { center: true }),
           ] })),
           new TableRow({ children: [tcell('รวมการจัดการเรียนรู้ตลอดภาคเรียน', span5, { bold: true, columnSpan: 5 }), tcell(`${fmt(T.t) || 0}/${fmt(T.pr) || 0}`, wd[5], { center: true }), tcell(fmt(T.pc), wd[6], { center: true })] }),
-          new TableRow({ children: [tcell('ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)', span5, { columnSpan: 5 }), tcell(`${fmt(T.ft) || 0}/${fmt(T.fp) || 0}`, wd[5], { center: true }), tcell(fmt(T.fpc), wd[6], { center: true })] }),
+          ...(T.mt + T.mp > 0 ? [new TableRow({ children: [tcell('ทดสอบกลางภาค', span5, { columnSpan: 5 }), tcell(`${fmt(T.mt) || 0}/${fmt(T.mp) || 0}`, wd[5], { center: true }), tcell(fmt(T.mpc), wd[6], { center: true })] })] : []),
+          new TableRow({ children: [tcell('ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)', span5, { columnSpan: 5 }), tcell(`${fmt(T.ot) || 0}/${fmt(T.op) || 0}`, wd[5], { center: true }), tcell(fmt(T.opc), wd[6], { center: true })] }),
           new TableRow({ children: [tcell('รวม', span5, { bold: true, center: true, columnSpan: 5 }), tcell(`${fmt(T.t + T.ft) || 0}/${fmt(T.pr + T.fp) || 0}`, wd[5], { bold: true, center: true }), tcell(fmt(T.pc + T.fpc), wd[6], { bold: true, center: true })] }),
         ],
       }),
@@ -529,7 +532,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
           ] }),
           new TableRow({ tableHeader: true, children: ['ทฤษฎี', 'ปฏิบัติ', 'รวม'].map((h, i) => tcell(h, wd[2 + i], { bold: true, center: true, size: 16 })) }),
           ...u.map((r) => row(r.no, r.name, r.hours_theory, r.hours_practice)),
-          row('', 'ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา', T.ft, T.fp),
+          ...(T.mt + T.mp > 0 ? [row('', 'ทดสอบกลางภาค', T.mt, T.mp)] : []), // set by the weekly schedule
+          row('', 'ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา', T.ot, T.op),
           new TableRow({ children: [tcell('รวม', wd[0] + wd[1], { bold: true, center: true, columnSpan: 2, size: 16 }), ...[T.t + T.ft, T.pr + T.fp, T.t + T.ft + T.pr + T.fp].map((v, i) => tcell(fmt(v), wd[2 + i], { bold: true, center: true, size: 16 }))] }),
         ],
       }),

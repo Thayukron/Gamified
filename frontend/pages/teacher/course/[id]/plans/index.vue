@@ -115,6 +115,12 @@ async function doExport(keys: string[]) {
         <span class="text-sm text-rune-300">กรอกเลย →</span>
       </NuxtLink>
 
+      <NuxtLink :to="`/teacher/course/${id}/plans/schedule`" class="card card-hover flex items-center gap-3 !py-3" data-testid="open-schedule">
+        <AppIcon name="book" :size="18" class="text-rune-300" />
+        <span class="flex-1 text-sm text-slate-200"><b>ตารางกำหนดการสอนรายสัปดาห์</b> — กำหนดว่าแต่ละหน่วยสอนกี่สัปดาห์ รวมสัปดาห์ทดสอบกลางภาคและปลายภาค</span>
+        <span class="text-sm text-rune-300">เปิด →</span>
+      </NuxtLink>
+
       <p v-if="err" class="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{{ err }}</p>
 
       <!-- units -->

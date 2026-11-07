@@ -23,7 +23,9 @@ export interface CourseBook {
   occupational: { agency: string; standard: string; occupation: string; level: string; rows: Record<string, string>[] }
   job_analysis: { job: string; rows: Record<string, string>[] }
   units: Record<string, string>[]
+  midterm_eval: { hours_theory: string; hours_practice: string; percent: string }
   final_eval: { hours_theory: string; hours_practice: string; percent: string }
+  schedule: { units: { no: string; weeks: string }[] }
   preface: string
   bibliography: string
   author: string

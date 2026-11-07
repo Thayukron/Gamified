@@ -19,13 +19,16 @@ class CoursePlanService
         'occupational' => ['agency' => '', 'standard' => '', 'occupation' => '', 'level' => '', 'rows' => []],
         'job_analysis' => ['job' => '', 'rows' => []],
         'units' => [],
+        'midterm_eval' => ['hours_theory' => '', 'hours_practice' => '', 'percent' => ''],
         'final_eval' => ['hours_theory' => '', 'hours_practice' => '', 'percent' => ''],
+        'schedule' => ['units' => []], // weeks per unit; sessions and hours are worked out from them
         'preface' => '',
         'bibliography' => '',
         'author' => '',
     ];
     private const OCC_ROW = ['unit_code' => '', 'unit_desc' => '', 'sub_code' => '', 'sub_desc' => '', 'criteria' => '', 'method' => ''];
     private const JOB_ROW = ['duty' => '', 'task' => '', 'sub_competency' => '', 'knowledge' => '', 'skill' => ''];
+    private const SCHEDULE_ROW = ['no' => '', 'weeks' => ''];
     private const UNIT_ROW = ['no' => '', 'name' => '', 'k' => '', 's' => '', 'a' => '', 'ap' => '', 'hours_theory' => '', 'hours_practice' => '', 'percent' => ''];
 
     private static function text(mixed $v, int $max = 6000): string
@@ -67,9 +70,12 @@ class CoursePlanService
         $c['job_analysis']['job'] = self::text($in['job_analysis']['job'] ?? '', 1000);
         $c['job_analysis']['rows'] = self::rows($in['job_analysis']['rows'] ?? [], self::JOB_ROW);
         $c['units'] = self::rows($in['units'] ?? [], self::UNIT_ROW, 40);
-        foreach (self::EMPTY['final_eval'] as $k => $_) {
-            $c['final_eval'][$k] = self::text($in['final_eval'][$k] ?? '', 20);
+        foreach (['midterm_eval', 'final_eval'] as $part) {
+            foreach (self::EMPTY[$part] as $k => $_) {
+                $c[$part][$k] = self::text($in[$part][$k] ?? '', 20);
+            }
         }
+        $c['schedule']['units'] = self::rows($in['schedule']['units'] ?? [], self::SCHEDULE_ROW, 40);
         foreach (['preface', 'bibliography', 'author'] as $k) {
             $c[$k] = self::text($in[$k] ?? '');
         }

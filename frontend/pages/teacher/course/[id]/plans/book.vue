@@ -43,9 +43,10 @@ const n = (s: any) => parseFloat(String(s ?? '').replace(/[^\d.]/g, '')) || 0
 const totals = computed(() => {
   const u = book.value?.units ?? []
   const f = book.value?.final_eval
-  const t = u.reduce((s, r) => s + n(r.hours_theory), 0) + n(f?.hours_theory)
-  const p = u.reduce((s, r) => s + n(r.hours_practice), 0) + n(f?.hours_practice)
-  const pct = u.reduce((s, r) => s + n(r.percent), 0) + n(f?.percent)
+  const m = book.value?.midterm_eval
+  const t = u.reduce((s, r) => s + n(r.hours_theory), 0) + n(f?.hours_theory) + n(m?.hours_theory)
+  const p = u.reduce((s, r) => s + n(r.hours_practice), 0) + n(f?.hours_practice) + n(m?.hours_practice)
+  const pct = u.reduce((s, r) => s + n(r.percent), 0) + n(f?.percent) + n(m?.percent)
   const weeks = data.value?.level_higher ? 15 : 18
   const perWeek = n(book.value?.curriculum.theory_hours) + n(book.value?.curriculum.practice_hours)
   return { t, p, pct, weeks, expected: perWeek * weeks }
@@ -223,6 +224,13 @@ const unitCols = [
       <section v-if="tab === 'units'" class="card space-y-4">
         <p class="text-sm text-slate-400">ใช้สร้าง <b>ตารางวิเคราะห์พฤติกรรมการเรียนรู้ (แบบ 2)</b> และ <b>ตารางหน่วยการเรียนรู้</b> · K ใส่ได้หลายระดับ (เช่น K1,K2,K3) · S / A / Ap ใส่ระดับเดียว</p>
         <TeacherRowTable v-model="book.units" :columns="unitCols" add-label="เพิ่มหน่วย" testid="units-table" />
+        <NuxtLink :to="`/teacher/course/${id}/plans/schedule`" class="block text-sm text-rune-300 hover:text-rune-200" data-testid="book-schedule">จัดชั่วโมงจากจำนวนสัปดาห์ที่หน้าตารางกำหนดการสอนรายสัปดาห์ →</NuxtLink>
+        <div class="grid gap-3 sm:grid-cols-4">
+          <p class="text-sm text-slate-300 sm:col-span-4">ทดสอบกลางภาค</p>
+          <div><p class="label">ชม. ทฤษฎี</p><input v-model="book.midterm_eval.hours_theory" class="input" data-testid="mid-t"></div>
+          <div><p class="label">ชม. ปฏิบัติ</p><input v-model="book.midterm_eval.hours_practice" class="input" data-testid="mid-p"></div>
+          <div><p class="label">ร้อยละ</p><input v-model="book.midterm_eval.percent" class="input" data-testid="mid-pc"></div>
+        </div>
         <div class="grid gap-3 sm:grid-cols-4">
           <p class="text-sm text-slate-300 sm:col-span-4">ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)</p>
           <div><p class="label">ชม. ทฤษฎี</p><input v-model="book.final_eval.hours_theory" class="input"></div>
