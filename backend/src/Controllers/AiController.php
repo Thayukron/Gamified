@@ -14,7 +14,7 @@ class AiController
     /** GET /me/ai */
     public static function status(Request $req): array
     {
-        return ['ai' => AiGuideService::status((int) $req->user['id'])];
+        return ['ai' => AiGuideService::status((int) $req->user['id']), 'usage' => \App\Core\BackgroundJob::usage((int) $req->user['id'])];
     }
 
     /** PUT /me/ai — { api_key, model? } verify then save encrypted. */
@@ -34,14 +34,14 @@ class AiController
     public static function setModel(Request $req): array
     {
         AiGuideService::setModel((int) $req->user['id'], (string) $req->input('model', ''));
-        return ['ai' => AiGuideService::status((int) $req->user['id'])];
+        return ['ai' => AiGuideService::status((int) $req->user['id']), 'usage' => \App\Core\BackgroundJob::usage((int) $req->user['id'])];
     }
 
     /** DELETE /me/ai */
     public static function removeKey(Request $req): array
     {
         AiGuideService::removeKey((int) $req->user['id']);
-        return ['ai' => AiGuideService::status((int) $req->user['id'])];
+        return ['ai' => AiGuideService::status((int) $req->user['id']), 'usage' => \App\Core\BackgroundJob::usage((int) $req->user['id'])];
     }
 
     // ---------------------------------------------------------------- admin

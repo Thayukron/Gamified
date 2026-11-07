@@ -252,7 +252,7 @@ class LessonPlanService
     // ------------------------------------------------------------------ AI draft (teacher's own Gemini key)
 
     /** Ask Gemini for a full draft. Returns ['content' => …, 'model' => …]; nothing is saved here. */
-    public static function aiDraft(int $userId, array $course, array $dash, array $plan): array
+    public static function aiDraft(int $userId, array $course, array $dash, array $plan, ?string $section = null, array $current = []): array
     {
         if (!AiGuideService::enabled()) {
             throw new HttpException(403, 'ผู้ดูแลระบบปิดการใช้งานฟังก์ชัน AI อยู่');
@@ -263,10 +263,22 @@ class LessonPlanService
         }
         set_time_limit(300);
         $ctx = AiGuideService::context($course, $dash);
-        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, self::prompt($course, $ctx, $plan), 2, 24000);
-        $content = self::normalize($res['data']);
-        $content['after'] = self::EMPTY['after']; // written by the teacher after teaching
-        return ['content' => $content, 'model' => $res['model']];
+        $prompt = self::prompt($course, $ctx, $plan);
+        if ($section !== null) {
+            if (!array_key_exists($section, self::EMPTY) || in_array($section, ['standard', 'after'], true)) {
+                throw new HttpException(422, 'ข้อนี้ร่างใหม่ด้วย AI ไม่ได้');
+            }
+            $current = self::normalize($current);
+            $prompt .= "\n\nสำคัญ: ครั้งนี้ให้ร่างใหม่เฉพาะ \"{$section}\" ข้อเดียว ให้สอดคล้องกับส่วนอื่นของแผนที่ครูมีอยู่แล้วด้านล่าง "
+                . "และตอบ JSON ที่มีเพียง key \"{$section}\" ตามโครงสร้างเดิม:\n" . json_encode(array_diff_key($current, [$section => 1, 'after' => 1]), JSON_UNESCAPED_UNICODE);
+        }
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, $prompt, 2, $section ? 8192 : 24000);
+        $draft = self::normalize($res['data']);
+        if ($section !== null) {
+            return ['content' => [$section => $draft[$section]] + $current, 'section' => $section, 'model' => $res['model']];
+        }
+        $draft['after'] = self::EMPTY['after']; // written by the teacher after teaching
+        return ['content' => $draft, 'model' => $res['model']];
     }
 
     /** AI draft of an exam-week plan: broad, no unit numbers; the sections that don't apply stay empty. */

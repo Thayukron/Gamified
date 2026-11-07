@@ -44,13 +44,13 @@ async function draft(source: 'ai' | 'guide') {
   msg.value = null
   try {
     const r = await aiApi<any>(`/teacher/plans/${props.plan.id}/draft`, { method: 'POST', body: { ...header, source } })
-    content.value = { ...r.content, after: content.value.after }
-    aiModel.value = r.model
+    applyDraft(r)
     msg.value = { ok: true, text: source === 'ai' ? `AI (${r.model}) ร่างแล้ว — เปิดดูทีละข้อ แก้ไข แล้วกด “บันทึก”` : 'เติมจากไกด์แล้ว — ตรวจแล้วกด “บันทึก”' }
   } catch (e) {
     msg.value = { ok: false, text: apiErrorMessage(e) }
   } finally {
     busy.value = ''
+    if (source === 'ai') usage.value?.refresh()
   }
 }
 
@@ -69,6 +69,31 @@ async function findStandard() {
   } catch (e) {
     std.value = { busy: false, result: null, error: apiErrorMessage(e) }
   }
+}
+
+// one section again with AI: the rest of the plan stays as it is on screen
+const AI_SECTIONS = computed(() => (isExam.value ? [] : PLAN_SECTIONS.filter((s) => !['standard', 'after'].includes(s.key))))
+const usage = ref<any>(null)
+async function draftSection(key: string, no: string) {
+  if (!confirm(`ให้ AI ร่างใหม่เฉพาะข้อ ${no}? ข้ออื่นไม่ถูกแตะ — ยังไม่บันทึกจนกว่าจะกด “บันทึก”`)) return
+  busy.value = 'ai'
+  msg.value = null
+  try {
+    const r = await aiApi<any>(`/teacher/plans/${props.plan.id}/draft`, { method: 'POST', body: { ...header, source: 'ai', section: key, content: content.value } })
+    applyDraft(r)
+    msg.value = { ok: true, text: `AI (${r.model}) ร่างข้อ ${no} ใหม่แล้ว — ตรวจแล้วกด “บันทึก”` }
+  } catch (e) {
+    msg.value = { ok: false, text: apiErrorMessage(e) }
+  } finally {
+    busy.value = ''
+    usage.value?.refresh()
+  }
+}
+/** a draft from the AI (now, or one left unsaved earlier): a single section, or sections 1–9 */
+function applyDraft(r: any) {
+  if (r.section) (content.value as any)[r.section] = r.content[r.section]
+  else content.value = { ...r.content, after: content.value.after }
+  aiModel.value = r.model
 }
 
 async function save() {
@@ -100,6 +125,7 @@ defineExpose({ save, isDirty: () => dirty.value })
         <AppIcon name="orb" :size="16" /> {{ busy === 'ai' ? 'AI กำลังร่าง… (30–60 วินาที)' : 'ให้ AI ร่างแผน' }}
       </button>
       <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" data-testid="guide-draft" @click="draft('guide')">{{ isExam ? 'เติมข้อความตั้งต้น' : 'เติมจากไกด์' }}</button>
+      <TeacherAiUsage ref="usage" />
       <span class="flex-1" />
       <span class="text-xs text-slate-400">กรอกแล้ว {{ filled }}/{{ sections.length }} ข้อ</span>
       <button class="btn-primary !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="save" @click="save">
@@ -107,6 +133,7 @@ defineExpose({ save, isDirty: () => dirty.value })
       </button>
     </div>
     <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="msg">{{ msg.text }}</p>
+    <TeacherAiDraftBanner :path="`/teacher/plans/${plan.id}/draft`" :after="plan.updated_at" @use="(r) => { applyDraft(r); msg = { ok: true, text: 'นำร่างจาก AI มาใช้แล้ว — ตรวจแล้วกด “บันทึก”' } }" />
 
     <!-- compact header -->
     <div class="rounded-xl bg-white/5 px-4 py-2 text-sm ring-1 ring-white/10">
@@ -139,6 +166,11 @@ defineExpose({ save, isDirty: () => dirty.value })
     </div>
 
     <TeacherSectionAccordion v-model="content" :sections="sections">
+      <template v-for="s in AI_SECTIONS" :key="s.key" #[`${s.no}-top`]>
+        <div class="flex justify-end">
+          <button type="button" class="text-xs text-sky-300 hover:text-sky-200 disabled:opacity-50" :disabled="!!busy" :data-testid="`ai-section-${s.key}`" @click="draftSection(s.key, s.no)">ร่างใหม่เฉพาะข้อนี้ (AI)</button>
+        </div>
+      </template>
       <template #[STD_SLOT]>
         <p v-if="isExam" class="text-xs text-slate-400">สัปดาห์ทดสอบเว้นข้อนี้ไว้ได้</p>
         <div v-else class="rounded-xl bg-indigo-500/5 p-3 ring-1 ring-rune-400/20" data-testid="std-box">

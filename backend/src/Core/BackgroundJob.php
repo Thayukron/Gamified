@@ -40,6 +40,39 @@ class BackgroundJob
         return ['status' => $job['status'], 'http_status' => (int) $job['http_status'], 'result' => $job['result'] !== null ? json_decode($job['result'], true) : null];
     }
 
+    /**
+     * GET /jobs/latest?path=…&after=… — the caller's newest AI result for that path made after the item was last
+     * saved: a draft that was never saved (the page was left, the browser closed) can be taken up again instead of
+     * asking the AI once more. Fills made without AI (model null) are left out.
+     */
+    public static function latest(Request $req): array
+    {
+        $stmt = Database::get()->prepare(
+            "SELECT id, created_at, result FROM background_jobs WHERE user_id = ? AND path = ? AND status = 'done'
+              AND created_at > ? AND result NOT LIKE '%\"model\":null%' ORDER BY created_at DESC LIMIT 1"
+        );
+        $stmt->execute([$req->user['id'], (string) $req->query('path', ''), (string) ($req->query('after') ?: '1970-01-01')]);
+        $job = $stmt->fetch();
+        return ['job' => $job ? ['id' => $job['id'], 'created_at' => $job['created_at'], 'result' => json_decode($job['result'], true)] : null];
+    }
+
+    /**
+     * AI requests of a user since the free tier's daily quota last came back (midnight Pacific time): what the
+     * teacher has used in this quota day. Fills made without AI are not counted.
+     */
+    public static function usage(int $userId): array
+    {
+        $reset = new \DateTime('today', new \DateTimeZone('America/Los_Angeles'));
+        $stmt = Database::get()->prepare(
+            "SELECT COUNT(*) AS used, SUM(status = 'error') AS failed FROM background_jobs
+              WHERE user_id = ? AND created_at >= NOW() - INTERVAL ? SECOND AND (result IS NULL OR result NOT LIKE '%\"model\":null%')"
+        );
+        $stmt->execute([$userId, time() - $reset->getTimestamp()]);
+        $row = $stmt->fetch();
+        return ['used' => (int) $row['used'], 'failed' => (int) $row['failed'],
+            'since' => $reset->setTimezone(new \DateTimeZone('Asia/Bangkok'))->format('H:i')];
+    }
+
     /** Send the response and close the connection, but keep the script running. */
     private static function respondNow(array $data): void
     {

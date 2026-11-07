@@ -117,4 +117,5 @@ $router->background(
     '/teacher/courses/{id}/book/draft',
     '/teacher/units/suggest',
 );
+$router->get('/jobs/latest', [App\Core\BackgroundJob::class, 'latest'], ['teacher', 'admin']); // before /jobs/{id}
 $router->get('/jobs/{id}', [App\Core\BackgroundJob::class, 'show'], ['teacher', 'admin']);

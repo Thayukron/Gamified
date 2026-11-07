@@ -83,6 +83,15 @@ function keepScheduleHours(parts: any) {
   }
 }
 
+const usage = ref<any>(null)
+/** an AI draft of the book (now, or one left unsaved earlier); hours stay with the weekly schedule */
+function useBookDraft(r: any) {
+  keepScheduleHours(r.parts)
+  Object.assign(book.value!, r.parts)
+  aiModel.value = r.model
+  usage.value?.refresh()
+}
+
 /** analysis tables without AI: fills only the empty cells */
 async function guideFill() {
   busy.value = 'ai'
@@ -105,13 +114,12 @@ async function aiDraft() {
   msg.value = null
   try {
     const r = await aiApi<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value } })
-    keepScheduleHours(r.parts)
-    Object.assign(book.value!, r.parts)
-    aiModel.value = r.model
+    useBookDraft(r)
     tab.value = 'job'
     msg.value = { ok: true, text: `AI (${r.model}) ร่างตารางวิเคราะห์และคำนำแล้ว — ตรวจ แก้ไข แล้วกด “บันทึก”` }
   } catch (e) {
     msg.value = { ok: false, text: apiErrorMessage(e) }
+    usage.value?.refresh()
   } finally {
     busy.value = ''
   }
@@ -182,12 +190,14 @@ const unitCols = [
           <AppIcon name="orb" :size="16" /> {{ busy === 'ai' ? 'AI กำลังวิเคราะห์… (30–60 วินาที)' : 'ให้ AI ร่างตารางวิเคราะห์ + คำนำ' }}
         </button>
         <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" data-testid="book-guide" title="เติมเฉพาะช่องที่ว่าง ไม่ใช้โควตา AI" @click="guideFill">เติมตารางวิเคราะห์ (ไม่ใช้ AI)</button>
+        <TeacherAiUsage ref="usage" />
         <span class="flex-1" />
         <span class="text-xs" :class="dirty ? 'text-rune-300' : 'text-slate-500'">{{ dirty ? '● ยังไม่ได้บันทึก' : 'บันทึกแล้ว' }}</span>
         <button class="btn-ghost !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="book-save" @click="save"><AppIcon name="check" :size="16" /> บันทึก</button>
         <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="book-word" @click="word"><AppIcon name="download" :size="16" /> ส่งออก Word (เลือกส่วน)</button>
       </div>
       <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="book-msg">{{ msg.text }}</p>
+      <TeacherAiDraftBanner :path="`/teacher/courses/${id}/book/draft`" :after="data.updated_at" @use="(r) => { useBookDraft(r); tab = 'job'; msg = { ok: true, text: 'นำร่างจาก AI มาใช้แล้ว — ตรวจแล้วกด “บันทึก”' } }" />
 
       <div class="flex flex-wrap gap-2">
         <button

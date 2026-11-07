@@ -278,7 +278,12 @@ class LessonPlanController
         $h = self::header($req, $plan) + ['unit_no' => $plan['unit_no'], 'kind' => $plan['kind'], 'sessions' => $plan['sessions']];
         $exam = $plan['kind'] !== 'unit';
         if ($req->input('source') === 'ai') {
-            return $exam ? LessonPlanService::aiExamDraft((int) $req->user['id'], $course, $h) : LessonPlanService::aiDraft((int) $req->user['id'], $course, TeacherController::classData($course), $h);
+            if ($exam) {
+                return LessonPlanService::aiExamDraft((int) $req->user['id'], $course, $h);
+            }
+            // one section only: the rest of the plan (as on screen) stays and is given to the AI as context
+            $section = $req->input('section') ? (string) $req->input('section') : null;
+            return LessonPlanService::aiDraft((int) $req->user['id'], $course, TeacherController::classData($course), $h, $section, (array) $req->input('content', []));
         }
         return ['content' => $exam ? LessonPlanService::examPrefill($course, $plan['kind']) : LessonPlanService::prefill($course, TeacherController::classData($course), $h), 'model' => null];
     }

@@ -37,6 +37,7 @@ async function draft(source: 'ai' | 'plan') {
   msg.value = null
   try {
     const r = await aiApi<any>(`/teacher/sheets/${props.sheet.id}/draft`, { method: 'POST', body: { ...header, source } })
+    if (source === 'ai') usage.value?.refresh()
     content.value = r.content
     aiModel.value = r.model
     msg.value = { ok: true, text: source === 'ai' ? `AI (${r.model}) ร่างแล้ว — ตรวจแล้วกด “บันทึก”` : 'เติมจากแผนแล้ว — ตรวจแล้วกด “บันทึก”' }
@@ -46,6 +47,8 @@ async function draft(source: 'ai' | 'plan') {
     busy.value = ''
   }
 }
+
+const usage = ref<any>(null)
 
 async function save() {
   busy.value = 'save'
@@ -88,6 +91,7 @@ const rubricCols = [
         <AppIcon name="orb" :size="16" /> {{ busy === 'ai' ? 'AI กำลังเขียน… (30–60 วินาที)' : `ให้ AI ร่าง${spec.th}` }}
       </button>
       <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" @click="draft('plan')">เติมจากแผน</button>
+      <TeacherAiUsage ref="usage" />
       <span class="flex-1" />
       <button class="text-xs text-red-300/70 hover:text-red-300" @click="remove">ลบเอกสารนี้</button>
       <button class="btn-primary !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="sheet-save" @click="save">
@@ -95,6 +99,7 @@ const rubricCols = [
       </button>
     </div>
     <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="sheet-msg">{{ msg.text }}</p>
+    <TeacherAiDraftBanner :path="`/teacher/sheets/${sheet.id}/draft`" :after="sheet.updated_at" @use="(r) => { content = r.content; aiModel = r.model; msg = { ok: true, text: 'นำร่างจาก AI มาใช้แล้ว — ตรวจแล้วกด “บันทึก”' } }" />
 
     <div class="flex flex-wrap items-center gap-3 rounded-xl bg-white/5 px-4 py-2 text-sm ring-1 ring-white/10">
       <label class="flex items-center gap-2 text-slate-300">{{ spec.th }}ที่ <input v-model="header.number" class="input !w-20 !py-1"></label>
