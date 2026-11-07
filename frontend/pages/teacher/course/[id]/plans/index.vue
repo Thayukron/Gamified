@@ -177,6 +177,7 @@ async function doExport(keys: string[]) {
             <button class="text-xs text-red-300/70 hover:text-red-300" @click="remove(examPlan(row.exam))">ลบ</button>
           </template>
           <button v-else class="btn-ghost !px-3 !py-1.5 text-sm" :disabled="busy" :data-testid="`start-${row.exam}`" @click="fromSchedule({ kind: row.exam })">+ สร้างแผนสัปดาห์ทดสอบ</button>
+          <NuxtLink :to="`/teacher/course/${id}/plans/exam/${row.exam}`" class="btn-ghost !px-3 !py-1.5 text-sm" :data-testid="`exam-questions-${row.exam}`"><AppIcon name="orb" :size="14" /> แนวข้อสอบ (AI)</NuxtLink>
         </div>
         <div v-else class="card !p-4">
           <div class="flex flex-wrap items-center gap-3">
