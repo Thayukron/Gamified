@@ -44,6 +44,21 @@ export function autoWeeks(hours: number[], total: number): number[] {
   return out
 }
 
+/** Week by week: which unit (or exam) each week holds — the teaching schedule table of the book. */
+export function weekPlan(c: TeachingCalendar, units: ScheduleUnit[]) {
+  const free = teachingWeeks(c)
+  const owner = new Map<number, ScheduleUnit>()
+  let next = 0
+  for (const u of units) for (const w of free.slice(next, (next += u.weeks))) owner.set(w, u)
+  return Array.from({ length: c.weeks }, (_, i) => {
+    const week = i + 1
+    if (week === c.midterm) return { week, kind: 'midterm' as const, label: 'ทดสอบกลางภาค' }
+    if (week === c.final) return { week, kind: 'final' as const, label: 'ทดสอบปลายภาค (ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา)' }
+    const u = owner.get(week)
+    return u ? { week, kind: 'unit' as const, label: `หน่วยที่ ${u.no} ${u.name}` } : { week, kind: 'empty' as const, label: '' }
+  })
+}
+
 /** Place the units on the teaching weeks in order, with the exam weeks in session order among them. */
 export function buildSchedule(c: TeachingCalendar, units: ScheduleUnit[], theory: number, practice: number) {
   const free = teachingWeeks(c)

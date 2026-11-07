@@ -115,6 +115,7 @@ export const BOOK_PARTS = [
   { key: 'job', label: 'ตารางวิเคราะห์หน่วยการเรียนรู้' },
   { key: 'behaviour', label: 'ตารางวิเคราะห์พฤติกรรมการเรียนรู้' },
   { key: 'units', label: 'หน่วยการเรียนรู้ (ตารางชั่วโมง)' },
+  { key: 'schedule', label: 'ตารางกำหนดการสอนรายสัปดาห์' },
 ] as const
 
 /** "สอนครั้งที่" of a plan: its range from the weekly schedule, or the single session of a plan made per session */

@@ -38,7 +38,7 @@ onMounted(async () => {
 })
 watch(book, () => (dirty.value = true), { deep: true })
 
-// ---- totals / checks for the units table (form rule: ปวช. ≥ 18 weeks incl. assessment, ปวส. ≥ 15 weeks excl.)
+// ---- totals / checks for the units table (ปวส. 15 / ปวช. 18 weeks, exam weeks included with the normal hours)
 const n = (s: any) => parseFloat(String(s ?? '').replace(/[^\d.]/g, '')) || 0
 const totals = computed(() => {
   const u = book.value?.units ?? []

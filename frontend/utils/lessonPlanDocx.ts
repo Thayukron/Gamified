@@ -1,6 +1,7 @@
 // Word (.docx) export of unit lesson plans in the OVEC 2567 form (แผนการจัดการเรียนรู้ ข้อ 1–10)
 // + appendix with the class's learner analysis. Browser-side; the docx library is loaded only when needed.
 import { SHEET_TYPES, planName, planSessions, type CourseBook, type PlanContent, type Sheet } from '~/utils/lessonPlan'
+import { calendarFor, weekPlan } from '~/utils/teachingSchedule'
 
 const FONT = 'TH SarabunPSK'
 const PT = (n: number) => n * 2 // docx sizes are half-points
@@ -542,6 +543,33 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     ]
   }
 
+  /** week by week, from the weekly schedule (a course without one has no such part) */
+  const schedulePart = () => {
+    const rows = book!.schedule?.units ?? []
+    if (!rows.length) return []
+    const units = rows.map((r) => ({ no: r.no, name: book!.units.find((u) => u.no === r.no)?.name ?? '', weeks: parseInt(r.weeks) || 0 }))
+    const cal = calendarFor(higher)
+    const [t, pr] = [toNum(book!.curriculum.theory_hours), toNum(book!.curriculum.practice_hours)]
+    const wd = [1200, 5654, 900, 900, 700]
+    const weeks = weekPlan(cal, units)
+    const row = (cells: (string | number)[], o: { bold?: boolean } = {}) =>
+      new TableRow({ children: cells.map((v, i) => tcell(typeof v === 'number' ? fmt(v) || '0' : v, wd[i], { center: i !== 1, bold: o.bold, size: 16 })) })
+    return [
+      partTitle('ตารางกำหนดการสอนรายสัปดาห์'),
+      codeLine(), hoursLine(),
+      p([run(`จัดเรียน ${cal.weeks} สัปดาห์ สัปดาห์ละ 1 ครั้ง ทดสอบกลางภาคสัปดาห์ที่ ${cal.midterm} ทดสอบปลายภาคสัปดาห์ที่ ${cal.final}`)], { after: 80 }),
+      new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: wd,
+        rows: [
+          new TableRow({ tableHeader: true, children: ['สัปดาห์ที่\n(สอนครั้งที่)', 'หน่วยการเรียนรู้ / กิจกรรม', 'ทฤษฎี', 'ปฏิบัติ', 'รวม'].map((h, i) => tcell(h, wd[i], { bold: true, center: true, size: 16 })) }),
+          ...weeks.map((w) => row([String(w.week), w.label || '-', w.label ? t : 0, w.label ? pr : 0, w.label ? t + pr : 0], { bold: w.kind === 'midterm' || w.kind === 'final' })),
+          row(['รวม', '', weeks.filter((w) => w.label).length * t, weeks.filter((w) => w.label).length * pr, weeks.filter((w) => w.label).length * (t + pr)], { bold: true }),
+        ],
+      }),
+    ]
+  }
+
   const bibliographyPart = () => [
     partTitle('บรรณานุกรม'),
     ...(lines(book!.bibliography).length ? lines(book!.bibliography).map((l) => p([run(l)], { indent: 709, hanging: 709 })) : body('', 0, 3)),
@@ -615,6 +643,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     if (has('job')) front.push(...jobPart())
     if (has('behaviour')) front.push(...behaviourPart())
     if (has('units')) front.push(...unitsPart())
+    if (has('schedule')) front.push(...schedulePart())
   }
   const children: any[] = []
   let first = true
