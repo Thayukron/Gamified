@@ -40,6 +40,11 @@ class AiGuideService
     {
         $s = self::userSettings($userId);
         if ($s['api_key_enc'] && ($key = Crypto::decrypt($s['api_key_enc']))) {
+            if ($s['model'] && isset(GeminiClient::missingModels()[$s['model']])) {
+                // the model the teacher picked no longer exists: back to the default (newest working flash)
+                Database::get()->prepare('UPDATE user_ai_settings SET model = NULL WHERE user_id = ?')->execute([$userId]);
+                $s['model'] = null;
+            }
             return ['source' => 'own', 'key' => $key, 'model' => $s['model']];
         }
         $central = Crypto::decrypt(self::setting('ai_central_key_enc'));

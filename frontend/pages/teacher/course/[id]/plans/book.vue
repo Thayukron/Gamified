@@ -70,12 +70,42 @@ async function save() {
   }
 }
 
+/** once the weekly schedule is saved, the hours of units and exams come from it — a draft never changes them */
+function keepScheduleHours(parts: any) {
+  const b = book.value!
+  if (!b.schedule.units.length) return
+  for (const u of parts.units ?? []) {
+    const old = b.units.find((x) => x.no === u.no)
+    if (old) Object.assign(u, { hours_theory: old.hours_theory, hours_practice: old.hours_practice })
+  }
+  for (const k of ['midterm_eval', 'final_eval'] as const) {
+    if (parts[k]) parts[k] = { ...parts[k], hours_theory: b[k].hours_theory, hours_practice: b[k].hours_practice }
+  }
+}
+
+/** analysis tables without AI: fills only the empty cells */
+async function guideFill() {
+  busy.value = 'ai'
+  msg.value = null
+  try {
+    const r = await api<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value, source: 'guide' } })
+    Object.assign(book.value!, r.parts)
+    tab.value = 'job'
+    msg.value = { ok: true, text: 'เติมข้อมูลตั้งต้นในช่องที่ว่างแล้ว (ไม่ใช้ AI) — ตรวจ แก้ไข แล้วกด “บันทึก”' }
+  } catch (e) {
+    msg.value = { ok: false, text: apiErrorMessage(e) }
+  } finally {
+    busy.value = ''
+  }
+}
+
 async function aiDraft() {
   if (!confirm('ให้ AI ร่าง “ตารางวิเคราะห์หน่วยการเรียนรู้ · ระดับพฤติกรรม K/S/A/Ap · ชั่วโมงและร้อยละ · คำนำ” จากข้อมูลหลักสูตรรายวิชาที่กรอกไว้?\nข้อมูลเดิมในส่วนเหล่านี้จะถูกแทนที่ (หลักสูตรรายวิชาไม่ถูกแตะ) — ยังไม่บันทึกจนกว่าจะกด “บันทึก”')) return
   busy.value = 'ai'
   msg.value = null
   try {
     const r = await aiApi<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value } })
+    keepScheduleHours(r.parts)
     Object.assign(book.value!, r.parts)
     aiModel.value = r.model
     tab.value = 'job'
@@ -151,6 +181,7 @@ const unitCols = [
         <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="book-ai" @click="aiDraft">
           <AppIcon name="orb" :size="16" /> {{ busy === 'ai' ? 'AI กำลังวิเคราะห์… (30–60 วินาที)' : 'ให้ AI ร่างตารางวิเคราะห์ + คำนำ' }}
         </button>
+        <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" data-testid="book-guide" title="เติมเฉพาะช่องที่ว่าง ไม่ใช้โควตา AI" @click="guideFill">เติมตารางวิเคราะห์ (ไม่ใช้ AI)</button>
         <span class="flex-1" />
         <span class="text-xs" :class="dirty ? 'text-rune-300' : 'text-slate-500'">{{ dirty ? '● ยังไม่ได้บันทึก' : 'บันทึกแล้ว' }}</span>
         <button class="btn-ghost !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="book-save" @click="save"><AppIcon name="check" :size="16" /> บันทึก</button>

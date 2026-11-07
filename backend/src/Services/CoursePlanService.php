@@ -217,6 +217,75 @@ class CoursePlanService
         return ['units' => $units, 'model' => $res['model']];
     }
 
+    // ------------------------------------------------------------------ without AI
+
+    /**
+     * Starting values for the analysis tables without AI (no quota): one duty per unit with three tasks, expected
+     * behaviour levels rising through the course (higher for ปวส.), percentages by hours. Only empty cells are filled —
+     * what the teacher wrote stays — and hours are never touched (they come from the weekly schedule).
+     */
+    public static function guideDraft(array $course, array $content): array
+    {
+        $higher = LessonPlanService::isHigher($course);
+        $units = $content['units'];
+        $n = count($units);
+        $job = $content['job_analysis'];
+        if (trim($job['job']) === '') {
+            $job['job'] = "ปฏิบัติงานด้าน{$course['name']}ตามหลักการและขั้นตอนที่กำหนด อย่างถูกต้อง ปลอดภัย และมีกิจนิสัยที่ดีในการทำงาน";
+        }
+        if (!$job['rows']) {
+            foreach ($units as $i => $u) {
+                $no = $i + 1;
+                $do = str_starts_with($u['name'], 'งาน') ? "ปฏิบัติ{$u['name']}" : "ปฏิบัติงาน{$u['name']}"; // no “ปฏิบัติงานงาน…”
+                $job['rows'][] = [
+                    'duty' => "{$no}. {$u['name']}",
+                    'task' => "{$no}.1 ศึกษาหลักการและเตรียมการ{$u['name']}
+{$no}.2 {$do}ตามขั้นตอน
+{$no}.3 ตรวจสอบและสรุปผลการปฏิบัติงาน",
+                    'sub_competency' => '',
+                    'knowledge' => "หลักการ ขั้นตอน และข้อกำหนดของ{$u['name']}",
+                    'skill' => "{$do}ได้ถูกต้องตามขั้นตอนและปลอดภัย",
+                ];
+            }
+        }
+        // levels by thirds of the course: basic → applied
+        $levels = $higher
+            ? [['K2,K3', 'S3', 'A2', 'Ap2'], ['K3,K4', 'S3', 'A3', 'Ap3'], ['K4,K5', 'S4', 'A3', 'Ap3']]
+            : [['K1,K2', 'S2', 'A2', 'Ap1'], ['K2,K3', 'S3', 'A2', 'Ap2'], ['K3,K4', 'S3', 'A3', 'Ap2']];
+        $final = $content['final_eval'];
+        $mid = $content['midterm_eval'];
+        $fillPct = !array_filter(array_column($units, 'percent'), fn ($p) => trim($p) !== '');
+        if ($fillPct) {
+            $final['percent'] = trim($final['percent']) !== '' ? $final['percent'] : '20';
+            $hasMid = (float) $mid['hours_theory'] + (float) $mid['hours_practice'] > 0;
+            $mid['percent'] = trim($mid['percent']) !== '' ? $mid['percent'] : ($hasMid ? '10' : '');
+            $left = max(0, 100 - (int) $final['percent'] - (int) $mid['percent']);
+            $fillPct = $left > 0; // the exams already take 100%: leave the units' percentages to the teacher
+            $w = array_map(fn ($u) => (float) $u['hours_theory'] + (float) $u['hours_practice'], $units);
+            $w = $n && min($w ?: [0]) > 0 ? $w : array_fill(0, $n, 1); // by hours only when every unit has them
+            $exact = array_map(fn ($x) => $x / array_sum($w) * $left, $w);
+            $pct = array_map('floor', $exact);
+            $order = array_keys($exact);
+            usort($order, fn ($a, $b) => ($exact[$b] - $pct[$b]) <=> ($exact[$a] - $pct[$a]));
+            for ($k = 0, $rest = $left - array_sum($pct); $rest > 0 && $n; $k = ($k + 1) % $n, $rest--) {
+                $pct[$order[$k]]++;
+            }
+        }
+        foreach ($units as $i => &$u) {
+            $l = $levels[min(2, intdiv($i * 3, max(1, $n)))];
+            foreach (['k', 's', 'a', 'ap'] as $j => $k) {
+                if (trim($u[$k]) === '') {
+                    $u[$k] = $l[$j];
+                }
+            }
+            if ($fillPct) {
+                $u['percent'] = (string) (int) $pct[$i];
+            }
+        }
+        unset($u);
+        return ['parts' => ['job_analysis' => $job, 'units' => $units, 'midterm_eval' => $mid, 'final_eval' => $final], 'model' => null];
+    }
+
     // ------------------------------------------------------------------ AI draft
 
     /** Draft the analysis parts with Gemini; curriculum text stays exactly as the teacher entered it. */

@@ -481,6 +481,9 @@ class LessonPlanController
     {
         $course = TeacherController::course($req, (int) $req->params['id']);
         $content = \App\Services\CoursePlanService::normalize($req->input('content', []));
+        if ($req->input('source') === 'guide') {
+            return \App\Services\CoursePlanService::guideDraft($course, $content); // no AI, no quota
+        }
         return \App\Services\CoursePlanService::aiDraft((int) $req->user['id'], $course, TeacherController::classData($course), $content);
     }
 

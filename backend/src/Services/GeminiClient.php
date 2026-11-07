@@ -43,7 +43,9 @@ class GeminiClient
         }
         $json = json_decode($raw, true) ?? [];
         if ($status >= 400) {
-            throw new HttpException(self::statusFor($status), self::explain($status, $json['error']['message'] ?? ''));
+            // a quota error names the quota (per minute / per day) only in its details
+            $msg = ($json['error']['message'] ?? '') . ($status === 429 ? ' ' . json_encode($json['error']['details'] ?? []) : '');
+            throw new HttpException(self::statusFor($status), self::explain($status, $msg));
         }
         return $json;
     }
@@ -59,8 +61,9 @@ class GeminiClient
         return match (true) {
             $status === 400 && str_contains($msg, 'API key') => 'API Key ไม่ถูกต้อง — ตรวจสอบว่าคัดลอกมาครบ',
             in_array($status, [401, 403], true) => 'API Key ไม่ถูกต้องหรือไม่มีสิทธิ์ใช้ Gemini API',
-            $status === 429 => 'ใช้งาน Gemini เกินโควตาของ API Key นี้ — รอสักครู่แล้วลองใหม่ (ระบบยังใช้ไกด์แบบกฎได้ตามปกติ)',
-            $status === 404 => 'ไม่พบรุ่นโมเดลนี้ — กดทดสอบการเชื่อมต่อใหม่เพื่อเลือกรุ่นที่ใช้ได้',
+            $status === 429 && self::isDaily($msg) => 'โควตารายวันของ API Key นี้หมดแล้ว (Gemini แบบฟรีรีเซ็ตทุกวัน) — ใช้ AI ได้อีกครั้งประมาณ ' . self::resetTime() . ' น. ระหว่างนี้ใช้ปุ่ม “เติมจากไกด์ / เติมข้อมูลตั้งต้น” ได้โดยไม่ใช้ AI',
+            $status === 429 => 'ส่งคำขอถึง Gemini ถี่เกินไป — รอประมาณ 1 นาทีแล้วกดใหม่ครั้งเดียว',
+            $status === 404 => 'รุ่นโมเดลที่ตั้งไว้ใช้ไม่ได้แล้ว — ระบบเปลี่ยนไปใช้รุ่นอื่นให้อัตโนมัติ กรุณากดใหม่อีกครั้ง',
             in_array($status, [500, 503], true) => 'ขณะนี้ Google Gemini มีผู้ใช้งานหนาแน่น (เซิร์ฟเวอร์ของ Google ไม่ว่าง) ระบบลองใหม่และลองรุ่นสำรองแล้วแต่ยังไม่สำเร็จ — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)',
             default => "Gemini ตอบกลับผิดพลาด ($status): " . mb_substr($msg, 0, 200),
         };
@@ -115,31 +118,36 @@ class GeminiClient
      */
     public function generateJsonResilient(string $preferred, string $system, string $prompt, int $maxFallbacks = 2, int $maxTokens = 8192, bool $search = false): array
     {
-        $candidates = [$preferred];
+        // Every call counts against the key's quota, so one press = one request when things are fine:
+        // no test call first, and a model known to be gone or out of daily quota isn't tried at all.
+        $slow = self::slowModels();
+        $skip = self::missingModels() + $this->exhaustedModels();
+        $candidates = isset($skip[$preferred]) || isset($slow[$preferred]) ? [] : [$preferred];
         $lastError = null;
         $fallbacksLoaded = false;
-        $slow = self::slowModels();
-        if (isset($slow[$preferred])) {
-            // the chosen model hung recently: start with models that answer, keep the slow ones last
+        $load = function () use (&$candidates, &$fallbacksLoaded, $preferred, $slow, &$skip) {
             $fallbacksLoaded = true;
-            $all = [$preferred, ...array_values(array_diff(self::rank($this->listModels()), [$preferred]))];
-            $candidates = [...array_values(array_filter($all, fn ($m) => !isset($slow[$m]))), ...array_values(array_filter($all, fn ($m) => isset($slow[$m])))];
+            $skip = self::missingModels() + $this->exhaustedModels();
+            $all = array_values(array_filter(array_unique([$preferred, ...self::rank($this->listModels())]), fn ($m) => !isset($skip[$m])));
+            // models that hung recently go last
+            $fresh = array_values(array_filter($all, fn ($m) => !isset($slow[$m]) && !in_array($m, $candidates, true)));
+            $candidates = [...$candidates, ...$fresh, ...array_values(array_filter($all, fn ($m) => isset($slow[$m]) && !in_array($m, $candidates, true)))];
+        };
+        if (!$candidates) {
+            $load();
         }
-        for ($i = 0; $i < count($candidates) && $i <= $maxFallbacks + 2; $i++) {
+        for ($i = 0; $i < count($candidates) && $i <= $maxFallbacks; $i++) {
             $model = $candidates[$i];
-            // a long answer gives no sign of life until it is complete, so check first that the model answers
-            // at all (~1–2 s, a few tokens) instead of waiting the full timeout on a hung model
-            if (!$this->alive($model)) {
+            // a model that hung lately: a 1-token check first instead of waiting the full timeout again
+            if (isset($slow[$model]) && !$this->alive($model)) {
                 self::markSlow($model);
                 $lastError = new HttpException(504, 'Gemini รุ่นล่าสุดไม่ตอบสนองในขณะนี้ (เซิร์ฟเวอร์ของ Google ไม่ว่าง) — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)');
                 if (!$fallbacksLoaded) {
-                    $fallbacksLoaded = true;
-                    $slow = self::slowModels();
-                    $candidates = [$preferred, ...array_values(array_filter(array_diff(self::rank($this->listModels()), [$preferred]), fn ($m) => !isset($slow[$m])))];
+                    $load();
                 }
                 continue;
             }
-            foreach ([0, 2, 5] as $attempt => $wait) {
+            foreach ([0, 3] as $attempt => $wait) {
                 if ($wait) {
                     sleep($wait);
                 }
@@ -147,6 +155,17 @@ class GeminiClient
                     return $this->generateJson($model, $system, $prompt, $maxTokens, $search) + ['model' => $model];
                 } catch (HttpException $e) {
                     $lastError = $e;
+                    if ($e->status === 429 && !str_contains($e->getMessage(), 'รายวัน')) {
+                        throw $e; // too many requests per minute: trying other models now only burns more quota
+                    }
+                    if ($e->status === 429) {
+                        $this->markExhausted($model); // this model's daily quota is gone; others have their own
+                        break;
+                    }
+                    if ($e->status === 404) {
+                        self::markMissing($model);
+                        break;
+                    }
                     // long answers occasionally come back as broken JSON — one more try usually succeeds
                     $broken = $e->status === 502 && str_contains($e->getMessage(), 'อ่านไม่ได้');
                     if ($broken && $attempt === 0) {
@@ -156,27 +175,77 @@ class GeminiClient
                         self::markSlow($model); // hung: don't wait on it again for a while
                         break;
                     }
-                    if ($broken) {
-                        break; // broken twice on this model: let another model try
+                    if ($broken || $e->status === 503) {
+                        break; // let another model try
                     }
-                    $overloaded = $e->status === 503 || $e->status === 429 || str_contains($e->getMessage(), 'ไม่พบรุ่น');
-                    if (!$overloaded) {
-                        throw $e; // bad key, bad output, etc. — retrying won't help
-                    }
-                    if ($e->status === 429 || str_contains($e->getMessage(), 'ไม่พบรุ่น')) {
-                        break; // quota/404 are per-model: go straight to the next model
-                    }
+                    throw $e; // bad key, bad output, etc. — retrying won't help
                 }
             }
             if (!$fallbacksLoaded) {
-                $fallbacksLoaded = true;
-                $candidates = [$preferred, ...array_values(array_diff(self::rank($this->listModels()), [$preferred]))];
+                $load();
             }
         }
-        throw $lastError;
+        throw $lastError ?? new HttpException(429, self::explain(429, 'PerDay'));
     }
 
-    /** Tiny request with a short timeout: false when the model is hung (errors other than a timeout count as alive). */
+    private static function isDaily(string $msg): bool
+    {
+        return (bool) preg_match('/per ?day|PerDay|daily|รายวัน/i', $msg);
+    }
+
+    /** Thai time when the free tier's daily quota comes back (midnight Pacific time). */
+    private static function resetTime(): string
+    {
+        $reset = new \DateTime('tomorrow', new \DateTimeZone('America/Los_Angeles'));
+        return $reset->setTimezone(new \DateTimeZone('Asia/Bangkok'))->format('H:i');
+    }
+
+    /** Models Google says don't exist (any key): skipped for a day. */
+    private const MISSING_KEY = 'gemini_missing_models';
+
+    public static function missingModels(): array
+    {
+        return self::timedList(self::MISSING_KEY);
+    }
+
+    private static function markMissing(string $model): void
+    {
+        self::timedMark(self::MISSING_KEY, $model, time() + 86400);
+    }
+
+    /** Models whose daily quota this key has used up: skipped until Google resets it. */
+    private function exhaustedModels(): array
+    {
+        return self::timedList('gemini_exhausted_' . substr(hash('sha256', $this->apiKey), 0, 16));
+    }
+
+    private function markExhausted(string $model): void
+    {
+        $reset = new \DateTime('tomorrow', new \DateTimeZone('America/Los_Angeles'));
+        self::timedMark('gemini_exhausted_' . substr(hash('sha256', $this->apiKey), 0, 16), $model, $reset->getTimestamp());
+    }
+
+    private static function timedList(string $key): array
+    {
+        try {
+            $stmt = \App\Core\Database::get()->prepare('SELECT setting_value FROM settings WHERE setting_key = ?');
+            $stmt->execute([$key]);
+            return array_filter(json_decode((string) $stmt->fetchColumn(), true) ?: [], fn ($until) => $until > time());
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private static function timedMark(string $key, string $model, int $until): void
+    {
+        try {
+            \App\Core\Database::get()->prepare('INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)')
+                ->execute([$key, json_encode([$model => $until] + self::timedList($key))]);
+        } catch (\Throwable) {
+            // best effort only
+        }
+    }
+
     private function alive(string $model): bool
     {
         try {
