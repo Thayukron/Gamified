@@ -58,6 +58,8 @@ class TeacherCourseController
             'course_type' => (string) $req->input('course_type', 'mixed'),
             'level' => mb_substr(trim((string) $req->input('level', '')), 0, 30) ?: null,
             'topics' => array_slice(array_values(array_filter(array_map(fn ($t) => mb_substr(trim((string) $t), 0, 100), (array) $req->input('topics', [])))), 0, 30),
+            // [theory, practice] per unit, in the order of topics, when the AI suggested them (null otherwise)
+            'topic_hours' => array_slice(array_map(fn ($h) => is_array($h) ? array_slice(array_map('floatval', $h), 0, 2) : null, (array) $req->input('topic_hours', [])), 0, 30),
             'semester' => (int) ($req->input('semester') ?: app_config('semester')),
             'academic_year' => (int) ($req->input('academic_year') ?: app_config('academic_year')),
         ];
@@ -107,6 +109,7 @@ class TeacherCourseController
         )->execute([$f['code'], $f['name'], $f['section'], $sem, $year, $f['department_id'], $req->user['id'], $f['course_type'], $f['level'],
             json_encode($f['topics'], JSON_UNESCAPED_UNICODE), ...array_map(fn ($k) => $f[$k], $cols)]);
         $id = (int) $db->lastInsertId();
+        \App\Services\CoursePlanService::syncTopics(['id' => $id, 'teacher_name' => $req->user['full_name'] ?? ''] + $f, $f['topics'], $f['topic_hours']);
         $added = self::enrollGroups($id, (array) $req->input('class_groups', []));
         return ['id' => $id, 'added' => $added];
     }
@@ -123,6 +126,7 @@ class TeacherCourseController
             . implode(', ', array_map(fn ($k) => "$k = ?", $cols)) . ' WHERE id = ?'
         )->execute([$f['code'], $f['name'], $f['section'], $f['semester'], $f['academic_year'], $f['department_id'], $f['course_type'], $f['level'],
             json_encode($f['topics'], JSON_UNESCAPED_UNICODE), ...array_map(fn ($k) => $f[$k], $cols), $course['id']]);
+        \App\Services\CoursePlanService::syncTopics($course, $f['topics'], $f['topic_hours']);
         return ['ok' => true];
     }
 

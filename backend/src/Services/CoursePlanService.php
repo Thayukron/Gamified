@@ -1,6 +1,7 @@
 <?php
 namespace App\Services;
 
+use App\Core\Database;
 use App\Core\HttpException;
 
 /**
@@ -109,6 +110,56 @@ class CoursePlanService
             . 'จากผลการวิเคราะห์ผู้เรียนรายบุคคลด้านสไตล์การเรียนรู้ ความสนใจอาชีพ และกรอบความคิด'
             . "\nผู้จัดทำหวังเป็นอย่างยิ่งว่าแผนการจัดการเรียนรู้ฉบับนี้จะเป็นประโยชน์ต่อการจัดการเรียนการสอน และการพัฒนาผู้เรียนให้บรรลุผลลัพธ์การเรียนรู้ตามที่หลักสูตรกำหนด";
         return $c;
+    }
+
+    /**
+     * The book's units follow the course's units (its topics, the list the plans page and the AI use). A unit keeps its
+     * row (K/S/A/Ap, hours, percentage) while its name stays the same; hours suggested by the AI replace the row's.
+     * When the list of units changes, the saved weekly schedule no longer fits and is dropped, to be drawn up again.
+     */
+    public static function withTopics(array $c, array $topics, array $hours = []): array
+    {
+        $topics = array_values(array_filter(array_map('strval', $topics), 'strlen'));
+        if (!$topics) {
+            return $c; // older books with units only in the book itself
+        }
+        $byName = array_column($c['units'], null, 'name');
+        $units = [];
+        foreach ($topics as $i => $name) {
+            $row = $byName[$name] ?? array_fill_keys(array_keys(self::UNIT_ROW), '');
+            $row['no'] = (string) ($i + 1);
+            $row['name'] = $name;
+            if (isset($hours[$i]) && is_array($hours[$i])) {
+                $row['hours_theory'] = self::num(max(0, (float) ($hours[$i][0] ?? 0)));
+                $row['hours_practice'] = self::num(max(0, (float) ($hours[$i][1] ?? 0)));
+            }
+            $units[] = $row;
+        }
+        if (array_column($units, 'name') !== array_column($c['units'], 'name')) {
+            $c['schedule']['units'] = [];
+        }
+        $c['units'] = $units;
+        return $c;
+    }
+
+    /** After the course's units are edited: bring the saved book in line (a new book is made only to keep AI hours). */
+    public static function syncTopics(array $course, array $topics, array $hours = []): void
+    {
+        $db = Database::get();
+        $stmt = $db->prepare('SELECT content FROM course_plans WHERE course_id = ?');
+        $stmt->execute([$course['id']]);
+        $saved = $stmt->fetchColumn();
+        if ($saved === false && !array_filter($hours)) {
+            return;
+        }
+        $content = $saved !== false ? self::normalize(json_decode($saved, true))
+            : self::defaults(['topics' => json_encode($topics, JSON_UNESCAPED_UNICODE)] + $course, [], (string) ($course['teacher_name'] ?? ''));
+        $next = self::withTopics($content, $topics, $hours);
+        if ($saved !== false && $next === $content) {
+            return;
+        }
+        $db->prepare('INSERT INTO course_plans (course_id, content) VALUES (?, ?) ON DUPLICATE KEY UPDATE content = VALUES(content)')
+            ->execute([$course['id'], json_encode($next, JSON_UNESCAPED_UNICODE)]);
     }
 
     private static function num(float $n): string

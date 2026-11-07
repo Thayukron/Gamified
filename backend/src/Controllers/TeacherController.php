@@ -215,6 +215,7 @@ class TeacherController
             mb_substr(trim((string) $req->input('context_note', '')), 0, 1000) ?: null,
             $course['id'],
         ]);
+        \App\Services\CoursePlanService::syncTopics($course, array_slice($topics, 0, 30));
         return ['ok' => true];
     }
 

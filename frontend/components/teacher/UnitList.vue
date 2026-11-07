@@ -6,6 +6,7 @@ import type { CourseFormValue } from '~/utils/courseForm'
 const props = defineProps<{ course: CourseFormValue }>()
 const emit = defineEmits<{ needContent: [] }>()
 const text = defineModel<string>({ required: true }) // one unit per line (CourseFormValue.topicsText)
+const hours = defineModel<Record<string, [number, number]>>('hours', { default: () => ({}) }) // AI hours by unit name
 const api = useApi()
 const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 
@@ -75,7 +76,10 @@ function suggestSplit() {
 
 const pickedCount = computed(() => suggestions.value?.filter((s) => s.pick && s.name.trim()).length ?? 0)
 function apply(mode: 'replace' | 'append') {
-  const picked = suggestions.value!.filter((s) => s.pick && s.name.trim()).map((s) => s.name.trim())
+  const chosen = suggestions.value!.filter((s) => s.pick && s.name.trim())
+  const picked = chosen.map((s) => s.name.trim())
+  const withHours = chosen.filter((s) => (s.hours_theory ?? 0) + (s.hours_practice ?? 0) > 0)
+  if (withHours.length) hours.value = { ...hours.value, ...Object.fromEntries(withHours.map((s) => [s.name.trim(), [s.hours_theory ?? 0, s.hours_practice ?? 0]])) }
   if (mode === 'replace' && units.value.length && !confirm(`แทนที่หน่วยเดิม ${units.value.length} หน่วยด้วยหน่วยที่เลือก ${picked.length} หน่วย?`)) return
   units.value = mode === 'replace' ? picked : [...units.value, ...picked.filter((p) => !units.value.includes(p))]
   suggestions.value = null

@@ -9,6 +9,8 @@ export interface CourseFormValue {
   course_type: 'theory' | 'practice' | 'mixed'
   level: string
   topicsText: string
+  /** hours the AI suggested, by unit name ([theory, practice]); kept so the weekly schedule can share weeks by them */
+  topicHours: Record<string, [number, number]>
   // course content copied from the official curriculum — used by the lesson-plan book and the AI
   theory_hours: string
   practice_hours: string
@@ -24,7 +26,7 @@ const CONTENT_KEYS = ['theory_hours', 'practice_hours', 'credits', 'outcome', 'o
 
 /** term = the current term from the server (/teacher/meta) — new courses start in it */
 export function emptyCourseForm(term?: { semester: number; academic_year: number }): CourseFormValue {
-  return { code: '', name: '', section: '', semester: term?.semester ?? 1, academic_year: term?.academic_year ?? 2569, department_id: null, course_type: 'mixed', level: '', topicsText: '', ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, ''])) } as CourseFormValue
+  return { code: '', name: '', section: '', semester: term?.semester ?? 1, academic_year: term?.academic_year ?? 2569, department_id: null, course_type: 'mixed', level: '', topicsText: '', topicHours: {}, ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, ''])) } as CourseFormValue
 }
 
 export function courseToForm(c: any): CourseFormValue {
@@ -39,12 +41,14 @@ export function courseToForm(c: any): CourseFormValue {
     course_type: c.course_type ?? 'mixed',
     level: c.level ?? '',
     topicsText: topics.join('\n'),
+    topicHours: {},
     ...Object.fromEntries(CONTENT_KEYS.map((k) => [k, c[k] ?? ''])),
   } as CourseFormValue
 }
 
 export function formToBody(f: CourseFormValue) {
-  const { topicsText, ...rest } = f
-  return { ...rest, topics: topicsText.split(/[,\n]/).map((t) => t.trim()).filter(Boolean) }
+  const { topicsText, topicHours, ...rest } = f
+  const topics = topicsText.split(/[,\n]/).map((t) => t.trim()).filter(Boolean)
+  return { ...rest, topics, topic_hours: topics.map((t) => topicHours?.[t] ?? null) }
 }
 

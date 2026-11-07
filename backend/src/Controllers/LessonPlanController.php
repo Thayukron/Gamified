@@ -112,6 +112,7 @@ class LessonPlanController
         $stmt = Database::get()->prepare('SELECT content FROM course_plans WHERE course_id = ?');
         $stmt->execute([$course['id']]);
         $book = \App\Services\CoursePlanService::normalize(json_decode((string) $stmt->fetchColumn(), true));
+        $book = \App\Services\CoursePlanService::withTopics($book, json_decode($course['topics'] ?? '[]', true) ?: []);
         $book['curriculum']['theory_hours'] = (string) ($course['theory_hours'] ?? '');
         $book['curriculum']['practice_hours'] = (string) ($course['practice_hours'] ?? '');
         return $book;
@@ -439,6 +440,8 @@ class LessonPlanController
         $plansStmt->execute([$course['id']]);
         $plans = $plansStmt->fetchAll();
         $book = $row ? \App\Services\CoursePlanService::normalize(json_decode($row['content'], true)) : \App\Services\CoursePlanService::defaults($course, $plans, (string) ($course['teacher_name'] ?? ''));
+        // units always follow the course's units (edited on the course form or by the AI)
+        $book = \App\Services\CoursePlanService::withTopics($book, json_decode($course['topics'] ?? '[]', true) ?: []);
         // the course record is the single source of the curriculum content (entered on the course form)
         foreach (TeacherCourseController::CONTENT as $k => $_) {
             $book['curriculum'][$k] = (string) ($course[$k] ?? '');
