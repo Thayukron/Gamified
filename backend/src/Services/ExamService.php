@@ -67,7 +67,8 @@ class ExamService
         if (is_array($v)) {
             $v = implode("\n", array_filter($v, 'is_scalar'));
         }
-        return is_scalar($v) ? mb_substr(trim(str_replace("\r", '', (string) $v)), 0, $max) : '';
+        // markdown code marks (`x`, ```) mean nothing on a printed paper
+        return is_scalar($v) ? mb_substr(trim(str_replace(["\r", '```', '`'], '', (string) $v)), 0, $max) : '';
     }
 
     /** Questions in a fixed shape: multiple choice has four choices and the letter of the answer. */
