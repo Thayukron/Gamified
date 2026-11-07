@@ -1,6 +1,6 @@
 // Word (.docx) export of unit lesson plans in the OVEC 2567 form (แผนการจัดการเรียนรู้ ข้อ 1–10)
 // + appendix with the class's learner analysis. Browser-side; the docx library is loaded only when needed.
-import { SHEET_TYPES, type CourseBook, type PlanContent, type Sheet } from '~/utils/lessonPlan'
+import { SHEET_TYPES, planName, planSessions, type CourseBook, type PlanContent, type Sheet } from '~/utils/lessonPlan'
 
 const FONT = 'TH SarabunPSK'
 const PT = (n: number) => n * 2 // docx sizes are half-points
@@ -13,8 +13,10 @@ const STEP = 284 // 0.5 cm
 
 export interface PlanForExport {
   id?: number
+  kind?: string
   unit_no: number
   session_no: number
+  sessions?: string | null
   unit_name: string
   title: string
   hours_theory: number
@@ -168,13 +170,13 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
           children: [
             cell([p([new ImageRun({ type: 'png', data: logo, transformation: { width: 70, height: 70 } })], { align: AlignmentType.CENTER })], cL, { rowSpan: 3, center: true }),
             cell([p([run(docTitle, { bold: true, size: 18 })], { align: AlignmentType.CENTER })], cM, { center: true }),
-            cell([p([run(`หน่วยที่ ${pl.unit_no}`)], { align: AlignmentType.LEFT })], cR, { center: true }),
+            cell([p([run(pl.kind && pl.kind !== 'unit' ? 'การวัดผล' : `หน่วยที่ ${pl.unit_no}`)], { align: AlignmentType.LEFT })], cR, { center: true }),
           ],
         }),
         new TableRow({
           children: [
             cell([p([run('รหัสวิชา '), run(course.code, { bold: true }), run('   ชื่อวิชา '), run(course.name, { bold: true })], { align: AlignmentType.LEFT })], cM),
-            cell([p([run(`สอนครั้งที่ ${pl.session_no}`)], { align: AlignmentType.LEFT })], cR),
+            cell([p([run(`สอนครั้งที่ ${planSessions(pl)}`)], { align: AlignmentType.LEFT })], cR),
           ],
         }),
         new TableRow({
@@ -307,7 +309,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const diffs = opts.plans.filter((pl) => lines(pl.content.differentiation).length)
     if (diffs.length) {
       out.push(heading('5. การนำผลการวิเคราะห์ไปใช้ในแผนการจัดการเรียนรู้'))
-      diffs.forEach((pl) => out.push(p([run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })], { first: IND1, keepNext: true }), ...body(pl.content.differentiation, IND2)))
+      diffs.forEach((pl) => out.push(p([run(`${planName(pl)} (สอนครั้งที่ ${planSessions(pl)})`, { bold: true })], { first: IND1, keepNext: true }), ...body(pl.content.differentiation, IND2)))
     }
     out.push(p([run('หมายเหตุ ผลการวิเคราะห์เป็นข้อมูลคัดกรองเบื้องต้นเพื่อประกอบการออกแบบการจัดการเรียนรู้ ไม่ใช่การวินิจฉัย ใช้ร่วมกับการสังเกตผู้เรียนในชั้นเรียน', { size: 14 })], { before: 240 }))
     return out
@@ -626,7 +628,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     if (!withPlan && !sheets.length) return
     if (book) {
       // table-of-contents entry only: the Heading 2 style makes it invisible, the header table below already names the unit
-      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, children: [new TextRun({ text: `หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, language: { value: 'th-TH', bidirectional: 'th-TH' } })] }))
+      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, children: [new TextRun({ text: `${planName(pl)} (สอนครั้งที่ ${planSessions(pl)})`, language: { value: 'th-TH', bidirectional: 'th-TH' } })] }))
       first = false
     }
     if (withPlan) {

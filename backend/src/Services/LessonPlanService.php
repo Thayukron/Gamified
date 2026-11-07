@@ -57,13 +57,16 @@ class LessonPlanService
     }
 
     /** Share of filled sections (for progress badges). */
-    public static function completeness(array $c): int
+    public static function completeness(array $c, string $kind = 'unit'): int
     {
         $leaves = 0;
         $filled = 0;
         foreach (self::EMPTY as $key => $default) {
             if ($key === 'after' || $key === 'standard') {
                 continue; // written after teaching / only when the course references a standard
+            }
+            if ($key === 'differentiation' && $kind !== 'unit') {
+                continue; // left out of exam-week plans
             }
             foreach (is_array($default) ? array_keys($default) : [null] as $k) {
                 $leaves++;
@@ -105,6 +108,41 @@ class LessonPlanService
 
     // ------------------------------------------------------------------ rule-based draft (no AI)
 
+    /**
+     * Exam-week plan: the sections that apply, in broad terms (no unit numbers — the plan is written before teaching,
+     * and what the exam covers is up to what was actually taught). Standard, differentiation and after-teaching stay empty.
+     */
+    public static function examPrefill(array $course, string $kind): array
+    {
+        $c = self::EMPTY;
+        $exam = TeachingSchedule::EXAM_NAME[$kind];
+        $scope = $kind === 'final' ? 'เนื้อหาที่ได้เรียนมาตลอดภาคเรียน' : 'เนื้อหาที่ได้เรียนมาก่อนการทดสอบ';
+        $verb = self::isHigher($course) ? 'ประมวลความรู้เกี่ยวกับ' : 'แสดงความรู้เกี่ยวกับ';
+        $c['outcome'] = "ผู้เรียนแสดงความรู้และทักษะตาม{$scope}ผ่านการ{$exam}ได้ตามเกณฑ์ที่กำหนด";
+        $c['competency'] = [
+            'knowledge' => "{$verb}{$scope}",
+            'practice' => "ทำแบบ{$exam}ตามกติกาและเวลาที่กำหนด",
+            'apply' => 'ประยุกต์ใช้ความรู้และทักษะที่ได้เรียนมาในการแก้โจทย์ปัญหา',
+        ];
+        $c['objectives'] = [
+            'cognitive' => "ตอบคำถามจาก{$scope}ได้ตามเกณฑ์ที่กำหนด",
+            'psychomotor' => 'ทำแบบทดสอบได้ครบถ้วนภายในเวลาที่กำหนด',
+            'affective' => 'ปฏิบัติตามกติกาการทดสอบ และมีความซื่อสัตย์',
+            'application' => 'นำความรู้ที่ได้เรียนมาประยุกต์ตอบโจทย์สถานการณ์ได้',
+        ];
+        $c['content'] = "{$scope}ตามหน่วยการเรียนรู้ของรายวิชา";
+        $c['activities'] = [
+            'motivation' => 'ครูชี้แจงวัตถุประสงค์ ขอบเขต เวลา และกติกาการทดสอบ',
+            'information' => 'ผู้เรียนรับแบบทดสอบ อ่านคำชี้แจง และสอบถามข้อสงสัยก่อนเริ่มทำ',
+            'application' => 'ผู้เรียนทำแบบทดสอบด้วยตนเองภายในเวลาที่กำหนด ครูควบคุมการทดสอบ',
+            'progress' => 'ครูเก็บแบบทดสอบ ตรวจให้คะแนน และแจ้งผลเพื่อนำไปพัฒนาผู้เรียน',
+        ];
+        $c['media'] = "แบบ{$exam}\nกระดาษคำตอบ";
+        $c['evidence'] = ['knowledge' => 'กระดาษคำตอบและคะแนนการทดสอบ', 'performance' => 'ผลการปฏิบัติตามกติกาการทดสอบ'];
+        $c['assessment'] = ['criteria' => 'ผ่านเกณฑ์ร้อยละ 60 ขึ้นไป', 'methods' => "ตรวจให้คะแนนแบบทดสอบ\nสังเกตการปฏิบัติตามกติกา", 'tools' => "แบบ{$exam}\nแบบสังเกตพฤติกรรม"];
+        return $c;
+    }
+
     /** Fill the plan from the rule-based teaching guide — always available, no API key needed. */
     public static function prefill(array $course, array $dash, array $plan): array
     {
@@ -145,7 +183,7 @@ class LessonPlanService
                 'application' => 'ผู้เรียนฝึกปฏิบัติตามใบงาน ครูให้คำแนะนำรายบุคคล',
                 'progress' => 'ผู้เรียนนำเสนอผลงาน ครูและผู้เรียนร่วมกันสรุป ทำแบบทดสอบท้ายหน่วย',
             ];
-            return $c;
+            return self::spreadSessions($c, $plan);
         }
 
         $unit = null;
@@ -170,6 +208,23 @@ class LessonPlanService
             $diff[] = "ผู้เรียน Fixed Mindset ({$guide['mindset']['fixed_pct']}%): " . $guide['mindset']['fixed'][0];
         }
         $c['differentiation'] = implode("\n", $diff);
+        return self::spreadSessions($c, $plan);
+    }
+
+    /** A plan covering several sessions says what happens when: opening in the first, practice in each, wrap-up in the last. */
+    private static function spreadSessions(array $c, array $plan): array
+    {
+        $list = TeachingSchedule::expand((string) ($plan['sessions'] ?? ''));
+        if (count($list) < 2) {
+            return $c;
+        }
+        $first = $list[0];
+        $last = end($list);
+        $c['activities']['motivation'] = "ครั้งที่ {$first}: {$c['activities']['motivation']}";
+        $c['activities']['information'] = "ครั้งที่ {$first}: {$c['activities']['information']}";
+        $more = array_map(fn ($n) => "ครั้งที่ {$n}: ผู้เรียนฝึกปฏิบัติต่อเนื่องจากครั้งก่อน ครูให้คำแนะนำรายบุคคล", array_slice($list, 1));
+        $c['activities']['application'] = implode("\n", ["ครั้งที่ {$first}: " . str_replace("\n", ' ', $c['activities']['application']), ...$more]);
+        $c['activities']['progress'] = "ครั้งที่ {$last}: {$c['activities']['progress']}";
         return $c;
     }
 
@@ -211,6 +266,38 @@ class LessonPlanService
         $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, self::prompt($course, $ctx, $plan), 2, 24000);
         $content = self::normalize($res['data']);
         $content['after'] = self::EMPTY['after']; // written by the teacher after teaching
+        return ['content' => $content, 'model' => $res['model']];
+    }
+
+    /** AI draft of an exam-week plan: broad, no unit numbers; the sections that don't apply stay empty. */
+    public static function aiExamDraft(int $userId, array $course, array $plan): array
+    {
+        if (!AiGuideService::enabled()) {
+            throw new HttpException(403, 'ผู้ดูแลระบบปิดการใช้งานฟังก์ชัน AI อยู่');
+        }
+        $r = AiGuideService::resolve($userId);
+        if (!$r['key']) {
+            throw new HttpException(409, 'กรุณากรอก API Key ของ Gemini ที่หน้า “ตั้งค่า AI ของฉัน” ก่อน หรือใช้ปุ่มเติมข้อความตั้งต้น (ไม่ต้องใช้ AI)');
+        }
+        set_time_limit(300);
+        $exam = TeachingSchedule::EXAM_NAME[$plan['kind']];
+        $level = self::isHigher($course) ? 'ปวส.' : 'ปวช.';
+        $prompt = self::curriculumText($course)
+            . "จงเขียนแผนการจัดการเรียนรู้ระดับ {$level} สำหรับสัปดาห์{$exam} รายวิชา {$course['code']} {$course['name']} สอนครั้งที่ {$plan['sessions']} ทฤษฎี {$plan['hours_theory']} ชม. ปฏิบัติ {$plan['hours_practice']} ชม.\n"
+            . "กติกา:\n"
+            . "- แผนนี้เขียนก่อนสอนจริง จึงเขียนแบบกว้าง ครอบคลุมเรื่องการทดสอบ ห้ามระบุเลขหน่วย ชื่อหน่วยการเรียนรู้ หรือเลขสัปดาห์ของเนื้อหาที่ทดสอบ เพราะครูอาจสอนไม่ตรงตามลำดับ\n"
+            . "- ไม่มีเนื้อหาใหม่ในสัปดาห์นี้ กิจกรรมคือการดำเนินการทดสอบเท่านั้น ห้ามแต่งข้อสอบ\n"
+            . "- เขียนกระชับ ข้อละ 1-4 บรรทัด ภาษาไทยทางการ\n"
+            . "- activities แบบ MIAP: motivation=ชี้แจงกติกา · information=รับแบบทดสอบและคำชี้แจง · application=ทำแบบทดสอบ · progress=เก็บ ตรวจ แจ้งผล\n"
+            . "- media/evidence/assessment เกี่ยวกับแบบทดสอบ กระดาษคำตอบ คะแนน เกณฑ์ผ่าน\n"
+            . "ตอบเป็น JSON (ค่าทุกช่องเป็นข้อความ ใช้ \\n ขึ้นบรรทัดใหม่):\n"
+            . '{"outcome":"","competency":{"knowledge":"","practice":"","apply":""},"objectives":{"cognitive":"","psychomotor":"","affective":"","application":""},"content":"","activities":{"motivation":"","information":"","application":"","progress":""},"media":"","evidence":{"knowledge":"","performance":""},"assessment":{"criteria":"","methods":"","tools":""}}';
+        $res = (new GeminiClient($r['key']))->generateJsonResilient($r['model'] ?: 'gemini-flash-latest', self::SYSTEM, $prompt, 2, 8192);
+        $content = self::normalize($res['data']);
+        foreach (['standard', 'differentiation', 'after'] as $k) {
+            $content[$k] = self::EMPTY[$k];
+        }
+        $content['content'] = self::examPrefill($course, $plan['kind'])['content']; // the model tends to pin down weeks here
         return ['content' => $content, 'model' => $res['model']];
     }
 
@@ -306,10 +393,14 @@ class LessonPlanService
         $verb = self::isHigher($course) ? 'ประมวลความรู้เกี่ยวกับ' : 'แสดงความรู้เกี่ยวกับ';
         $level = self::isHigher($course) ? 'ปวส.' : 'ปวช.';
         $hours = "ทฤษฎี {$plan['hours_theory']} ชม. ปฏิบัติ {$plan['hours_practice']} ชม.";
+        $session = ($plan['sessions'] ?? '') ?: $plan['session_no'];
+        $times = count(TeachingSchedule::expand((string) ($plan['sessions'] ?? '')));
+        // one plan covers the whole unit: say which session does what
+        $perSession = $times > 1 ? "- แผนนี้รวมการสอน {$times} ครั้ง (สอนครั้งที่ {$session}) ครั้งละเท่า ๆ กัน: activities ทุกขั้นให้ระบุว่าทำในครั้งใด โดยขึ้นต้นบรรทัดด้วย “ครั้งที่ n:” ตามเลขในช่วงนี้ ให้ครบทุกครั้ง และเนื้อหาในแต่ละครั้งต้องต่อเนื่องกัน\n" : '';
         $title = $plan['title'] !== '' ? $plan['title'] : $plan['unit_name'];
         return self::curriculumText($course) . "ข้อมูลรายวิชาและผู้เรียน:\n" . json_encode($ctx, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
             . "\n(vark_percent V=ภาพ A=ฟัง R=อ่านเขียน K=ลงมือทำ · riasec_percent R=ปฏิบัติ I=วิเคราะห์ A=สร้างสรรค์ S=ช่วยเหลือ E=ริเริ่ม C=จัดระบบ · mindset_percent)\n\n"
-            . "จงเขียนแผนการจัดการเรียนรู้ระดับ {$level} หน่วยที่ {$plan['unit_no']} “{$plan['unit_name']}” เรื่อง/งาน “{$title}” สอนครั้งที่ {$plan['session_no']} ({$hours})\n"
+            . "จงเขียนแผนการจัดการเรียนรู้ระดับ {$level} หน่วยที่ {$plan['unit_no']} “{$plan['unit_name']}” เรื่อง/งาน “{$title}” สอนครั้งที่ {$session} ({$hours})\n"
             . "กติกาของแบบฟอร์มและความละเอียดที่ต้องการ (เขียนให้ครบ ได้ใจความ ครูนำไปสอนได้ทันทีโดยไม่ต้องเติม):\n"
             . "- outcome: ผลลัพธ์นอกห้องเรียน 2-3 ประโยค ระบุว่าผู้เรียนนำความรู้/ทักษะไปทำอะไรได้ในงานอาชีพหรือชีวิตจริง พร้อมตัวอย่างสถานการณ์\n"
             . "- competency: รูปแบบ “กริยา + กรรม + เงื่อนไข” · knowledge ขึ้นต้นด้วย “{$verb}” ระบุเนื้อหาหลัก · practice = กริยาการปฏิบัติงาน + งาน + เงื่อนไข (เครื่องมือ ข้อกำหนด มาตรฐาน) · apply = การประยุกต์ใช้ในสถานการณ์จริง\n"
@@ -324,6 +415,7 @@ class LessonPlanService
             . "- evidence: knowledge และ performance อย่างละ 2-4 รายการ บรรทัดละ 1 รายการ เป็นชิ้นงาน/ผลการทดสอบที่จับต้องได้\n"
             . "- assessment: criteria = เกณฑ์ผ่านเป็นตัวเลข/ระดับคุณภาพชัดเจน · methods = วิธีประเมินที่จับคู่กับจุดประสงค์แต่ละด้าน · tools = เครื่องมือประเมินที่ระบุชื่อ (เช่น แบบทดสอบ 10 ข้อ, แบบประเมินผลงาน Rubric 4 ระดับ) · บรรทัดละ 1 รายการ\n"
             . "- standard: occupation/sub_competency/criteria/method ให้เว้นว่างถ้าไม่ทราบมาตรฐานอาชีพที่มีจริง · performance_evidence/knowledge_evidence/career_integration เขียนได้ (career_integration ระบุอาชีพ/ลักษณะงานที่เชื่อมโยง)\n"
+            . $perSession
             . "ตอบเป็น JSON (ค่าทุกช่องเป็นข้อความ ใช้ \\n ขึ้นบรรทัดใหม่):\n"
             . '{"outcome":"","standard":{"occupation":"","sub_competency":"","criteria":"","method":"","performance_evidence":"","knowledge_evidence":"","career_integration":""},'
             . '"competency":{"knowledge":"","practice":"","apply":""},"objectives":{"cognitive":"","psychomotor":"","affective":"","application":""},'

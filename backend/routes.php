@@ -48,6 +48,7 @@ $router->post('/auth/forgot', [App\Controllers\AccountController::class, 'forgot
 $router->get('/teacher/courses/{id}/plans', [App\Controllers\LessonPlanController::class, 'index'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/plans/full', [App\Controllers\LessonPlanController::class, 'full'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/plans', [App\Controllers\LessonPlanController::class, 'create'], ['teacher', 'admin']);
+$router->post('/teacher/courses/{id}/plans/from-schedule', [App\Controllers\LessonPlanController::class, 'createFromSchedule'], ['teacher', 'admin']);
 $router->get('/teacher/courses/{id}/book', [App\Controllers\LessonPlanController::class, 'book'], ['teacher', 'admin']);
 $router->put('/teacher/courses/{id}/book', [App\Controllers\LessonPlanController::class, 'saveBook'], ['teacher', 'admin']);
 $router->post('/teacher/courses/{id}/book/draft', [App\Controllers\LessonPlanController::class, 'bookDraft'], ['teacher', 'admin']);

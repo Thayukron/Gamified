@@ -85,7 +85,7 @@ async function save() {
     b.final_eval = { ...b.final_eval, hours_theory: fmt(t), hours_practice: fmt(pr) }
     book.value = (await api<any>(`/teacher/courses/${id}/book`, { method: 'PUT', body: { content: b } })).book
     dirty.value = false
-    msg.value = { ok: true, text: 'บันทึกตารางแล้ว และอัปเดตชั่วโมงในตารางหน่วยการเรียนรู้ของเล่มแผนให้ตรงกันแล้ว' }
+    msg.value = { ok: true, text: 'บันทึกตารางแล้ว ชั่วโมงในเล่มแผนและเลขสอนครั้งที่ของแผนที่สร้างจากตารางเปลี่ยนตามแล้ว' }
   } catch (e) {
     msg.value = { ok: false, text: apiErrorMessage(e) }
   } finally {
@@ -165,7 +165,7 @@ async function save() {
         <p v-if="units.some((u) => !u.weeks)" class="text-sm text-rune-300">มีหน่วยที่ยังไม่ได้กำหนดสัปดาห์</p>
         <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="sc-msg">{{ msg.text }}</p>
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <span class="text-xs text-slate-500">บันทึกแล้ว ชั่วโมงของแต่ละหน่วยในเล่มแผนจะเปลี่ยนตามตารางนี้ แผนที่ทำไว้แล้วไม่ถูกแก้ไข</span>
+          <span class="text-xs text-slate-500">บันทึกแล้ว ชั่วโมงในเล่มแผนและแผนที่สร้างจากตารางจะเปลี่ยนตาม (เนื้อหาในแผนไม่ถูกแก้) · แผนเดิมแบบแยกรายครั้งไม่เปลี่ยน</span>
           <button class="btn-primary !py-2 text-sm" :disabled="busy || over > 0 || !dirty" data-testid="sc-save" @click="save"><AppIcon name="check" :size="16" /> {{ busy ? 'กำลังบันทึก…' : 'บันทึกตาราง' }}</button>
         </div>
       </section>

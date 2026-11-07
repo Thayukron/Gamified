@@ -8,6 +8,8 @@ const api = useApi()
 const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 
 const header = reactive({ unit_no: 1, session_no: 1, unit_name: '', title: '', hours_theory: 0, hours_practice: 0 })
+const isExam = computed(() => props.plan.kind !== 'unit')
+const fromSchedule = computed(() => props.plan.sessions !== null) // unit, sessions and hours come from the weekly schedule
 const content = ref<PlanContent>(JSON.parse(JSON.stringify(props.plan.content)))
 Object.assign(header, { unit_no: props.plan.unit_no, session_no: props.plan.session_no, unit_name: props.plan.unit_name, title: props.plan.title, hours_theory: props.plan.hours_theory, hours_practice: props.plan.hours_practice })
 const aiModel = ref<string | null>(null)
@@ -97,7 +99,7 @@ defineExpose({ save, isDirty: () => dirty.value })
       <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="ai-draft" @click="draft('ai')">
         <AppIcon name="orb" :size="16" /> {{ busy === 'ai' ? 'AI กำลังร่าง… (30–60 วินาที)' : 'ให้ AI ร่างแผน' }}
       </button>
-      <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" data-testid="guide-draft" @click="draft('guide')">เติมจากไกด์</button>
+      <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" data-testid="guide-draft" @click="draft('guide')">{{ isExam ? 'เติมข้อความตั้งต้น' : 'เติมจากไกด์' }}</button>
       <span class="flex-1" />
       <span class="text-xs text-slate-400">กรอกแล้ว {{ filled }}/{{ sections.length }} ข้อ</span>
       <button class="btn-primary !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="save" @click="save">
@@ -109,20 +111,25 @@ defineExpose({ save, isDirty: () => dirty.value })
     <!-- compact header -->
     <div class="rounded-xl bg-white/5 px-4 py-2 text-sm ring-1 ring-white/10">
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-        <span class="text-slate-300">หน่วยที่ <b class="text-slate-100">{{ header.unit_no }}</b> · ครั้งที่ <b class="text-slate-100">{{ header.session_no }}</b></span>
-        <span class="text-slate-300">เรื่อง <b class="text-slate-100">{{ header.title || header.unit_name }}</b></span>
+        <span class="text-slate-300"><template v-if="!isExam">หน่วยที่ <b class="text-slate-100">{{ header.unit_no }}</b> · </template>สอนครั้งที่ <b class="text-slate-100" data-testid="plan-sessions">{{ plan.sessions ?? header.session_no }}</b></span>
+        <span class="text-slate-300">{{ isExam ? '' : 'เรื่อง ' }}<b class="text-slate-100">{{ header.title || header.unit_name }}</b></span>
         <span class="text-slate-400">ท {{ header.hours_theory }} · ป {{ header.hours_practice }} ชม.</span>
         <span class="flex-1" />
-        <button class="text-xs text-sky-300 hover:text-sky-200" data-testid="edit-header" @click="editHeader = !editHeader">{{ editHeader ? 'ปิด' : 'แก้ไขหัวแผน' }}</button>
+        <button v-if="!isExam" class="text-xs text-sky-300 hover:text-sky-200" data-testid="edit-header" @click="editHeader = !editHeader">{{ editHeader ? 'ปิด' : 'แก้ไขหัวแผน' }}</button>
         <button v-if="learners?.ready" class="text-xs text-sky-300 hover:text-sky-200" @click="showLearners = !showLearners">{{ showLearners ? 'ซ่อนข้อมูลผู้เรียน' : 'ดูข้อมูลผู้เรียนห้องนี้' }}</button>
       </div>
       <div v-if="editHeader" class="mt-3 grid gap-3 pb-1 sm:grid-cols-6">
-        <div><p class="label">หน่วยที่</p><input v-model.number="header.unit_no" type="number" min="1" class="input"></div>
-        <div><p class="label">สอนครั้งที่</p><input v-model.number="header.session_no" type="number" min="1" class="input"></div>
+        <template v-if="!fromSchedule">
+          <div><p class="label">หน่วยที่</p><input v-model.number="header.unit_no" type="number" min="1" class="input"></div>
+          <div><p class="label">สอนครั้งที่</p><input v-model.number="header.session_no" type="number" min="1" class="input"></div>
+        </template>
         <div class="sm:col-span-4"><p class="label">ชื่อหน่วยการเรียนรู้</p><input v-model="header.unit_name" class="input"></div>
         <div class="sm:col-span-4"><p class="label">ชื่อเรื่อง/งาน</p><input v-model="header.title" class="input"></div>
-        <div><p class="label">ทฤษฎี (ชม.)</p><input v-model.number="header.hours_theory" type="number" min="0" step="0.5" class="input"></div>
-        <div><p class="label">ปฏิบัติ (ชม.)</p><input v-model.number="header.hours_practice" type="number" min="0" step="0.5" class="input"></div>
+        <template v-if="!fromSchedule">
+          <div><p class="label">ทฤษฎี (ชม.)</p><input v-model.number="header.hours_theory" type="number" min="0" step="0.5" class="input"></div>
+          <div><p class="label">ปฏิบัติ (ชม.)</p><input v-model.number="header.hours_practice" type="number" min="0" step="0.5" class="input"></div>
+        </template>
+        <p v-else class="text-xs text-slate-400 sm:col-span-6">เลขสอนครั้งที่และชั่วโมงมาจากตารางกำหนดการสอนรายสัปดาห์ แก้ที่หน้าตารางได้</p>
       </div>
       <div v-if="showLearners && learners?.ready" class="mt-2 space-y-1 border-t border-white/10 pt-2 text-xs text-slate-400">
         <p>วิเคราะห์แล้ว {{ learners.profiled }}/{{ learners.enrolled }} คน · {{ learners.vark.map((v: any) => `${v.label} ${v.pct}%`).join(' · ') }}</p>
@@ -133,7 +140,8 @@ defineExpose({ save, isDirty: () => dirty.value })
 
     <TeacherSectionAccordion v-model="content" :sections="sections">
       <template #[STD_SLOT]>
-        <div class="rounded-xl bg-indigo-500/5 p-3 ring-1 ring-rune-400/20" data-testid="std-box">
+        <p v-if="isExam" class="text-xs text-slate-400">สัปดาห์ทดสอบเว้นข้อนี้ไว้ได้</p>
+        <div v-else class="rounded-xl bg-indigo-500/5 p-3 ring-1 ring-rune-400/20" data-testid="std-box">
           <div class="flex flex-wrap items-center gap-3">
             <button type="button" class="btn-ghost !py-1.5 text-sm" :disabled="std.busy || !!busy" data-testid="std-find" @click="findStandard">
               <AppIcon name="sparkle" :size="16" /> {{ std.busy ? 'AI กำลังค้นหามาตรฐานอาชีพ… (20–60 วินาที)' : 'ค้นหามาตรฐานอาชีพ (TPQI) ด้วย AI' }}

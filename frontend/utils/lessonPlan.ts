@@ -117,14 +117,20 @@ export const BOOK_PARTS = [
   { key: 'units', label: 'หน่วยการเรียนรู้ (ตารางชั่วโมง)' },
 ] as const
 
+/** "สอนครั้งที่" of a plan: its range from the weekly schedule, or the single session of a plan made per session */
+export const planSessions = (p: { sessions?: string | null; session_no: number }) => p.sessions ?? String(p.session_no)
+/** "หน่วยที่ 1 ชื่อ" of a unit plan; an exam plan goes by the name of the exam */
+export const planName = (p: { kind?: string; unit_no: number; unit_name: string; title: string }) =>
+  !p.kind || p.kind === 'unit' ? `หน่วยที่ ${p.unit_no} ${p.title || p.unit_name}` : p.unit_name
+
 /** Export picker for the whole course (book parts + units + forms per unit). */
-export function courseExportGroups(plans: { id: number; unit_no: number; session_no: number; unit_name: string; title: string; sheets?: { type: SheetType }[] }[], learnersReady: boolean): ExportGroup[] {
+export function courseExportGroups(plans: { id: number; kind?: string; unit_no: number; session_no: number; sessions?: string | null; unit_name: string; title: string; sheets?: { type: SheetType }[] }[], learnersReady: boolean): ExportGroup[] {
   const types = new Set(plans.flatMap((p) => (p.sheets ?? []).map((s) => s.type)))
   return [
     { title: 'ส่วนหน้า · ระดับรายวิชา', items: BOOK_PARTS.map((b) => ({ key: b.key, label: b.label, checked: true })) },
     {
       title: 'หน่วยการเรียน',
-      items: plans.map((p) => ({ key: `unit:${p.id}`, label: `หน่วยที่ ${p.unit_no} ${p.title || p.unit_name}`, hint: `สอนครั้งที่ ${p.session_no}`, checked: true })),
+      items: plans.map((p) => ({ key: `unit:${p.id}`, label: planName(p), hint: `สอนครั้งที่ ${planSessions(p)}`, checked: true })),
     },
     {
       title: 'ฟอร์มในแต่ละหน่วย',
