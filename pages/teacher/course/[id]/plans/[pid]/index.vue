@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Unit workspace: every form of one unit/session in tabs (review one form at a time),
 // exported together as ONE Word file with a picker for which forms to include.
-import { SHEET_ORDER, SHEET_TYPES, type ExportGroup, type Sheet, type SheetType } from '~/utils/lessonPlan'
+import { SHEET_ORDER, SHEET_TYPES, planName, planSessions, type ExportGroup, type Sheet, type SheetType } from '~/utils/lessonPlan'
 import { exportLessonPlansDocx } from '~/utils/lessonPlanDocx'
 
 const route = useRoute()
@@ -25,6 +25,7 @@ async function load() {
 onMounted(() => load().catch((e) => (loadError.value = apiErrorMessage(e))))
 
 const sheets = computed<Sheet[]>(() => data.value?.plan.sheets ?? [])
+const isExam = computed(() => data.value?.plan.kind !== 'unit') // exam-week plans have no supporting forms
 const tabs = computed(() => [
   { key: 'plan', label: 'แผนการจัดการเรียนรู้', pct: data.value?.plan.completeness ?? 0 },
   ...sheets.value.map((s) => ({ key: `s${s.id}`, label: `${s.type_th} ${s.number}`, pct: s.completeness })),
@@ -73,7 +74,7 @@ function onSheetRemoved() {
 // ---- export: one Word file for the unit, pick forms
 const exportGroups = computed<ExportGroup[]>(() => [
   {
-    title: `หน่วยที่ ${data.value.plan.unit_no} · สอนครั้งที่ ${data.value.plan.session_no}`,
+    title: `${isExam.value ? data.value.plan.unit_name : `หน่วยที่ ${data.value.plan.unit_no}`} · สอนครั้งที่ ${planSessions(data.value.plan)}`,
     items: [
       { key: 'plan', label: 'แผนการจัดการเรียนรู้ (ข้อ 1–10)', checked: true },
       ...sheets.value.map((s) => ({ key: `sheet:${s.id}`, label: `${s.type_th}ที่ ${s.number}`, hint: s.title, checked: true })),
@@ -94,7 +95,7 @@ async function doExport(keys: string[]) {
       plans: [p],
       learners: data.value.learners,
       include: new Set([...keys, ...(keys.some((k) => k.startsWith('sheet:')) ? [] : ['sheet:none'])]),
-      filename: `หน่วย${p.unit_no}-ครั้ง${p.session_no}-${data.value.course.code}.docx`,
+      filename: `${isExam.value ? p.unit_name : `หน่วย${p.unit_no}`}-ครั้ง${planSessions(p).replace(/,\s*/g, '_')}-${data.value.course.code}.docx`,
     })
     exportOpen.value = false
   } finally {
@@ -112,8 +113,8 @@ async function doExport(keys: string[]) {
       <header class="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p class="font-mono text-xs text-rune-300/80">{{ data.course.code }} {{ data.course.name }}</p>
-          <h1 class="title-glow mt-1 text-2xl">หน่วยที่ {{ data.plan.unit_no }} · {{ data.plan.title || data.plan.unit_name }}</h1>
-          <p class="text-sm text-slate-400">สอนครั้งที่ {{ data.plan.session_no }} · ตรวจทีละฟอร์มด้วยแท็บด้านล่าง แล้วส่งออกรวมเป็นไฟล์เดียว</p>
+          <h1 class="title-glow mt-1 text-2xl">{{ planName(data.plan) }}</h1>
+          <p class="text-sm text-slate-400">สอนครั้งที่ {{ planSessions(data.plan) }} · ตรวจทีละฟอร์มด้วยแท็บด้านล่าง แล้วส่งออกรวมเป็นไฟล์เดียว</p>
         </div>
         <button class="btn-primary !py-2 text-sm" data-testid="unit-export" @click="openExport"><AppIcon name="download" :size="16" /> ส่งออก Word (เลือกฟอร์ม)</button>
       </header>
@@ -130,7 +131,7 @@ async function doExport(keys: string[]) {
         >
           {{ t.label }} <span class="ml-1 text-xs" :class="t.pct >= 100 ? 'text-emerald-300' : 'text-slate-500'">{{ t.pct }}%</span>
         </button>
-        <div class="relative">
+        <div v-if="!isExam" class="relative">
           <button class="rounded-full px-4 py-1.5 text-sm text-rune-300 ring-1 ring-dashed ring-rune-400/40 hover:bg-rune-400/10" data-testid="add-form" @click="addOpen = !addOpen">+ เพิ่มเอกสารประกอบ</button>
           <div v-if="addOpen" class="absolute left-0 top-10 z-20 w-72 rounded-xl border border-white/10 bg-abyss-900 p-1 shadow-xl">
             <button v-for="t in SHEET_ORDER" :key="t" class="block w-full rounded-lg px-3 py-2 text-left hover:bg-white/5" :data-testid="`add-sheet-${t}`" @click="addSheet(t)">

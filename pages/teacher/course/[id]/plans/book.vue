@@ -38,14 +38,15 @@ onMounted(async () => {
 })
 watch(book, () => (dirty.value = true), { deep: true })
 
-// ---- totals / checks for the units table (form rule: ปวช. ≥ 18 weeks incl. assessment, ปวส. ≥ 15 weeks excl.)
+// ---- totals / checks for the units table (ปวส. 15 / ปวช. 18 weeks, exam weeks included with the normal hours)
 const n = (s: any) => parseFloat(String(s ?? '').replace(/[^\d.]/g, '')) || 0
 const totals = computed(() => {
   const u = book.value?.units ?? []
   const f = book.value?.final_eval
-  const t = u.reduce((s, r) => s + n(r.hours_theory), 0) + n(f?.hours_theory)
-  const p = u.reduce((s, r) => s + n(r.hours_practice), 0) + n(f?.hours_practice)
-  const pct = u.reduce((s, r) => s + n(r.percent), 0) + n(f?.percent)
+  const m = book.value?.midterm_eval
+  const t = u.reduce((s, r) => s + n(r.hours_theory), 0) + n(f?.hours_theory) + n(m?.hours_theory)
+  const p = u.reduce((s, r) => s + n(r.hours_practice), 0) + n(f?.hours_practice) + n(m?.hours_practice)
+  const pct = u.reduce((s, r) => s + n(r.percent), 0) + n(f?.percent) + n(m?.percent)
   const weeks = data.value?.level_higher ? 15 : 18
   const perWeek = n(book.value?.curriculum.theory_hours) + n(book.value?.curriculum.practice_hours)
   return { t, p, pct, weeks, expected: perWeek * weeks }
@@ -69,18 +70,56 @@ async function save() {
   }
 }
 
+/** once the weekly schedule is saved, the hours of units and exams come from it — a draft never changes them */
+function keepScheduleHours(parts: any) {
+  const b = book.value!
+  if (!b.schedule.units.length) return
+  for (const u of parts.units ?? []) {
+    const old = b.units.find((x) => x.no === u.no)
+    if (old) Object.assign(u, { hours_theory: old.hours_theory, hours_practice: old.hours_practice })
+  }
+  for (const k of ['midterm_eval', 'final_eval'] as const) {
+    if (parts[k]) parts[k] = { ...parts[k], hours_theory: b[k].hours_theory, hours_practice: b[k].hours_practice }
+  }
+}
+
+const usage = ref<any>(null)
+/** an AI draft of the book (now, or one left unsaved earlier); hours stay with the weekly schedule */
+function useBookDraft(r: any) {
+  keepScheduleHours(r.parts)
+  Object.assign(book.value!, r.parts)
+  aiModel.value = r.model
+  usage.value?.refresh()
+}
+
+/** analysis tables without AI: fills only the empty cells */
+async function guideFill() {
+  busy.value = 'ai'
+  msg.value = null
+  try {
+    const r = await api<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value, source: 'guide' } })
+    Object.assign(book.value!, r.parts)
+    tab.value = 'job'
+    msg.value = { ok: true, text: 'เติมข้อมูลตั้งต้นในช่องที่ว่างแล้ว (ไม่ใช้ AI) — ตรวจ แก้ไข แล้วกด “บันทึก”' }
+  } catch (e) {
+    msg.value = { ok: false, text: apiErrorMessage(e) }
+  } finally {
+    busy.value = ''
+  }
+}
+
 async function aiDraft() {
   if (!confirm('ให้ AI ร่าง “ตารางวิเคราะห์หน่วยการเรียนรู้ · ระดับพฤติกรรม K/S/A/Ap · ชั่วโมงและร้อยละ · คำนำ” จากข้อมูลหลักสูตรรายวิชาที่กรอกไว้?\nข้อมูลเดิมในส่วนเหล่านี้จะถูกแทนที่ (หลักสูตรรายวิชาไม่ถูกแตะ) — ยังไม่บันทึกจนกว่าจะกด “บันทึก”')) return
   busy.value = 'ai'
   msg.value = null
   try {
     const r = await aiApi<any>(`/teacher/courses/${id}/book/draft`, { method: 'POST', body: { content: book.value } })
-    Object.assign(book.value!, r.parts)
-    aiModel.value = r.model
+    useBookDraft(r)
     tab.value = 'job'
     msg.value = { ok: true, text: `AI (${r.model}) ร่างตารางวิเคราะห์และคำนำแล้ว — ตรวจ แก้ไข แล้วกด “บันทึก”` }
   } catch (e) {
     msg.value = { ok: false, text: apiErrorMessage(e) }
+    usage.value?.refresh()
   } finally {
     busy.value = ''
   }
@@ -150,12 +189,15 @@ const unitCols = [
         <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="book-ai" @click="aiDraft">
           <AppIcon name="orb" :size="16" /> {{ busy === 'ai' ? 'AI กำลังวิเคราะห์… (30–60 วินาที)' : 'ให้ AI ร่างตารางวิเคราะห์ + คำนำ' }}
         </button>
+        <button class="btn-ghost !py-2 text-sm" :disabled="!!busy" data-testid="book-guide" title="เติมเฉพาะช่องที่ว่าง ไม่ใช้โควตา AI" @click="guideFill">เติมตารางวิเคราะห์ (ไม่ใช้ AI)</button>
+        <TeacherAiUsage ref="usage" />
         <span class="flex-1" />
         <span class="text-xs" :class="dirty ? 'text-rune-300' : 'text-slate-500'">{{ dirty ? '● ยังไม่ได้บันทึก' : 'บันทึกแล้ว' }}</span>
         <button class="btn-ghost !py-2 text-sm" :disabled="!!busy || !dirty" data-testid="book-save" @click="save"><AppIcon name="check" :size="16" /> บันทึก</button>
         <button class="btn-primary !py-2 text-sm" :disabled="!!busy" data-testid="book-word" @click="word"><AppIcon name="download" :size="16" /> ส่งออก Word (เลือกส่วน)</button>
       </div>
       <p v-if="msg" class="rounded-xl px-3 py-2 text-sm" :class="msg.ok ? 'bg-emerald-500/10 text-emerald-300' : 'bg-red-500/10 text-red-300'" data-testid="book-msg">{{ msg.text }}</p>
+      <TeacherAiDraftBanner :path="`/teacher/courses/${id}/book/draft`" :after="data.updated_at" @use="(r) => { useBookDraft(r); tab = 'job'; msg = { ok: true, text: 'นำร่างจาก AI มาใช้แล้ว — ตรวจแล้วกด “บันทึก”' } }" />
 
       <div class="flex flex-wrap gap-2">
         <button
@@ -223,6 +265,13 @@ const unitCols = [
       <section v-if="tab === 'units'" class="card space-y-4">
         <p class="text-sm text-slate-400">ใช้สร้าง <b>ตารางวิเคราะห์พฤติกรรมการเรียนรู้ (แบบ 2)</b> และ <b>ตารางหน่วยการเรียนรู้</b> · K ใส่ได้หลายระดับ (เช่น K1,K2,K3) · S / A / Ap ใส่ระดับเดียว</p>
         <TeacherRowTable v-model="book.units" :columns="unitCols" add-label="เพิ่มหน่วย" testid="units-table" />
+        <NuxtLink :to="`/teacher/course/${id}/plans/schedule`" class="block text-sm text-rune-300 hover:text-rune-200" data-testid="book-schedule">จัดชั่วโมงจากจำนวนสัปดาห์ที่หน้าตารางกำหนดการสอนรายสัปดาห์ →</NuxtLink>
+        <div class="grid gap-3 sm:grid-cols-4">
+          <p class="text-sm text-slate-300 sm:col-span-4">ทดสอบกลางภาค</p>
+          <div><p class="label">ชม. ทฤษฎี</p><input v-model="book.midterm_eval.hours_theory" class="input" data-testid="mid-t"></div>
+          <div><p class="label">ชม. ปฏิบัติ</p><input v-model="book.midterm_eval.hours_practice" class="input" data-testid="mid-p"></div>
+          <div><p class="label">ร้อยละ</p><input v-model="book.midterm_eval.percent" class="input" data-testid="mid-pc"></div>
+        </div>
         <div class="grid gap-3 sm:grid-cols-4">
           <p class="text-sm text-slate-300 sm:col-span-4">ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)</p>
           <div><p class="label">ชม. ทฤษฎี</p><input v-model="book.final_eval.hours_theory" class="input"></div>

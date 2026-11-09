@@ -5,7 +5,7 @@ import type { StaffRecord } from '../../shared/types/staff'
 import { ApiError, inputString } from '../utils/errors'
 import { bool, text } from '../utils/staff'
 import { decryptSecret, encryptSecret, keyHint } from '../utils/crypto'
-import { GeminiClient, pickDefault } from './gemini'
+import { GeminiClient, missingModels, pickDefault } from './gemini'
 
 export const aiClient = (key: string, db: SqlClient, signal?: AbortSignal) => {
   const config = useRuntimeConfig()
@@ -18,7 +18,14 @@ async function userSettings(db: SqlClient, userId: number): Promise<StaffRecord>
 }
 export async function resolveAI(db: SqlClient, userId: number) {
   const own = await userSettings(db, userId), key = await decryptSecret(db, own.api_key_enc)
-  if (key) return { source: 'own', key, model: own.model as string | null }
+  if (key) {
+    if (own.model && (await missingModels(db))[own.model]) {
+      // the model the teacher picked no longer exists: back to the default (newest working flash)
+      await db.execute('UPDATE user_ai_settings SET model=NULL WHERE user_id=?', [userId])
+      own.model = null
+    }
+    return { source: 'own', key, model: own.model as string | null }
+  }
   const central = await decryptSecret(db, await setting(db, 'ai_central_key_enc'))
   if (Number(own.central_allowed) === 1 && central) return { source: 'central', key: central, model: await setting(db, 'ai_central_model') }
   return { source: null, key: null, model: null }

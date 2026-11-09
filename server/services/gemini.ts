@@ -2,6 +2,7 @@ import type { SqlClient } from '../utils/db'
 import type { StaffRecord } from '../../shared/types/staff'
 import { ApiError } from '../utils/errors'
 import { setTimeout as sleep } from 'node:timers/promises'
+import { createHash } from 'node:crypto'
 export interface GeminiOptions { baseUrl: string; timeoutSeconds: number; signal?: AbortSignal; retryDelayScale?: number }
 export function rankModels(models: string[]) {
   const usable = models.filter(model => model.includes('flash') && !/(tts|image|audio|live|embedding|vision|preview|exp|thinking|aqa|learnlm|robotics|computer)/i.test(model))
@@ -13,10 +14,32 @@ export const pickDefault = (models: string[]) => rankModels(models)[0] ?? models
 export function explainGemini(status: number, message: string) {
   if (status === 400 && message.includes('API key')) return 'API Key ไม่ถูกต้อง — ตรวจสอบว่าคัดลอกมาครบ'
   if ([401, 403].includes(status)) return 'API Key ไม่ถูกต้องหรือไม่มีสิทธิ์ใช้ Gemini API'
-  if (status === 429) return 'ใช้งาน Gemini เกินโควตาของ API Key นี้ — รอสักครู่แล้วลองใหม่ (ระบบยังใช้ไกด์แบบกฎได้ตามปกติ)'
-  if (status === 404) return 'ไม่พบรุ่นโมเดลนี้ — กดทดสอบการเชื่อมต่อใหม่เพื่อเลือกรุ่นที่ใช้ได้'
+  if (status === 429 && isDaily(message)) return `โควตารายวันของ API Key นี้หมดแล้ว (Gemini แบบฟรีรีเซ็ตทุกวัน) — ใช้ AI ได้อีกครั้งประมาณ ${resetTime()} น. ระหว่างนี้ใช้ปุ่ม “เติมจากไกด์ / เติมข้อมูลตั้งต้น” ได้โดยไม่ใช้ AI`
+  if (status === 429) return 'ส่งคำขอถึง Gemini ถี่เกินไป — รอประมาณ 1 นาทีแล้วกดใหม่ครั้งเดียว'
+  if (status === 404) return 'รุ่นโมเดลที่ตั้งไว้ใช้ไม่ได้แล้ว — ระบบเปลี่ยนไปใช้รุ่นอื่นให้อัตโนมัติ กรุณากดใหม่อีกครั้ง'
   if ([500, 503].includes(status)) return 'ขณะนี้ Google Gemini มีผู้ใช้งานหนาแน่น (เซิร์ฟเวอร์ของ Google ไม่ว่าง) ระบบลองใหม่และลองรุ่นสำรองแล้วแต่ยังไม่สำเร็จ — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)'
   return `Gemini ตอบกลับผิดพลาด (${status}): ${Array.from(message).slice(0, 200).join('')}`
+}
+const isDaily = (message: string) => /per ?day|PerDay|daily|รายวัน/i.test(message)
+/** Midnight Pacific time, when the free tier's daily quota comes back (unix seconds). */
+function nextReset() {
+  const now = new Date(), pacific = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const midnight = new Date(pacific); midnight.setHours(24, 0, 0, 0)
+  return Math.floor((now.getTime() + (midnight.getTime() - pacific.getTime())) / 1000)
+}
+/** The same moment in Thai time, e.g. "15:00". */
+const resetTime = () => new Date(nextReset() * 1000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit' })
+/** Models Google says don't exist (any key): skipped for a day. */
+export async function missingModels(db: SqlClient) { return timedList(db, 'gemini_missing_models') }
+async function timedList(db: SqlClient, key: string): Promise<Record<string, number>> {
+  try {
+    const row = (await db.rows<{ setting_value: string }>('SELECT setting_value FROM settings WHERE setting_key=?', [key]))[0]
+    return Object.fromEntries(Object.entries(JSON.parse(row?.setting_value || '{}')).filter(([, until]) => Number(until) > Date.now() / 1000)) as Record<string, number>
+  } catch { return {} }
+}
+async function timedMark(db: SqlClient, key: string, model: string, until: number) {
+  try { await db.execute('INSERT INTO settings (setting_key,setting_value) VALUES (?,?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)', [key, JSON.stringify({ [model]: until, ...await timedList(db, key) })]) }
+  catch { /* best effort only */ }
 }
 export class GeminiClient {
   constructor(private apiKey: string, private db: SqlClient, private options: GeminiOptions) {}
@@ -37,7 +60,8 @@ export class GeminiClient {
     }
     if (!response.ok) {
       const status = [400, 401, 403].includes(response.status) ? 422 : [429, 404].includes(response.status) ? response.status : 503
-      throw new ApiError(status, explainGemini(response.status, String(value.error?.message ?? '').split(this.apiKey).join('[redacted]')))
+      const message = String(value.error?.message ?? '') + (response.status === 429 ? ' ' + JSON.stringify(value.error?.details ?? []) : '') // a quota error names its quota only in the details
+      throw new ApiError(status, explainGemini(response.status, message.split(this.apiKey).join('[redacted]')))
     }
     return value
   }
@@ -78,28 +102,39 @@ export class GeminiClient {
     catch { throw new ApiError(502, `Gemini ตอบกลับมาแต่อ่านไม่ได้ (${candidate?.finishReason === 'MAX_TOKENS' ? 'คำตอบยาวเกินกำหนด' : 'รูปแบบคำตอบไม่ถูกต้อง'}) — ลองกดสร้างใหม่อีกครั้ง`) }
     return { data, prompt_tokens: result.usageMetadata?.promptTokenCount ?? null, output_tokens: result.usageMetadata?.candidatesTokenCount ?? null, sources: (candidate?.groundingMetadata?.groundingChunks ?? []).filter((chunk: StaffRecord) => chunk.web?.uri).map((chunk: StaffRecord) => ({ title: String(chunk.web.title ?? ''), url: String(chunk.web.uri) })) }
   }
+  /** Models whose daily quota this key has used up: skipped until Google resets it. */
+  private exhaustedKey() { return 'gemini_exhausted_' + createHash('sha256').update(this.apiKey).digest('hex').slice(0, 16) }
   async generateResilient(preferred: string | null, system: string, prompt: string, maxFallbacks = 2, maxTokens = 8192, search = false) {
     if (!preferred) preferred = pickDefault(await this.listModels())
     if (!preferred) throw new ApiError(422, 'API Key นี้ไม่มีโมเดลที่ใช้สร้างข้อความได้')
-    let candidates = [preferred], loaded = false, lastError: ApiError | undefined
+    // Every call counts against the key's quota, so one press = one request when things are fine: no test call first,
+    // and a model known to be gone or out of daily quota isn't tried at all.
     const slow = await this.slowModels()
-    if (slow[preferred]) {
+    let skip = { ...await missingModels(this.db), ...await timedList(this.db, this.exhaustedKey()) }
+    let candidates = skip[preferred] || slow[preferred] ? [] : [preferred], loaded = false, lastError: ApiError | undefined
+    const load = async () => {
       loaded = true
-      const all = [preferred, ...rankModels(await this.listModels()).filter(m => m !== preferred)]
-      candidates = [...all.filter(m => !slow[m]), ...all.filter(m => slow[m])]
+      skip = { ...await missingModels(this.db), ...await timedList(this.db, this.exhaustedKey()) }
+      const all = [...new Set([preferred!, ...rankModels(await this.listModels())])].filter(m => !skip[m])
+      // models that hung recently go last
+      candidates = [...candidates, ...all.filter(m => !slow[m] && !candidates.includes(m)), ...all.filter(m => slow[m] && !candidates.includes(m))]
     }
-    for (let i = 0; i < candidates.length && i <= maxFallbacks + 2; i++) {
+    if (!candidates.length) await load()
+    for (let i = 0; i < candidates.length && i <= maxFallbacks; i++) {
       const model = candidates[i]!
-      let alive = true
-      try { await this.request('POST', '/models/' + encodeURIComponent(model) + ':generateContent', { contents: [{ role: 'user', parts: [{ text: 'ok' }] }], generationConfig: { maxOutputTokens: 1 } }, 12) }
-      catch (error) { if (!(error instanceof ApiError)) throw error; alive = error.status !== 504 }
-      if (!alive) {
-        if (this.options.signal?.aborted) throw new ApiError(504, 'งาน AI ถูกหยุด กรุณาลองใหม่')
-        await this.markSlow(model); lastError = new ApiError(504, 'Gemini รุ่นล่าสุดไม่ตอบสนองในขณะนี้ (เซิร์ฟเวอร์ของ Google ไม่ว่าง) — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)')
-        if (!loaded) { loaded = true; const currentSlow = await this.slowModels(); candidates = [preferred, ...rankModels(await this.listModels()).filter(m => m !== preferred && !currentSlow[m])] }
-        continue
+      if (slow[model]) {
+        // a model that hung lately: a 1-token check first instead of waiting the full timeout again
+        let alive = true
+        try { await this.request('POST', '/models/' + encodeURIComponent(model) + ':generateContent', { contents: [{ role: 'user', parts: [{ text: 'ok' }] }], generationConfig: { maxOutputTokens: 1 } }, 12) }
+        catch (error) { if (!(error instanceof ApiError)) throw error; alive = error.status !== 504 }
+        if (!alive) {
+          if (this.options.signal?.aborted) throw new ApiError(504, 'งาน AI ถูกหยุด กรุณาลองใหม่')
+          await this.markSlow(model); lastError = new ApiError(504, 'Gemini รุ่นล่าสุดไม่ตอบสนองในขณะนี้ (เซิร์ฟเวอร์ของ Google ไม่ว่าง) — กรุณารอ 1–2 นาทีแล้วกดใหม่ (ไกด์แบบกฎยังใช้ได้ตามปกติ)')
+          if (!loaded) await load()
+          continue
+        }
       }
-      for (const [attempt, delay] of [0, 2, 5].entries()) {
+      for (const [attempt, delay] of [0, 3].entries()) {
         if (delay) {
           try { await sleep(delay * 1000 * (this.options.retryDelayScale ?? 1), undefined, { signal: this.options.signal }) }
           catch { throw new ApiError(504, 'งาน AI ถูกหยุด กรุณาลองใหม่') }
@@ -109,16 +144,19 @@ export class GeminiClient {
           if (!(error instanceof ApiError)) throw error
           if (this.options.signal?.aborted) throw error
           lastError = error
+          if (error.status === 429 && !error.message.includes('รายวัน')) throw error // too many requests per minute: other models now only burn more quota
+          if (error.status === 429) { await timedMark(this.db, this.exhaustedKey(), model, nextReset()); break } // this model's daily quota is gone; others have their own
+          if (error.status === 404) { await timedMark(this.db, 'gemini_missing_models', model, Math.floor(Date.now() / 1000) + 86400); break }
+          // long answers occasionally come back as broken JSON — one more try usually succeeds
           const broken = error.status === 502 && error.message.includes('อ่านไม่ได้')
           if (broken && attempt === 0) continue
           if (error.status === 504) { await this.markSlow(model); break }
-          if (broken) break
-          if (![503, 429].includes(error.status) && !error.message.includes('ไม่พบรุ่น')) throw error
-          if (error.status === 429 || error.message.includes('ไม่พบรุ่น')) break
+          if (broken || error.status === 503) break // let another model try
+          throw error // bad key, bad output, etc. — retrying won't help
         }
       }
-      if (!loaded) { loaded = true; candidates = [preferred, ...rankModels(await this.listModels()).filter(m => m !== preferred)] }
+      if (!loaded) await load()
     }
-    throw lastError ?? new ApiError(503, 'Gemini ยังไม่พร้อมใช้งาน กรุณาลองใหม่')
+    throw lastError ?? new ApiError(429, explainGemini(429, 'PerDay'))
   }
 }

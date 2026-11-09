@@ -42,6 +42,9 @@ function setGroup(g: ExportGroup, v: boolean) {
           </label>
         </div>
       </div>
+      <p v-if="selected.includes('toc')" class="border-t border-white/10 px-5 py-3 text-xs text-slate-400" data-testid="ex-toc-note">
+        เลขหน้าในสารบัญเป็นค่าประมาณ อาจคลาดเล็กน้อยช่วงท้ายเล่ม — เมื่อเปิดไฟล์ใน Word แล้ว คลิกที่สารบัญ กด F9 แล้วเลือกตัวเลือกแรก (เฉพาะเลขหน้า) เลขจะตรงทุกหน้า
+      </p>
       <div class="flex items-center justify-between gap-3 border-t border-white/10 px-5 py-3">
         <span class="text-xs text-slate-400">เลือก {{ selected.length }} รายการ</span>
         <div class="flex gap-2">

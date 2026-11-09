@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-09 — ย้ายงานจาก main (65cce69…dc92f85) มา dev บน Nuxt 3 / Nitro
+
+- ผู้ใช้สั่ง: สลับไป dev, pull, เทียบกับ main แล้วย้ายงานใหม่ของ main มาเป็น Nuxt 3 และ push ขึ้น dev
+- งานจาก main ที่ย้ายมา (15 commit; ส่วนแผนก c165a6a dev ย้ายไว้แล้ว): Word เลขหน้าแบบเล่ม (ปกไม่นับ/ก ข ค/แผนหน่วยแรก = 1), สารบัญไม่สั่งอัปเดตตอนเปิด + คำแนะนำ F9, ท้ายปก แผนกวิชา/สอศ./กระทรวง, ตัดบรรทัดชื่อหน่วย/ชื่อเอกสารก่อนตาราง, ตารางกำหนดการสอนรายสัปดาห์ (ปวส. 15 สอบ 7/15, ปวช. 18 สอบ 9/18), แผน 1 ฉบับต่อหน่วย + แผนสัปดาห์ทดสอบ + ปรับแผนเดิมฉบับเดียวเป็นแผนรวม, หน่วยในเล่มตามหน่วยของรายวิชา + ชั่วโมงจาก AI, ลดการใช้โควตา Gemini, เติมตารางวิเคราะห์ไม่ใช้ AI, ร่าง AI ค้างกลับมาใช้ได้ + ร่างใหม่ทีละข้อ + ตัวนับ, ตารางกำหนดการสอนใน Word + AI แบ่งหน่วยเป็นสัปดาห์เต็ม, AI แนวข้อสอบกลางภาค/ปลายภาค
+- หน้าจอ: นำ diff ของ frontend/ ใน main มาใช้ที่ root (17 ไฟล์ ไม่ชนกับ dev) · `utils/teachingSchedule.ts` ย้ายไป `shared/utils/` ให้เซิร์ฟเวอร์ใช้ร่วม (utils/ ส่งต่อ)
+- เซิร์ฟเวอร์ (เขียนใหม่จาก PHP): `services/teachingSchedule.ts`, `exams.ts`, `bookSync.ts` ใหม่ · `lessonPlans.ts` (kind/sessions, from-schedule, ลำดับเล่ม, ซิงก์ตาราง, แผนสอบ, ร่างทีละข้อ) · `documentModels.ts` (midterm_eval/schedule, withTopics, guideDraft, examPrefill, กิจกรรมรายครั้ง) · `documentPrompts.ts` + `data/plan-prompts.json` (ช่วงครั้ง, ปฏิทิน, หน่วยเป็นสัปดาห์เต็ม, prompt แผนสอบ) · `gemini.ts` (ไม่เรียกทดสอบก่อนร่าง, 429 รายนาที/รายวัน, จำรุ่นหมดโควตา/หายไป) · `aiSettings.ts` · `jobs.ts` (latestJob, aiUsage) · `teacherCourses.ts` (topic_hours, syncTopics) · staffHandler/aiHandler มี `raw` (พารามิเตอร์ข้อความ เช่น midterm)
+- route ใหม่ 5: `POST /teacher/courses/{id}/plans/from-schedule`, `GET/PUT /teacher/courses/{id}/exam/{kind}`, `POST …/exam/{kind}/generate` (เบื้องหลัง), `GET /jobs/latest` · `shared/data/migrated-api.json` = 94
+- ฐานข้อมูล: `docs/database/upgrades/2026-11-07_plan_sessions.sql`, `2026-11-07b_exam_sets.sql` + schema.sql · ต้องรัน `npm run db:upgrade` กับฐานที่ใช้
+- ทดสอบ: typecheck server (tsc) ผ่าน · `npm run build` ผ่าน · ทดสอบตรรกะ 26 ข้อ (tsx) ผ่าน: ตารางสัปดาห์ ปวส./ปวช./คร่อมสอบ, withTopics, guideDraft (ร้อยละ 100, สอบรวม 100 เว้นหน่วย), examPrefill, ความครบของแผนสอบ, กิจกรรมรายครั้ง, prompt ทุกแบบ, Gemini กับ API จำลอง (ปกติ 1 ครั้ง, รายนาทีหยุด, รายวันลอง 3 รุ่น/ครั้งต่อไปข้าม, รุ่นหายจำไว้)
+- ยังไม่ได้ทดสอบ: เรียก API จริง/หน้าจอในเบราว์เซอร์/Word/Gemini จริงบน dev เพราะเชื่อมฐาน MariaDB 3306 ด้วยรหัสใน .env ปัจจุบันไม่ได้ (Access denied) · แนวข้อสอบฝั่งเซิร์ฟเวอร์ตรวจได้แค่ typecheck
+
 ## 2026-10-29 — ให้ผู้ดูแลกำหนด .env เอง
 
 - ลบคำสั่งคัดลอก .env.example ไปทับ .env จาก README/Deploy/ไฟล์ตัวอย่าง ให้สร้างและตั้งค่าด้วย editor เท่านั้น

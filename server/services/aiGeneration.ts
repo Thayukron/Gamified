@@ -6,8 +6,8 @@ import { array, bool, record, text } from '../utils/staff'
 import { phpInt } from './scenarioEngine'
 import { aiContext, cachedInsight, classData, phpJson } from './teacherDashboard'
 import { aiClient, aiEnabled, aiStatus, enabledKey, resolveAI } from './aiSettings'
-import { BOOK_EMPTY, PLAN_EMPTY, SYSTEMS, documentText, normalizeBook, normalizePlan, normalizeSheet, sheetShared } from './documentModels'
-import { bookPrompt, guidePrompt, planPrompt, sheetPrompt, standardPrompt, suggestPrompt } from './documentPrompts'
+import { BOOK_EMPTY, PLAN_EMPTY, SYSTEMS, documentText, examPrefill, normalizeBook, normalizePlan, normalizeSheet, sheetShared } from './documentModels'
+import { bookPrompt, examPlanPrompt, guidePrompt, planPrompt, sheetPrompt, standardPrompt, suggestPrompt } from './documentPrompts'
 import { normalizeGuideCourse, normalizeGuideUnit } from './aiModels'
 export async function generateGuide(db: SqlClient, userId: number, course: Course, dash: StaffRecord, type: string, topic: string | null, signal?: AbortSignal) {
   if (!await aiEnabled(db)) throw new ApiError(403, 'ผู้ดูแลระบบปิดการใช้งานฟังก์ชัน AI อยู่')
@@ -28,10 +28,24 @@ export async function allCached(db: SqlClient, userId: number, course: Course, d
   for (const topic of JSON.parse(course.topics ?? '[]') || []) { const result = await cachedInsight(db, course, dash, 'unit', topic); if (result) units[topic] = result }
   return { course: await cachedInsight(db, course, dash, 'course', null), units, ai: await aiStatus(db, userId) }
 }
-export async function draftPlan(db: SqlClient, userId: number, course: Course, dash: StaffRecord, plan: StaffRecord, signal?: AbortSignal) {
+export async function draftPlan(db: SqlClient, userId: number, course: Course, dash: StaffRecord, plan: StaffRecord, signal?: AbortSignal, section: string | null = null, current: unknown = {}) {
   const resolved = await enabledKey(db, userId, 'กรุณากรอก API Key ของ Gemini ที่หน้า “ตั้งค่า AI ของฉัน” ก่อน หรือใช้ปุ่ม “เติมจากไกด์ (ไม่ใช้ AI)”')
-  const response = await aiClient(resolved.key, db, signal).generateResilient(resolved.model, SYSTEMS.plan, planPrompt(course, aiContext(course, dash), plan), 2, 24000)
-  const content = normalizePlan(response.data); content.after = structuredClone(PLAN_EMPTY.after)
+  if (section !== null && (!Object.hasOwn(PLAN_EMPTY, section) || ['standard', 'after'].includes(section))) throw new ApiError(422, 'ข้อนี้ร่างใหม่ด้วย AI ไม่ได้')
+  const now = normalizePlan(current)
+  const response = await aiClient(resolved.key, db, signal).generateResilient(resolved.model, SYSTEMS.plan, planPrompt(course, aiContext(course, dash), plan, section, now), 2, section ? 8192 : 24000)
+  const content = normalizePlan(response.data)
+  // one section: only that one changes; the rest stays as it was on screen
+  if (section !== null) return { content: { ...now, [section]: content[section] }, section, model: response.model }
+  content.after = structuredClone(PLAN_EMPTY.after)
+  return { content, model: response.model }
+}
+/** Exam-week plan: broad, no unit numbers; the sections that don't apply stay empty. */
+export async function draftExamPlan(db: SqlClient, userId: number, course: Course, plan: StaffRecord, signal?: AbortSignal) {
+  const resolved = await enabledKey(db, userId, 'กรุณากรอก API Key ของ Gemini ที่หน้า “ตั้งค่า AI ของฉัน” ก่อน หรือใช้ปุ่มเติมข้อความตั้งต้น (ไม่ต้องใช้ AI)')
+  const response = await aiClient(resolved.key, db, signal).generateResilient(resolved.model, SYSTEMS.plan, examPlanPrompt(course, plan), 2, 8192)
+  const content = normalizePlan(response.data)
+  for (const key of ['standard', 'differentiation', 'after']) content[key] = structuredClone(PLAN_EMPTY[key])
+  content.content = examPrefill(course, plan.kind).content // the model tends to pin down weeks here
   return { content, model: response.model }
 }
 export async function draftSheet(db: SqlClient, userId: number, course: Course, plan: StaffRecord, type: string, sheet: StaffRecord, signal?: AbortSignal) {

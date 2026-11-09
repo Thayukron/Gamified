@@ -7,11 +7,11 @@ import { apiHandler, jsonBody } from './errors'
 import { authenticated } from './auth'
 import { phpInt } from '../services/scenarioEngine'
 import { startJob } from '../services/jobs'
-interface Context { db: SqlClient; user: AuthUser; body: StaffRecord; query: StaffRecord; params: Record<string, number>; signal?: AbortSignal }
+interface Context { db: SqlClient; user: AuthUser; body: StaffRecord; query: StaffRecord; params: Record<string, number>; raw: Record<string, string>; signal?: AbortSignal }
 export function aiHandler(roles: Role[], handler: (context: Context) => Promise<unknown>, background = false) {
   return apiHandler(async event => {
     const user = await authenticated(event, roles), body = event.method === 'GET' ? {} : await jsonBody(event)
-    const context = { db: database(), user, body, query: getQuery(event), params: Object.fromEntries(Object.entries(getRouterParams(event)).map(([key, value]) => [key, phpInt(value)])) }
+    const context = { db: database(), user, body, query: getQuery(event), params: Object.fromEntries(Object.entries(getRouterParams(event)).map(([key, value]) => [key, phpInt(value)])), raw: getRouterParams(event) /* text params, e.g. midterm/final */ }
     if (background && getHeader(event, 'x-async-job') === '1') {
       const job = await startJob(user.id, getRequestURL(event).pathname.replace(/^\/api/, ''), signal => handler({ ...context, signal }))
       event.waitUntil(job.task)

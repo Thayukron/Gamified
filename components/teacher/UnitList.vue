@@ -6,6 +6,7 @@ import type { CourseFormValue } from '~/utils/courseForm'
 const props = defineProps<{ course: CourseFormValue }>()
 const emit = defineEmits<{ needContent: [] }>()
 const text = defineModel<string>({ required: true }) // one unit per line (CourseFormValue.topicsText)
+const hours = defineModel<Record<string, [number, number]>>('hours', { default: () => ({}) }) // AI hours by unit name
 const api = useApi()
 const aiApi = useAiApi() // long AI calls run as background jobs (no Cloudflare 524)
 
@@ -75,11 +76,20 @@ function suggestSplit() {
 
 const pickedCount = computed(() => suggestions.value?.filter((s) => s.pick && s.name.trim()).length ?? 0)
 function apply(mode: 'replace' | 'append') {
-  const picked = suggestions.value!.filter((s) => s.pick && s.name.trim()).map((s) => s.name.trim())
+  const chosen = suggestions.value!.filter((s) => s.pick && s.name.trim())
+  const picked = chosen.map((s) => s.name.trim())
+  const withHours = chosen.filter((s) => (s.hours_theory ?? 0) + (s.hours_practice ?? 0) > 0)
+  if (withHours.length) hours.value = { ...hours.value, ...Object.fromEntries(withHours.map((s) => [s.name.trim(), [s.hours_theory ?? 0, s.hours_practice ?? 0]])) }
   if (mode === 'replace' && units.value.length && !confirm(`แทนที่หน่วยเดิม ${units.value.length} หน่วยด้วยหน่วยที่เลือก ${picked.length} หน่วย?`)) return
   units.value = mode === 'replace' ? picked : [...units.value, ...picked.filter((p) => !units.value.includes(p))]
   suggestions.value = null
 }
+const targetHours = computed(() => {
+  const higher = /ปวส/.test(`${props.course.level} ${props.course.section}`)
+  const perWeek = (parseFloat(props.course.theory_hours) || 0) + (parseFloat(props.course.practice_hours) || 0)
+  const weeks = higher ? 13 : 16 // 15 / 18 weeks less the two exam weeks
+  return perWeek ? { hours: perWeek * weeks, weeks } : null
+})
 const totalHours = computed(() => (suggestions.value ?? []).filter((s) => s.pick).reduce((a, s) => a + (s.hours_theory ?? 0) + (s.hours_practice ?? 0), 0))
 </script>
 
@@ -102,7 +112,7 @@ const totalHours = computed(() => (suggestions.value ?? []).filter((s) => s.pick
     <div v-if="suggestions" class="space-y-2 rounded-xl border border-sky-400/30 bg-sky-500/5 p-4" data-testid="unit-suggestions">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm font-medium text-sky-200">หน่วยที่แนะนำ · {{ source }}</p>
-        <span v-if="totalHours" class="text-xs text-slate-400">รวมประมาณ {{ totalHours }} ชม.</span>
+        <span v-if="totalHours" class="text-xs text-slate-400" data-testid="units-total">รวมประมาณ {{ totalHours }} ชม.<template v-if="targetHours"> · เป้าหมาย {{ targetHours.hours }} ชม. ({{ targetHours.weeks }} สัปดาห์เนื้อหา ไม่รวมสัปดาห์ทดสอบ)</template></span>
       </div>
       <label v-for="(s, i) in suggestions" :key="i" class="flex items-start gap-3 rounded-lg px-2 py-1.5 hover:bg-white/5">
         <input v-model="s.pick" type="checkbox" class="mt-2.5">

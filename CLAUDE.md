@@ -88,6 +88,8 @@ Gamified Universal Student Profiling System — ผู้เรียนเล�
 - [ ] **เฟส 7 PWA & Performance** — manifest/service worker, ทดสอบโหลด 500–1000 users
 
 ## สถานะล่าสุด
+- 2026-11-09: **ย้ายงานจาก main (ถึง dc92f85) มา dev บน Nitro แล้ว** — ตารางกำหนดการสอนรายสัปดาห์, แผน 1 ฉบับต่อหน่วย + แผนสัปดาห์ทดสอบ, AI แนวข้อสอบ (`exam_sets`), Word เลขหน้าแบบเล่ม/ตารางสัปดาห์, ลดโควตา Gemini, ร่างค้าง/ร่างทีละข้อ/ตัวนับ ฯลฯ (รายละเอียด CHANGELOG) · ตรรกะร่วมหน้าจอ-เซิร์ฟเวอร์อยู่ `shared/utils/teachingSchedule.ts` · route ใหม่ต้องเพิ่มใน `shared/data/migrated-api.json` · staffHandler/aiHandler ใช้ `raw` เมื่อพารามิเตอร์เป็นข้อความ · ฐานที่ใช้ต้อง `npm run db:upgrade` (upgrades 2026-11-07, 2026-11-07b) · **ยังไม่ได้ทดสอบกับฐาน/เบราว์เซอร์จริง** (รหัส MariaDB 3306 ใน .env ไม่ตรง) · ผู้ใช้สั่ง push ขึ้น origin dev ในรอบนี้
+- กติกาจาก main ที่ใช้ต่อใน dev: ปวส. 15 สัปดาห์ (สอบ 7, 15) / ปวช. 18 (สอบ 9, 18) สอนสัปดาห์ละครั้ง, สัปดาห์สอบนับชั่วโมงปกติ, ประเมินผลลัพธ์รายวิชา = สอบปลายภาค · แผนเฉพาะ ปวช./ปวส. (ป.ตรี ใช้วัดโปรไฟล์อย่างเดียว) · Heading 2/3 ใน Word = รายการสารบัญที่มองไม่เห็น · ทดสอบ Word ใช้ Word COM ตัวใหม่เท่านั้น ห้าม GetActiveObject
 - 2026-10-29: **ผู้ดูแลตั้ง .env เอง** — ถอดคำสั่งคัดลอกไฟล์ตัวอย่างจากคู่มือ/.env.example, ห้ามทับไฟล์เดิมเมื่ออัปเดต; แอปอ่าน env เท่านั้น; fallback/ตัวอย่างพอร์ต 3000; ไม่แก้ .env จริง
 - 2026-10-29: แก้ชื่อไฟล์แผนเป็น ROADMAP.md และอัปเดตลิงก์อ้างอิงแล้ว
 - 2026-10-29: **ย้ายอัปเดตแผนกจาก main c165a6a มา dev** — Nitro CRUD แผนก 3 routes + overview courses + UI จัดการแผนก, รวม inventory 89 routes; แผน ROADMAP.md ย้ายมา dev แล้ว; tests 13 + logic UI + typecheck/build + production health/HTTP 5 checks ผ่าน; ไม่เปลี่ยน DB จริง/ยังไม่ browser E2E/deploy; origin ตอนนี้ชี้ Thayukron/Gamified ตามคำสั่งผู้ใช้ ไม่ push เอง

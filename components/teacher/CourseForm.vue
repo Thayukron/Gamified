@@ -107,7 +107,7 @@ const filled = computed(() => ['objectives', 'competencies', 'description'].filt
     </div>
 
     <div v-show="step === 'units'">
-      <TeacherUnitList v-model="form.topicsText" :course="form" @need-content="step = 'content'" />
+      <TeacherUnitList v-model="form.topicsText" v-model:hours="form.topicHours" :course="form" @need-content="step = 'content'" />
     </div>
   </div>
 </template>

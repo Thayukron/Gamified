@@ -44,3 +44,25 @@ export async function showJob(userId: number, id: string) {
   return { status: row.status, http_status: Number(row.http_status ?? 0), result: row.result !== null ? JSON.parse(row.result) : null }
 }
 export async function drainJobs() { await Promise.allSettled([...pending]) }
+/**
+ * The caller's newest AI result for a path made after the item was last saved: a draft that was never saved (page
+ * left, browser closed) can be taken up again instead of asking the AI once more. Fills made without AI (model null)
+ * are left out.
+ */
+export async function latestJob(userId: number, path: string, after: string) {
+  const row = (await database().rows<{ id: string; created_at: string; result: string }>(
+    `SELECT id,created_at,result FROM background_jobs WHERE user_id=? AND path=? AND status='done' AND created_at>? AND result NOT LIKE '%"model":null%' ORDER BY created_at DESC LIMIT 1`,
+    [userId, path, after || '1970-01-01']))[0]
+  return { job: row ? { id: row.id, created_at: row.created_at, result: JSON.parse(row.result) } : null }
+}
+/** AI requests of a user since the free tier's daily quota last came back (midnight Pacific time); fills without AI not counted. */
+export async function aiUsage(userId: number) {
+  const now = new Date(), pacific = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }))
+  const midnight = new Date(pacific); midnight.setHours(0, 0, 0, 0)
+  const seconds = Math.floor((pacific.getTime() - midnight.getTime()) / 1000)
+  const row = (await database().rows<{ used: number; failed: number | null }>(
+    `SELECT COUNT(*) AS used, SUM(status='error') AS failed FROM background_jobs WHERE user_id=? AND created_at>=NOW()-INTERVAL ? SECOND AND (result IS NULL OR result NOT LIKE '%"model":null%')`,
+    [userId, seconds]))[0]!
+  const since = new Date(now.getTime() - seconds * 1000).toLocaleTimeString('en-GB', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit' })
+  return { used: Number(row.used), failed: Number(row.failed ?? 0), since }
+}

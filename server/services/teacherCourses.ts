@@ -9,6 +9,7 @@ import { phpInt } from './scenarioEngine'
 import { resetToDefault } from './password'
 import { validateTerm } from './admin'
 import { rosterCommit, rosterPreview } from './rosterImport'
+import { syncTopics } from './bookSync'
 
 export const COURSE_CONTENT: Record<string, number> = { theory_hours: 10, practice_hours: 10, credits: 10, standards_ref: 2000, outcome: 2000, objectives: 4000, competencies: 4000, description: 6000 }
 async function fields(db: SqlClient, body: StaffRecord) {
@@ -52,19 +53,26 @@ export async function meta(db: SqlClient, user: AuthUser) {
     class_groups: await db.rows<StaffRecord>("SELECT u.class_group AS name,COUNT(*) AS students,MIN(d.name) AS department_name FROM users u LEFT JOIN departments d ON d.id=u.department_id WHERE u.role='student' AND u.is_active=1 AND u.class_group IS NOT NULL AND u.class_group<>'' GROUP BY u.class_group ORDER BY u.class_group"),
   }
 }
+// [theory, practice] per unit, in the order of topics, when the AI suggested them (null otherwise)
+const topicHours = (body: StaffRecord) => array(body.topic_hours).slice(0, 30).map(value => Array.isArray(value) ? value.slice(0, 2).map(Number) : null)
 export async function create(db: SqlClient, user: AuthUser, body: StaffRecord) {
   const data = await fields(db, body); await assertUnique(db, data)
   const columns = ['code', 'name', 'section', 'semester', 'academic_year', 'department_id', 'teacher_id', 'course_type', 'level', 'topics', ...Object.keys(COURSE_CONTENT)]
+  const topics = data.topics as string[]
   data.teacher_id = user.id; data.topics = JSON.stringify(data.topics)
   const result = await write(db, `INSERT INTO courses (${columns.join(',')}) VALUES (${marks(columns)})`, columns.map(key => data[key]))
+  await syncTopics(db, { ...data, id: result.id, teacher_name: user.full_name } as unknown as Course, topics, topicHours(body))
   return { id: result.id, added: await enrollGroups(db, result.id, body.class_groups) }
 }
 export async function update(db: SqlClient, user: AuthUser, id: number, body: StaffRecord) {
-  await course(db, user, id)
+  const before = await course(db, user, id)
   const data = await fields(db, body); await assertUnique(db, data, id)
+  const topics = data.topics as string[]
   data.topics = JSON.stringify(data.topics)
   const columns = ['code', 'name', 'section', 'semester', 'academic_year', 'department_id', 'course_type', 'level', 'topics', ...Object.keys(COURSE_CONTENT)]
-  await db.execute(`UPDATE courses SET ${columns.map(key => key + '=?').join(',')} WHERE id=?`, [...columns.map(key => data[key]), id]); return { ok: true }
+  await db.execute(`UPDATE courses SET ${columns.map(key => key + '=?').join(',')} WHERE id=?`, [...columns.map(key => data[key]), id])
+  await syncTopics(db, { ...before, ...data, id } as Course, topics, topicHours(body))
+  return { ok: true }
 }
 export async function removeCourse(db: SqlClient, user: AuthUser, id: number) {
   await course(db, user, id); await db.execute('DELETE FROM courses WHERE id=?', [id]); return { ok: true }
@@ -115,8 +123,9 @@ export async function importRoster(db: SqlClient, user: AuthUser, id: number, bo
   return commit ? rosterCommit(db, data, body.rows) : rosterPreview(db, data, body.rows)
 }
 export async function saveContext(db: SqlClient, user: AuthUser, id: number, body: StaffRecord) {
-  await course(db, user, id)
+  const before = await course(db, user, id)
   if (!['theory', 'practice', 'mixed'].includes(body.course_type)) throw new ApiError(422, 'ประเภทวิชาไม่ถูกต้อง')
   await db.execute('UPDATE courses SET course_type=?,level=?,topics=?,context_note=? WHERE id=?', [body.course_type, optionalText(body.level, 30), JSON.stringify(array(body.topics).map(value => text(value, 100)).filter(bool).slice(0, 30)), optionalText(body.context_note, 1000), id])
+  await syncTopics(db, before, array(body.topics).map(value => text(value, 100)).filter(bool).slice(0, 30))
   return { ok: true }
 }

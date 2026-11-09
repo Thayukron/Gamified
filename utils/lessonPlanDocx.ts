@@ -1,6 +1,7 @@
 // Word (.docx) export of unit lesson plans in the OVEC 2567 form (แผนการจัดการเรียนรู้ ข้อ 1–10)
 // + appendix with the class's learner analysis. Browser-side; the docx library is loaded only when needed.
-import { SHEET_TYPES, type CourseBook, type PlanContent, type Sheet } from '~/utils/lessonPlan'
+import { SHEET_TYPES, planName, planSessions, type CourseBook, type PlanContent, type Sheet } from '~/utils/lessonPlan'
+import { calendarFor, weekPlan } from '~/utils/teachingSchedule'
 
 const FONT = 'TH SarabunPSK'
 const PT = (n: number) => n * 2 // docx sizes are half-points
@@ -13,8 +14,10 @@ const STEP = 284 // 0.5 cm
 
 export interface PlanForExport {
   id?: number
+  kind?: string
   unit_no: number
   session_no: number
+  sessions?: string | null
   unit_name: string
   title: string
   hours_theory: number
@@ -52,7 +55,7 @@ const toNum = (s: string | number) => {
  */
 export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForExport[]; learners: any; filename: string; book?: CourseBook; institution?: { name: string }; include?: Set<string> }) {
   const d = await import('docx')
-  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
+  const { AlignmentType, BorderStyle, Document, Header, HeadingLevel, ImageRun, NumberFormat, Packer, PageBreak, PageNumber, Paragraph, PositionalTab, PositionalTabAlignment, PositionalTabLeader, PositionalTabRelativeTo, ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, VerticalAlign, WidthType } = d
 
   const logo = await fetch('/forms/ovec-logo.png').then((r) => r.arrayBuffer())
 
@@ -168,13 +171,13 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
           children: [
             cell([p([new ImageRun({ type: 'png', data: logo, transformation: { width: 70, height: 70 } })], { align: AlignmentType.CENTER })], cL, { rowSpan: 3, center: true }),
             cell([p([run(docTitle, { bold: true, size: 18 })], { align: AlignmentType.CENTER })], cM, { center: true }),
-            cell([p([run(`หน่วยที่ ${pl.unit_no}`)], { align: AlignmentType.LEFT })], cR, { center: true }),
+            cell([p([run(pl.kind && pl.kind !== 'unit' ? 'การวัดผล' : `หน่วยที่ ${pl.unit_no}`)], { align: AlignmentType.LEFT })], cR, { center: true }),
           ],
         }),
         new TableRow({
           children: [
             cell([p([run('รหัสวิชา '), run(course.code, { bold: true }), run('   ชื่อวิชา '), run(course.name, { bold: true })], { align: AlignmentType.LEFT })], cM),
-            cell([p([run(`สอนครั้งที่ ${pl.session_no}`)], { align: AlignmentType.LEFT })], cR),
+            cell([p([run(`สอนครั้งที่ ${planSessions(pl)}`)], { align: AlignmentType.LEFT })], cR),
           ],
         }),
         new TableRow({
@@ -307,7 +310,7 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const diffs = opts.plans.filter((pl) => lines(pl.content.differentiation).length)
     if (diffs.length) {
       out.push(heading('5. การนำผลการวิเคราะห์ไปใช้ในแผนการจัดการเรียนรู้'))
-      diffs.forEach((pl) => out.push(p([run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })], { first: IND1, keepNext: true }), ...body(pl.content.differentiation, IND2)))
+      diffs.forEach((pl) => out.push(p([run(`${planName(pl)} (สอนครั้งที่ ${planSessions(pl)})`, { bold: true })], { first: IND1, keepNext: true }), ...body(pl.content.differentiation, IND2)))
     }
     out.push(p([run('หมายเหตุ ผลการวิเคราะห์เป็นข้อมูลคัดกรองเบื้องต้นเพื่อประกอบการออกแบบการจัดการเรียนรู้ ไม่ใช่การวินิจฉัย ใช้ร่วมกับการสังเกตผู้เรียนในชั้นเรียน', { size: 14 })], { before: 240 }))
     return out
@@ -353,7 +356,9 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
       big(`รหัสวิชา ${course.code}  วิชา ${course.name}`, 20, 900),
       ...(book!.author ? [big(`จัดทำโดย ${book!.author}`, 18, 900, false)] : []),
       big(`ภาคเรียนที่ ${opts.learners.term.semester} ปีการศึกษา ${opts.learners.term.academic_year}`, 18, 0, false),
-      big(opts.institution?.name || 'วิทยาลัย……………………………', 20, 600),
+      big(`${course.department_name ? `แผนกวิชา${String(course.department_name).replace(/^แผนก(วิชา)?s*/, '')} ` : ''}${opts.institution?.name || 'วิทยาลัย……………………………'}`, 20, 600),
+      big('สำนักงานคณะกรรมการการอาชีวศึกษา', 20),
+      big('กระทรวงศึกษาธิการ', 20),
     ]
   }
 
@@ -366,8 +371,9 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
 
   const toc = () => [
     new Paragraph({ alignment: AlignmentType.CENTER, pageBreakBefore: true, spacing: { after: 160 }, children: [run('สารบัญ', { bold: true, size: 18 })] }),
-    // page numbers written from the layout estimate; dirty, so Word recounts them exactly when the file opens
-    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3', beginDirty: true }),
+    // numbers written from the layout estimate. Not dirty: updating while the file opens, before Word has laid out the
+    // pages, turns every entry into the first page of its section (ก / 1). The teacher updates it once it is open.
+    new TableOfContents('สารบัญ', { hyperlink: true, headingStyleRange: '1-3' }),
   ]
 
   const curriculumPart = () => {
@@ -449,7 +455,9 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const pr = u.reduce((s, r) => s + toNum(r.hours_practice), 0)
     const pc = u.reduce((s, r) => s + toNum(r.percent), 0)
     const f = book!.final_eval
-    return { t, pr, pc, ft: toNum(f.hours_theory), fp: toNum(f.hours_practice), fpc: toNum(f.percent) }
+    const m = book!.midterm_eval
+    // ft/fp/fpc = everything assessed outside the units (midterm + course-level assessment), for the grand totals
+    return { t, pr, pc, mt: toNum(m.hours_theory), mp: toNum(m.hours_practice), mpc: toNum(m.percent), ot: toNum(f.hours_theory), op: toNum(f.hours_practice), opc: toNum(f.percent), ft: toNum(f.hours_theory) + toNum(m.hours_theory), fp: toNum(f.hours_practice) + toNum(m.hours_practice), fpc: toNum(f.percent) + toNum(m.percent) }
   }
 
   const behaviourPart = () => {
@@ -497,7 +505,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
             tcell(`${r.hours_theory || 0}/${r.hours_practice || 0}`, wd[5], { center: true }), tcell(r.percent, wd[6], { center: true }),
           ] })),
           new TableRow({ children: [tcell('รวมการจัดการเรียนรู้ตลอดภาคเรียน', span5, { bold: true, columnSpan: 5 }), tcell(`${fmt(T.t) || 0}/${fmt(T.pr) || 0}`, wd[5], { center: true }), tcell(fmt(T.pc), wd[6], { center: true })] }),
-          new TableRow({ children: [tcell('ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)', span5, { columnSpan: 5 }), tcell(`${fmt(T.ft) || 0}/${fmt(T.fp) || 0}`, wd[5], { center: true }), tcell(fmt(T.fpc), wd[6], { center: true })] }),
+          ...(T.mt + T.mp > 0 ? [new TableRow({ children: [tcell('ทดสอบกลางภาค', span5, { columnSpan: 5 }), tcell(`${fmt(T.mt) || 0}/${fmt(T.mp) || 0}`, wd[5], { center: true }), tcell(fmt(T.mpc), wd[6], { center: true })] })] : []),
+          new TableRow({ children: [tcell('ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา (เมื่อเรียนรายวิชานี้สำเร็จแล้วทำอะไรได้)', span5, { columnSpan: 5 }), tcell(`${fmt(T.ot) || 0}/${fmt(T.op) || 0}`, wd[5], { center: true }), tcell(fmt(T.opc), wd[6], { center: true })] }),
           new TableRow({ children: [tcell('รวม', span5, { bold: true, center: true, columnSpan: 5 }), tcell(`${fmt(T.t + T.ft) || 0}/${fmt(T.pr + T.fp) || 0}`, wd[5], { bold: true, center: true }), tcell(fmt(T.pc + T.fpc), wd[6], { bold: true, center: true })] }),
         ],
       }),
@@ -526,8 +535,36 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
           ] }),
           new TableRow({ tableHeader: true, children: ['ทฤษฎี', 'ปฏิบัติ', 'รวม'].map((h, i) => tcell(h, wd[2 + i], { bold: true, center: true, size: 16 })) }),
           ...u.map((r) => row(r.no, r.name, r.hours_theory, r.hours_practice)),
-          row('', 'ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา', T.ft, T.fp),
+          ...(T.mt + T.mp > 0 ? [row('', 'ทดสอบกลางภาค', T.mt, T.mp)] : []), // set by the weekly schedule
+          row('', 'ประเมินผลลัพธ์การเรียนรู้ระดับรายวิชา', T.ot, T.op),
           new TableRow({ children: [tcell('รวม', wd[0] + wd[1], { bold: true, center: true, columnSpan: 2, size: 16 }), ...[T.t + T.ft, T.pr + T.fp, T.t + T.ft + T.pr + T.fp].map((v, i) => tcell(fmt(v), wd[2 + i], { bold: true, center: true, size: 16 }))] }),
+        ],
+      }),
+    ]
+  }
+
+  /** week by week, from the weekly schedule (a course without one has no such part) */
+  const schedulePart = () => {
+    const rows = book!.schedule?.units ?? []
+    if (!rows.length) return []
+    const units = rows.map((r) => ({ no: r.no, name: book!.units.find((u) => u.no === r.no)?.name ?? '', weeks: parseInt(r.weeks) || 0 }))
+    const cal = calendarFor(higher)
+    const [t, pr] = [toNum(book!.curriculum.theory_hours), toNum(book!.curriculum.practice_hours)]
+    const wd = [1200, 5654, 900, 900, 700]
+    const weeks = weekPlan(cal, units)
+    const row = (cells: (string | number)[], o: { bold?: boolean } = {}) =>
+      new TableRow({ children: cells.map((v, i) => tcell(typeof v === 'number' ? fmt(v) || '0' : v, wd[i], { center: i !== 1, bold: o.bold, size: 16 })) })
+    return [
+      partTitle('ตารางกำหนดการสอนรายสัปดาห์'),
+      codeLine(), hoursLine(),
+      p([run(`จัดเรียน ${cal.weeks} สัปดาห์ สัปดาห์ละ 1 ครั้ง ทดสอบกลางภาคสัปดาห์ที่ ${cal.midterm} ทดสอบปลายภาคสัปดาห์ที่ ${cal.final}`)], { after: 80 }),
+      new Table({
+        width: { size: W, type: WidthType.DXA },
+        columnWidths: wd,
+        rows: [
+          new TableRow({ tableHeader: true, children: ['สัปดาห์ที่\n(สอนครั้งที่)', 'หน่วยการเรียนรู้ / กิจกรรม', 'ทฤษฎี', 'ปฏิบัติ', 'รวม'].map((h, i) => tcell(h, wd[i], { bold: true, center: true, size: 16 })) }),
+          ...weeks.map((w) => row([String(w.week), w.label || '-', w.label ? t : 0, w.label ? pr : 0, w.label ? t + pr : 0], { bold: w.kind === 'midterm' || w.kind === 'final' })),
+          row(['รวม', '', weeks.filter((w) => w.label).length * t, weeks.filter((w) => w.label).length * pr, weeks.filter((w) => w.label).length * (t + pr)], { bold: true }),
         ],
       }),
     ]
@@ -596,17 +633,20 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
   const unitWanted = (pl: PlanForExport) => !anyOf('unit:') || has(`unit:${pl.id}`)
   const sheetWanted = (s: Sheet) => (anyOf('sheet:') ? has(`sheet:${s.id}`) : anyOf('type:') ? has(`type:${s.type}`) : true)
 
-  const children: any[] = []
+  // front matter (คำนำ … ตารางหน่วย) is numbered ก ข ค; the numbering restarts at 1 with the first unit plan
+  const front: any[] = []
   if (book) {
-    if (has('preface')) children.push(...preface())
-    if (has('toc')) children.push(...toc())
-    if (has('curriculum')) children.push(...curriculumPart())
-    if (has('occupational')) children.push(...occupationalPart())
-    if (has('job')) children.push(...jobPart())
-    if (has('behaviour')) children.push(...behaviourPart())
-    if (has('units')) children.push(...unitsPart())
+    if (has('preface')) front.push(...preface())
+    if (has('toc')) front.push(...toc())
+    if (has('curriculum')) front.push(...curriculumPart())
+    if (has('occupational')) front.push(...occupationalPart())
+    if (has('job')) front.push(...jobPart())
+    if (has('behaviour')) front.push(...behaviourPart())
+    if (has('units')) front.push(...unitsPart())
+    if (has('schedule')) front.push(...schedulePart())
   }
-  let first = !children.length
+  const children: any[] = []
+  let first = true
   const newPage = () => {
     if (!first) children.push(pageBreak())
     first = false
@@ -616,8 +656,8 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     const sheets = (pl.sheets ?? []).filter(sheetWanted)
     if (!withPlan && !sheets.length) return
     if (book) {
-      // unit heading for the table of contents
-      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, spacing: { after: 120 }, children: [run(`หน่วยที่ ${pl.unit_no} ${pl.title || pl.unit_name} (สอนครั้งที่ ${pl.session_no})`, { bold: true })] }))
+      // table-of-contents entry only: the Heading 2 style makes it invisible, the header table below already names the unit
+      children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, pageBreakBefore: !first, children: [new TextRun({ text: `${planName(pl)} (สอนครั้งที่ ${planSessions(pl)})`, language: { value: 'th-TH', bidirectional: 'th-TH' } })] }))
       first = false
     }
     if (withPlan) {
@@ -627,25 +667,27 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     sheets.forEach((s, i) => {
       if (book && !withPlan && i === 0) first = true // the unit heading already starts the page
       newPage()
-      // in the book every sheet is listed in the table of contents under its unit
-      if (book) children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, spacing: { after: 80 }, children: [run(`${SHEET_TYPES[s.type].th}ที่ ${s.number} ${s.title}`, { bold: true })] }))
+      // table-of-contents entry under its unit, invisible like the unit's (Heading 3 style): the header table names the sheet
+      if (book) children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun({ text: `${SHEET_TYPES[s.type].th}ที่ ${s.number} ${s.title}`, language: { value: 'th-TH', bidirectional: 'th-TH' } })] }))
       children.push(...sheetBody(pl, s))
     })
   })
-  if (book && has('bibliography')) children.push(...bibliographyPart())
+  if (book && has('bibliography')) {
+    children.push(...bibliographyPart())
+    first = false
+  }
   if (opts.learners && has('appendix')) {
     const app = appendix()
     if (first) app.shift() // nothing before it: no leading page break
     if (book) app.splice(0, first ? 1 : 2, partTitle('ภาคผนวก', !first)) // a TOC heading
     children.push(...app)
   }
-  if (!children.length) children.push(p([run()]))
 
   const page = { size: { width: 11906, height: 16838 }, margin: { top: 851, right: 1134, bottom: 567, left: 1418, header: 709, footer: 709 } }
-  const pageHeader = new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
+  const pageHeader = () => new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: PT(16), sizeComplexScript: PT(16) })] })] })
   const headingRun = { font: FONT, bold: true, boldComplexScript: true, color: '000000' }
   // The table of contents is written WITH page numbers (laid out from the TH SarabunPSK files the site serves),
-  // so it shows them in any program and before Word updates it; Word still offers to update them exactly.
+  // so it shows them in any program; Thai line breaks can differ from Word's, so "update field" in Word makes them exact.
   let pageNumbers: any
   if (book) {
     try {
@@ -660,25 +702,26 @@ export async function exportLessonPlansDocx(opts: { course: any; plans: PlanForE
     creator: 'ARCANA PROFILE',
     title: `แผนการจัดการเรียนรู้ ${course.code} ${course.name}`,
     pageNumbers,
-    features: book ? { updateFields: true } : undefined, // Word offers to refresh the table of contents when the file opens
     styles: {
       default: { document: { run: { font: FONT, size: PT(16), sizeComplexScript: PT(16), language: { value: 'th-TH', bidirectional: 'th-TH' } } } },
       paragraphStyles: [
         { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(18), sizeComplexScript: PT(18) }, paragraph: { spacing: { before: 0, after: 160 } } },
-        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 120 } } },
+        // unit entries for the table of contents: 1 pt white, so nothing shows on the page (style formatting doesn't carry over to the TOC)
+        { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, color: 'FFFFFF', size: 2, sizeComplexScript: 2 }, paragraph: { spacing: { before: 0, after: 0, line: 240 } } },
         // table-of-contents entries (Word's built-in "toc 1/2" styles would fall back to Angsana)
         { id: 'TOC1', name: 'toc 1', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 60, after: 0 } } },
-        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { ...headingRun, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { spacing: { before: 0, after: 80 } } },
+        { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, color: 'FFFFFF', size: 2, sizeComplexScript: 2 }, paragraph: { spacing: { before: 0, after: 0, line: 240 } } },
         { id: 'TOC3', name: 'toc 3', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 1134 }, spacing: { before: 0, after: 0 } } },
         { id: 'TOC2', name: 'toc 2', basedOn: 'Normal', next: 'Normal', run: { font: FONT, size: PT(16), sizeComplexScript: PT(16) }, paragraph: { indent: { left: 567 }, spacing: { before: 0, after: 0 } } },
       ],
     },
-    sections: book && has('cover')
-      ? [
-          { properties: { page }, children: cover() }, // cover: no page number
-          { properties: { page }, headers: { default: pageHeader }, children },
-        ]
-      : [{ properties: { page }, headers: { default: pageHeader }, children }],
+    sections: [
+      ...(book && has('cover') ? [{ properties: { page }, children: cover() }] : []), // cover: no page number, not counted
+      ...(front.length ? [{ properties: { page: { ...page, pageNumbers: { start: 1, formatType: NumberFormat.THAI_LETTERS } } }, headers: { default: pageHeader() }, children: front }] : []),
+      ...(children.length || !front.length && !(book && has('cover'))
+        ? [{ properties: { page: { ...page, pageNumbers: { start: 1, formatType: NumberFormat.DECIMAL } } }, headers: { default: pageHeader() }, children: children.length ? children : [p([run()])] }]
+        : []),
+    ],
   })
   const blob = await markThaiRuns(await Packer.toBlob(doc))
   const url = URL.createObjectURL(blob)

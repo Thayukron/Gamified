@@ -354,5 +354,25 @@
   {
     "method": "DELETE",
     "path": "/admin/departments/{id}"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/plans/from-schedule"
+  },
+  {
+    "method": "GET",
+    "path": "/teacher/courses/{id}/exam/{kind}"
+  },
+  {
+    "method": "PUT",
+    "path": "/teacher/courses/{id}/exam/{kind}"
+  },
+  {
+    "method": "POST",
+    "path": "/teacher/courses/{id}/exam/{kind}/generate"
+  },
+  {
+    "method": "GET",
+    "path": "/jobs/latest"
   }
 ]
