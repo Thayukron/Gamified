@@ -19,13 +19,7 @@ try {
     await db.execute('INSERT INTO schema_migrations (name) VALUES (?)', [name])
     console.log(`Applied ${name}`)
   }
-  // Repair older installations whose migration ledger does not match the schema.
-  const [lease] = await db.execute("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='background_jobs' AND COLUMN_NAME='lease_until'")
-  if (!lease.length) {
-    await db.query(readFileSync(new URL('2026-10-29_job_lease.sql', directory), 'utf8'))
-    console.log('Repaired background_jobs.lease_until')
-  }
-  console.log('Database upgrade complete: background_jobs.lease_until verified')
+  console.log('Database upgrade complete')
 } finally {
   if (locked) await db.query("SELECT RELEASE_LOCK('arcana-schema-upgrades')")
   await db.end()

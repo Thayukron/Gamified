@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-09 — schema ของ dev ให้ตรงกับ main
+
+- ผู้ใช้สั่ง: ตัดสิ่งที่ไม่เหมือน main ออก (ยึด main เป็นหลัก)
+- ต่างกันจุดเดียว: `background_jobs.lease_until` (+ upgrade `2026-10-29_job_lease.sql`) มีเฉพาะ dev → ลบออกจาก schema.sql และลบไฟล์ upgrade
+- งานเบื้องหลังเดิมใช้ lease_until ตรวจงานค้าง → เปลี่ยนเป็นใช้ `updated_at` (มีใน main อยู่แล้ว): ขณะทำงานต่อเวลาทุก 10 วินาที, ไม่ต่อเกิน 30 วินาที = งานตาย แสดง error แทนค้าง (`server/services/jobs.ts`) · `upgrade-db.mjs` เลิกซ่อมคอลัมน์นี้, `init-db.mjs` เลิกตรวจ · README ของ upgrades อัปเดต
+- ฐานที่มีคอลัมน์นี้อยู่แล้ว (เช่น MariaDB 3306) ไม่ต้องลบ ระบบไม่ใช้แล้ว
+- ตรวจ: schema.sql ของ dev = main ทุกบรรทัด ✓ รายชื่อไฟล์ upgrades ตรงกัน 8 ไฟล์ ✓ tsc ✓ build ✓ node --check สคริปต์ ✓ · ยังไม่ได้ทดสอบงานเบื้องหลังกับฐานจริง (เข้าฐาน 3306 ไม่ได้)
+
 ## 2026-11-09 — ย้ายงานจาก main (65cce69…dc92f85) มา dev บน Nuxt 3 / Nitro
 
 - ผู้ใช้สั่ง: สลับไป dev, pull, เทียบกับ main แล้วย้ายงานใหม่ของ main มาเป็น Nuxt 3 และ push ขึ้น dev

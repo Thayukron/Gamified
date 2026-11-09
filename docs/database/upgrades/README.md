@@ -11,6 +11,6 @@ A brand-new install records all existing files as applied, because `schema.sql` 
 
 For an existing database, run `npm run db:upgrade` after pulling schema changes;
 building or restarting the app does not apply migrations. The upgrade script creates
-the migration ledger if missing and also repairs a missing `background_jobs.lease_until`
-even when its migration was previously recorded. Fresh installation verifies that
-column before recording migrations as applied. Neither command resets existing data.
+the migration ledger if missing. Neither command resets existing data. The schema is kept the
+same as the `main` branch's (the former `background_jobs.lease_until` column is no longer used;
+an existing database may keep it, it is simply ignored).
